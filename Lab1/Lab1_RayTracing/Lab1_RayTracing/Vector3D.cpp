@@ -37,7 +37,7 @@ Vector3D Vector3D::crossproduct(const Vector3D& vec2)
 	return Vector3D(this->y * vec2.z - this->z * vec2.y, this->z*vec2.x - this->x*vec2.z, this->x*vec2.y - this->y*vec2.x);
 }
 
-double Vector3D::Length()
+double Vector3D::Length() const
 {
 	return sqrt(this->x * this->x + this->y * this->y + this->z * this->z);
 }

@@ -21,7 +21,7 @@ public:
 	double operator*(const Vector3D& vec2);	 //Dotproduct
 	Vector3D operator*(const double& val);
 	Vector3D crossproduct(const Vector3D& vec2);
-	
-	double Length();
+
+	double Length() const;
 	void Normalize();
 };

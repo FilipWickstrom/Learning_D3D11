@@ -4,6 +4,7 @@
 
 #include "Plane.h"
 #include "Sphere.h"
+#include "OrientedBoundingBox.h"
 
 //For creating a image
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -22,6 +23,8 @@ int main()
 	shapes.push_back(std::make_unique<Plane>(plane));
 	Sphere sphere(Vector3D(255.0f, 0.0f, 0.0f), Vector3D(width/2.0f, height/2.0f, 50), 50.0f);
 	shapes.push_back(std::make_unique<Sphere>(sphere));
+	OrientedBoundBox obb(Vector3D(255.0f, 20.0f, 147.0f), Vector3D(width*3/4, height*3/4, 50), Vector3D(50,0,0), Vector3D(0,50,0), Vector3D(0,0,50));
+	shapes.push_back(std::make_unique<OrientedBoundBox>(obb));
 
 	//Do the raycasting
 	for (unsigned int h = 0; h < height; ++h)

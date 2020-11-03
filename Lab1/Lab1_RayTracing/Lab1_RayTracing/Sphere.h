@@ -10,8 +10,6 @@ private:
 public:
 	Sphere(const Vector3D& colour, const Vector3D& center, double radius);
 
-
 	// Inherited via Shape
 	virtual bool Intersection(const Ray& ray, double& t) override;
-
 };

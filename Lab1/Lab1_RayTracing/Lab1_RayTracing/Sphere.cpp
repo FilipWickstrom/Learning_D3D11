@@ -1,5 +1,7 @@
 #include "Sphere.h"
 
+//Note: förstå vad det är som händer vid beräkning av b och c på rad: 15 och 16
+
 Sphere::Sphere(const Vector3D& colour, const Vector3D& center, double radius)
     :Shape(colour), center(center), radius(radius)
 {
