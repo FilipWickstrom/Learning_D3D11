@@ -12,5 +12,4 @@ public:
 
 	// Inherited via Shape
 	virtual bool Intersection(const Ray& ray, double& t) override;
-
 };

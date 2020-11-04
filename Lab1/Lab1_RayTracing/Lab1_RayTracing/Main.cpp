@@ -19,11 +19,11 @@ int main()
 	std::vector<std::unique_ptr<Shape>> shapes;
 
 	//Creates all objects in the scene
-	Plane plane(Vector3D(0.0f, 255.0f, 0.0f), Vector3D(0,0,-1), Vector3D(0,0,100));
-	shapes.push_back(std::make_unique<Plane>(plane));
-	Sphere sphere(Vector3D(255.0f, 0.0f, 0.0f), Vector3D(width/2.0f, height/2.0f, 50), 50.0f);
-	shapes.push_back(std::make_unique<Sphere>(sphere));
-	OrientedBoundBox obb(Vector3D(255.0f, 20.0f, 147.0f), Vector3D(width*3/4, height*3/4, 50), Vector3D(50,0,0), Vector3D(0,50,0), Vector3D(0,0,50));
+	//Plane plane(Vector3D(0, 255, 0), Vector3D(0,0,-1), Vector3D(0,0,100));
+	//shapes.push_back(std::make_unique<Plane>(plane));
+	//Sphere sphere(Vector3D(255, 0, 0), Vector3D(width/2, height/2, 50), 50);
+	//shapes.push_back(std::make_unique<Sphere>(sphere));
+	OrientedBoundBox obb(Vector3D(255, 20, 147), Vector3D(width*3/4,height*3/4,150), Vector3D(25,0,0), Vector3D(0,25,0), Vector3D(0,0,25));//Kubform just nu. Ändra senare
 	shapes.push_back(std::make_unique<OrientedBoundBox>(obb));
 
 	//Do the raycasting
@@ -60,6 +60,16 @@ int main()
 	{
 		std::cout << "ERROR: could not create the picture... stbi_write_png failed" << std::endl;
 	}
+
+	//Testing 
+	//Vector3D test1337[3];
+	//test1337[0] = Vector3D(1337, 1337, 1337);
+	//Vector3D testvector[3];
+	//testvector[0] = test1337[0];
+	////testvector[1] = Vector3D(200, 200, 200);
+	//std::cout << "\nVec[0].GetX(): " << testvector[0].GetX() << std::endl;
+	//testvector[0].Normalize();
+	//std::cout << "Vec[0].GetX(): " << testvector[0].GetX() << std::endl;
 
 	return 0;
 }
