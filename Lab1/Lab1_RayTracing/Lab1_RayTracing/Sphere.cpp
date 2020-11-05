@@ -12,8 +12,8 @@ bool Sphere::Intersection(const Ray& ray, double& t)
     Vector3D origin = ray.origin;
     Vector3D direction = ray.direction;
 
-    double b = direction.dotProduct(origin - this->center);
-    double c = (origin - this->center).dotProduct((origin - this->center)) - (this->radius * this->radius);
+    double b = direction.DotProduct(origin - this->center);
+    double c = (origin - this->center).DotProduct((origin - this->center)) - (this->radius * this->radius);
     //Check if it's imaginary numbers 
     if (b * b - c < 0)
     {

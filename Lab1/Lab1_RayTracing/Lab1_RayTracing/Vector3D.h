@@ -21,11 +21,10 @@ public:
 	Vector3D operator-(const Vector3D& vec);
 	Vector3D operator*(double val);
 	Vector3D operator/(double val);
+	Vector3D& operator=(const Vector3D& vec);
 
-	//double operator*(const Vector3D& vec);
-
-	double dotProduct(const Vector3D& vec);
-	Vector3D crossproduct(const Vector3D& vec);
+	double DotProduct(const Vector3D& vec);
+	Vector3D CrossProduct(const Vector3D& vec);
 
 	double Length() const;
 	void Normalize();

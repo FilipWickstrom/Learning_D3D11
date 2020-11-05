@@ -13,7 +13,7 @@ bool Plane::Intersection(const Ray& ray, double& t)
 	Vector3D direction = ray.direction;
 
 	//Check if the ray is perpendicual to the planes normal. Perpendicul if the dotproduct is 0
-	double directionDotNormal = direction.dotProduct(normal);
+	double directionDotNormal = direction.DotProduct(normal);
 	if (std::abs(directionDotNormal) < 0.0000001f)
 	{
 		return false;
@@ -22,10 +22,10 @@ bool Plane::Intersection(const Ray& ray, double& t)
 	//Plane intersection test
 	//ax + by + cz + d = 0 where a = normal.x, b = normal.y, c = normal.z
 	//d = -ax - by - cz
-	double d = normal.dotProduct(this->pointzero) * (-1);
+	double d = normal.DotProduct(this->pointzero) * (-1);
 
 	//Changed version of normal * (origin + t*direction) + d = 0
-	t = ((normal*(-1)).dotProduct(origin) - d) / (normal.dotProduct(direction));
+	t = ((normal*(-1)).DotProduct(origin) - d) / (normal.DotProduct(direction));
 
 	if (t < 0.0f)
 	{

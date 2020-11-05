@@ -10,7 +10,6 @@ private:
 
 public:
 	OrientedBoundBox(const Vector3D& colour, const Vector3D& center, const Vector3D& vec1, const Vector3D& vec2, const Vector3D& vec3);
-	virtual ~OrientedBoundBox();
 
 	// Inherited via Shape
 	virtual bool Intersection(const Ray& ray, double& t) override;

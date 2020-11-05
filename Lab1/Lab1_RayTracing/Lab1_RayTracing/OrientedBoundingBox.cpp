@@ -1,6 +1,5 @@
 #include "OrientedBoundingBox.h"
 #include <cmath>
-#include <iostream>//******
 
 OrientedBoundBox::OrientedBoundBox(const Vector3D& colour, const Vector3D& center, const Vector3D& vec1, const Vector3D& vec2, const Vector3D& vec3)
     :Shape(colour), centerpoint(center)
@@ -8,23 +7,12 @@ OrientedBoundBox::OrientedBoundBox(const Vector3D& colour, const Vector3D& cente
     this->vec[0] = vec1;
     this->vec[1] = vec2;
     this->vec[2] = vec3;
-
     this->normvec[0] = vec1;
     this->normvec[1] = vec2;
     this->normvec[2] = vec3;
-
-    //*******HÄR GÅR DET RIKTIGT FEL********
-
-    //std::cout << "Before: " << this->normvec[0].GetX() << ", " << this->normvec[0].GetY() << ", " << this->normvec[0].GetZ() << std::endl;
     this->normvec[0].Normalize();
     this->normvec[1].Normalize();
     this->normvec[2].Normalize();
-    //std::cout << "After: " << this->normvec[0].GetX() << ", " << this->normvec[0].GetY() << ", " << this->normvec[0].GetZ() << std::endl;
-
-}
-
-OrientedBoundBox::~OrientedBoundBox()
-{
 }
 
 bool OrientedBoundBox::Intersection(const Ray& ray, double& t)
@@ -32,15 +20,14 @@ bool OrientedBoundBox::Intersection(const Ray& ray, double& t)
     Vector3D origin = ray.origin;
     Vector3D direction = ray.direction;
     
-    //SIDA 960 i 4th edition
     double tmin = -INFINITY;
     double tmax = INFINITY;
     Vector3D p = this->centerpoint - origin;    //Creates a vector between the two points
 
     for (unsigned int i = 0; i < 3; i++)
     {
-        double e = this->normvec[i].dotProduct(p);            //r***  
-        double f = this->normvec[i].dotProduct(direction);    //s***
+        double e = this->normvec[i].DotProduct(p);              //***förklara
+        double f = this->normvec[i].DotProduct(direction);      //***förklara
         double hi = this->vec[i].Length();
 
         if (std::abs(f) > 0.0000001f)   //Check if perpendicular
@@ -64,7 +51,7 @@ bool OrientedBoundBox::Intersection(const Ray& ray, double& t)
             if (tmax < 0)
                 return false;
         }
-        else if (-e - hi > 0 || -e + hi < 0)    //Den kan det vara som ställer till***** större delen åker ut här
+        else if (-e - hi > 0 || -e + hi < 0)
         {
             return false;
         }

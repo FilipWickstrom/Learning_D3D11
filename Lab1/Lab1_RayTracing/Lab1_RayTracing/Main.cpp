@@ -5,6 +5,7 @@
 #include "Plane.h"
 #include "Sphere.h"
 #include "OrientedBoundingBox.h"
+#include "Triangle.h"
 
 //For creating a image
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -19,12 +20,20 @@ int main()
 	std::vector<std::unique_ptr<Shape>> shapes;
 
 	//Creates all objects in the scene
-	//Plane plane(Vector3D(0, 255, 0), Vector3D(0,0,-1), Vector3D(0,0,100));
-	//shapes.push_back(std::make_unique<Plane>(plane));
-	//Sphere sphere(Vector3D(255, 0, 0), Vector3D(width/2, height/2, 50), 50);
-	//shapes.push_back(std::make_unique<Sphere>(sphere));
-	OrientedBoundBox obb(Vector3D(255, 20, 147), Vector3D(width*3/4,height*3/4,150), Vector3D(25,0,0), Vector3D(0,25,0), Vector3D(0,0,25));//Kubform just nu. Ändra senare
+	Plane plane(Vector3D(0, 255, 0), Vector3D(0,0,-1), Vector3D(0,0,150));
+	shapes.push_back(std::make_unique<Plane>(plane));
+	
+	Sphere sphere(Vector3D(255, 0, 0), Vector3D(width/3, height/2, 75), 75);
+	shapes.push_back(std::make_unique<Sphere>(sphere));
+	
+	OrientedBoundBox obb(Vector3D(255, 111, 255), Vector3D(width*3/4,height*3/4,75), Vector3D(50,0,-25), Vector3D(-25,50,0), Vector3D(0,0,50));		//FIX LATER****
 	shapes.push_back(std::make_unique<OrientedBoundBox>(obb));
+
+	Triangle triangle(Vector3D(0, 0, 255), Vector3D(width/3, 5, 100), Vector3D(width/4, 400, 5), Vector3D(width/2, 450, 5));
+	shapes.push_back(std::make_unique<Triangle>(triangle));
+
+	//Light
+	const double lightRange = 180;
 
 	//Do the raycasting
 	for (unsigned int h = 0; h < height; ++h)
@@ -35,7 +44,7 @@ int main()
 			int currentPixel = (h * width + w) * channels;
 			double currentClosest = std::numeric_limits<double>::max();
 
-			// Default colour
+			//Default colour
 			imageData[currentPixel + 0] = 255;
 			imageData[currentPixel + 1] = 255;
 			imageData[currentPixel + 2] = 255;
@@ -45,10 +54,18 @@ int main()
 				double t = 0;
 				if (shape->Intersection(ray, t) && t < currentClosest)
 				{
+					//Shading
+					double distansToIntersection = t;
+					double lightFactor = 1 - (distansToIntersection / lightRange);
+					if (lightFactor > 1)
+						lightFactor = 1;
+					else if (lightFactor < 0)
+						lightFactor = 0;
+
 					const Vector3D& colour = shape->GetColour();
-					imageData[currentPixel + 0] = static_cast<uint8_t>(colour.GetX());
-					imageData[currentPixel + 1] = static_cast<uint8_t>(colour.GetY());
-					imageData[currentPixel + 2] = static_cast<uint8_t>(colour.GetZ());
+					imageData[currentPixel + 0] = static_cast<uint8_t>(colour.GetX() * lightFactor);
+					imageData[currentPixel + 1] = static_cast<uint8_t>(colour.GetY() * lightFactor);
+					imageData[currentPixel + 2] = static_cast<uint8_t>(colour.GetZ() * lightFactor);
 					currentClosest = t;
 				}
 			}
@@ -60,16 +77,6 @@ int main()
 	{
 		std::cout << "ERROR: could not create the picture... stbi_write_png failed" << std::endl;
 	}
-
-	//Testing 
-	//Vector3D test1337[3];
-	//test1337[0] = Vector3D(1337, 1337, 1337);
-	//Vector3D testvector[3];
-	//testvector[0] = test1337[0];
-	////testvector[1] = Vector3D(200, 200, 200);
-	//std::cout << "\nVec[0].GetX(): " << testvector[0].GetX() << std::endl;
-	//testvector[0].Normalize();
-	//std::cout << "Vec[0].GetX(): " << testvector[0].GetX() << std::endl;
 
 	return 0;
 }
