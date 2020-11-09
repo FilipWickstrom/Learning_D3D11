@@ -20,20 +20,22 @@ int main()
 	std::vector<std::unique_ptr<Shape>> shapes;
 
 	//Creates all objects in the scene
-	Plane plane(Vector3D(0, 255, 0), Vector3D(0,0,-1), Vector3D(0,0,150));
+	Plane plane(Vector3D(0, 255, 0), Vector3D(0,0,-1), Vector3D(0,0,250));
 	shapes.push_back(std::make_unique<Plane>(plane));
 	
-	Sphere sphere(Vector3D(255, 0, 0), Vector3D(width/3, height/2, 75), 75);
+	Sphere sphere(Vector3D(255, 0, 0), Vector3D(width/2, height/2, 160), 60);
 	shapes.push_back(std::make_unique<Sphere>(sphere));
 	
-	OrientedBoundBox obb(Vector3D(255, 111, 255), Vector3D(width*3/4,height*3/4,75), Vector3D(50,0,-25), Vector3D(-25,50,0), Vector3D(0,0,50));		//FIX LATER****
+	const double pi = 3.14159265359;
+	OrientedBoundBox obb(Vector3D(255, 111, 255), Vector3D(width * 0.70, height * 0.65, 120), {1,0,0}, {0,1,0}, {0,0,1}, 70, 80, 40);
+	obb.rotate(pi /4, pi /5, pi /6);	//Rotates 45° around x-axis, 36° around y-axis and 30° around-z-axis
 	shapes.push_back(std::make_unique<OrientedBoundBox>(obb));
 
-	Triangle triangle(Vector3D(0, 0, 255), Vector3D(width/3, 5, 100), Vector3D(width/4, 400, 5), Vector3D(width/2, 450, 5));
+	Triangle triangle(Vector3D(0, 0, 255), Vector3D(width*0.45, 5, 250), Vector3D(width*0.45, height*0.90, 20), Vector3D(width*0.65, height*0.95, 20));
 	shapes.push_back(std::make_unique<Triangle>(triangle));
 
-	//Light
-	const double lightRange = 180;
+	//How long the light should shine
+	const double lightRange = 200;
 
 	//Do the raycasting
 	for (unsigned int h = 0; h < height; ++h)
@@ -55,8 +57,7 @@ int main()
 				if (shape->Intersection(ray, t) && t < currentClosest)
 				{
 					//Shading
-					double distansToIntersection = t;
-					double lightFactor = 1 - (distansToIntersection / lightRange);
+					double lightFactor = 1 - (t / lightRange);	//t == distans to intersection
 					if (lightFactor > 1)
 						lightFactor = 1;
 					else if (lightFactor < 0)

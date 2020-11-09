@@ -16,6 +16,7 @@ public:
 	double GetX() const { return this->x; }
 	double GetY() const { return this->y; }
 	double GetZ() const { return this->z; }
+	void setCoords(double x, double y, double z) { this->x = x; this->y = y; this->z = z; }
 
 	Vector3D operator+(const Vector3D& vec);
 	Vector3D operator-(const Vector3D& vec);
