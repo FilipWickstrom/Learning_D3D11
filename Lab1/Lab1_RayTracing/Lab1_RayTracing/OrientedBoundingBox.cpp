@@ -1,12 +1,12 @@
 #include "OrientedBoundingBox.h"
-#include <cmath>
+#include <cmath>    //std::abs
 
-OrientedBoundBox::OrientedBoundBox(const Vector3D& colour, const Vector3D& center, const Vector3D& vec1, const Vector3D& vec2, const Vector3D& vec3, double xlen, double ylen, double zlen)
+OrientedBoundBox::OrientedBoundBox(const Vector3D& colour, const Vector3D& center, const Vector3D& v1, const Vector3D& v2, const Vector3D& v3, double xlen, double ylen, double zlen)
     :Shape(colour), centerpoint(center)
 {
-    this->vec[0] = vec1;
-    this->vec[1] = vec2;
-    this->vec[2] = vec3;
+    this->vec[0] = v1;
+    this->vec[1] = v2;
+    this->vec[2] = v3;
     for (unsigned int i = 0; i < 3; i++)
         this->vec[i].Normalize();
     this->lengths[0] = xlen;
@@ -17,6 +17,7 @@ OrientedBoundBox::OrientedBoundBox(const Vector3D& colour, const Vector3D& cente
 void OrientedBoundBox::rotate(double rotX, double rotY, double rotZ)
 {
     double xval, yval, zval;
+    //Checking if zero to avoid rotation
     if (rotX != 0)
     {
         Vector3D xrotmatrix[3] = { {1,0,0}, {0,cos(rotX),-sin(rotX)}, {0,sin(rotX),cos(rotX)} };
@@ -59,38 +60,41 @@ bool OrientedBoundBox::Intersection(const Ray& ray, double& t)
     
     double tmin = -INFINITY;
     double tmax = INFINITY;
-    Vector3D orgToCenter = this->centerpoint - origin;    //Creates a vector between the two points
+    Vector3D originToCenter = this->centerpoint - origin;    //Creates a vector between the two points
 
     //Goes through all the planes
     for (unsigned int i = 0; i < 3; i++)
     {
-        double first = this->vec[i].DotProduct(orgToCenter);    //Check-value for the orgToCenter and the normvector 
-        double second = this->vec[i].DotProduct(direction);     //Check-value for the direction and the normvector
+        double vecDotOriginToCenter = this->vec[i].DotProduct(originToCenter);  //The length of originToCenter in direction of the normvector 
+        double vecDotDirection = this->vec[i].DotProduct(direction);            //The length of the rays direction in the normvectors direction
 
-        if (std::abs(second) > 0.0000001f)  //Check if perpendicular with second one
+        //Check that the plane and the rays direction is not perpendicular. Actually 2 planes but they have the same normal
+        if (std::abs(vecDotDirection) > 0.0000001f) 
         {
-            double t1 = (first + this->lengths[i]) * (1 / second);
-            double t2 = (first - this->lengths[i]) * (1 / second);
-            if (t1 > t2)    //Swap for right order
+            /*Calculates t-values for the two planes. (+-) length is so that they are not in the center of the box
+              Plane EQ: t = (-dp - np*o)/np*d  =>  t1 = (length[i] + vecToOriginToCenter) / vecDotDirection*/
+            double t1 = (vecDotOriginToCenter + this->lengths[i]) * (1 / vecDotDirection);
+            double t2 = (vecDotOriginToCenter - this->lengths[i]) * (1 / vecDotDirection);  
+            //Swap for right order
+            if (t1 > t2)
             {
                 double temp = t1;
                 t1 = t2;
                 t2 = temp;
             }
-            //Check from previous values
+            //Checking previous values
             if (t1 > tmin)
                 tmin = t1;
-            //Also check from previous values
             if (t2 < tmax)
                 tmax = t2;
-            //Check to see if ray missed entirely or check if behind rays origin
+            //The ray missed the box or box is behind the ray origin
             if (tmin > tmax || tmax < 0)
                 return false;
         }
-        //Check with first
-        else if (-first - this->lengths[i] > 0 || -first + this->lengths[i] < 0)
+        //Check with vecDotOriginToCenter to see if we are outside the box
+        else if (-vecDotOriginToCenter - this->lengths[i] > 0 || -vecDotOriginToCenter + this->lengths[i] < 0)
             return false;
-        //Else did not go through the planes
+        //Else, went through only one of the two planes. Keep looping through the other planes
     }
     //Final check to see which t to send
     if (tmin > 0)

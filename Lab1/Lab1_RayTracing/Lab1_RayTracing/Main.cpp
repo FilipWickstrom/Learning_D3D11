@@ -1,5 +1,5 @@
-#include <iostream>
-#include <stdint.h>	//For uint8_t
+#include <iostream>	//output & numeric_limits
+#include <stdint.h>	//uint8_t
 #include <vector>
 
 #include "Plane.h"
@@ -31,7 +31,7 @@ int main()
 	obb.rotate(pi /4, pi /5, pi /6);	//Rotates 45° around x-axis, 36° around y-axis and 30° around-z-axis
 	shapes.push_back(std::make_unique<OrientedBoundBox>(obb));
 
-	Triangle triangle(Vector3D(0, 0, 255), Vector3D(width*0.45, 5, 250), Vector3D(width*0.45, height*0.90, 20), Vector3D(width*0.65, height*0.95, 20));
+	Triangle triangle(Vector3D(0, 0, 255), Vector3D(width * 0.45, 5, 250), Vector3D(width * 0.45, height * 0.90, 20), Vector3D(width * 0.65, height * 0.95, 20));
 	shapes.push_back(std::make_unique<Triangle>(triangle));
 
 	//How long the light should shine
@@ -40,11 +40,11 @@ int main()
 	//Do the raycasting
 	for (unsigned int h = 0; h < height; ++h)
 	{
-		for (unsigned int w = 0;  w < width;  ++w)
+		for (unsigned int w = 0;  w < width; ++w)
 		{
 			Ray ray({ static_cast<double>(w), static_cast<double>(h), 0 }, { 0,0,1 });
 			int currentPixel = (h * width + w) * channels;
-			double currentClosest = std::numeric_limits<double>::max();
+			double currentClosest = std::numeric_limits<double>::max(); //As far as possible
 
 			//Default colour
 			imageData[currentPixel + 0] = 255;
@@ -56,7 +56,7 @@ int main()
 				double t = 0;
 				if (shape->Intersection(ray, t) && t < currentClosest)
 				{
-					//Shading
+					//Calculates the shading
 					double lightFactor = 1 - (t / lightRange);	//t == distans to intersection
 					if (lightFactor > 1)
 						lightFactor = 1;

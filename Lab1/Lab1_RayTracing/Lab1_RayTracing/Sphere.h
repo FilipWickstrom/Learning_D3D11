@@ -6,7 +6,6 @@ class Sphere : public Shape
 private:
 	Vector3D center;
 	double radius;
-
 public:
 	Sphere(const Vector3D& colour, const Vector3D& center, double radius);
 

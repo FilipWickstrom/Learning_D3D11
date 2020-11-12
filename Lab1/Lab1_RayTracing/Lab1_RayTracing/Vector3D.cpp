@@ -15,6 +15,13 @@ Vector3D::Vector3D(const Vector3D& vector)
 {
 }
 
+void Vector3D::setCoords(double x, double y, double z)
+{
+	this->x = x; 
+	this->y = y; 
+	this->z = z;
+}
+
 Vector3D Vector3D::operator+(const Vector3D& vec)
 {
 	return Vector3D(this->x + vec.x, this->y+vec.y, this->z+vec.z);

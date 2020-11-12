@@ -5,8 +5,7 @@ class Plane : public Shape
 {
 private:
 	Vector3D normal;
-	Vector3D pointzero;
-
+	Vector3D planepoint;
 public:
 	Plane(const Vector3D& colour, const Vector3D& normal, const Vector3D& point);
 
