@@ -15,7 +15,7 @@ Vector3D::Vector3D(const Vector3D& vector)
 {
 }
 
-void Vector3D::setCoords(double x, double y, double z)
+void Vector3D::SetCoords(double x, double y, double z)
 {
 	this->x = x; 
 	this->y = y; 

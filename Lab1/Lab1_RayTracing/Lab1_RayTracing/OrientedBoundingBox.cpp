@@ -14,7 +14,7 @@ OrientedBoundBox::OrientedBoundBox(const Vector3D& colour, const Vector3D& cente
     this->lengths[2] = zlen;
 }
 
-void OrientedBoundBox::rotate(double rotX, double rotY, double rotZ)
+void OrientedBoundBox::Rotate(double rotX, double rotY, double rotZ)
 {
     double xval, yval, zval;
     //Checking if zero to avoid rotation
@@ -26,7 +26,7 @@ void OrientedBoundBox::rotate(double rotX, double rotY, double rotZ)
             xval = this->vec[i].DotProduct(xrotmatrix[0]);
             yval = this->vec[i].DotProduct(xrotmatrix[1]);
             zval = this->vec[i].DotProduct(xrotmatrix[2]);
-            this->vec[i].setCoords(xval, yval, zval);
+            this->vec[i].SetCoords(xval, yval, zval);
         }
     }
     if (rotY != 0)
@@ -37,7 +37,7 @@ void OrientedBoundBox::rotate(double rotX, double rotY, double rotZ)
             xval = this->vec[i].DotProduct(yrotmatrix[0]);
             yval = this->vec[i].DotProduct(yrotmatrix[1]);
             zval = this->vec[i].DotProduct(yrotmatrix[2]);
-            this->vec[i].setCoords(xval, yval, zval);
+            this->vec[i].SetCoords(xval, yval, zval);
         }
     }
     if (rotZ != 0)
@@ -48,7 +48,7 @@ void OrientedBoundBox::rotate(double rotX, double rotY, double rotZ)
             xval = this->vec[i].DotProduct(zrotmatrix[0]);
             yval = this->vec[i].DotProduct(zrotmatrix[1]);
             zval = this->vec[i].DotProduct(zrotmatrix[2]);
-            this->vec[i].setCoords(xval, yval, zval);
+            this->vec[i].SetCoords(xval, yval, zval);
         }
     }
 }
