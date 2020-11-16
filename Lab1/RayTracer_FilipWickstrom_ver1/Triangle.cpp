@@ -57,15 +57,6 @@ bool Triangle::Intersection(const Ray& ray, double& t)
         return false;
 
     //Intersect with the triangle. Calculates the t
-    double tCheck = (v2.DotProduct(r)) * devider;
-    //Check if infront of the "camera". Positive t
-    if (tCheck >= 0.0)
-    {
-        t = tCheck;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    t = (v2.DotProduct(r)) * devider;
+    return true;
 }

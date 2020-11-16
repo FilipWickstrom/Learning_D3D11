@@ -24,11 +24,22 @@ bool Sphere::Intersection(const Ray& ray, double& t)
     {
         double t1 = -b + sqrt(b*b - c);
         double t2 = -b - sqrt(b*b - c);
- 
+        //The goal is to figure out which one is closest to the origin
+
         //Both are behind the origin
         if (t1 < 0.0f && t2 < 0.0f)
         {
             return false;
+        }
+        //t1 is behind the origin
+        else if (t1 < 0.0f && t2 >= 0.0f)
+        {
+            t = t2;
+        }
+        //t2 is behind the origin
+        else if (t2 < 0.0f && t1 >= 0.0f)
+        {
+            t = t1;
         }
         //Check which one is closest to the origin, lower is closer
         else
@@ -37,7 +48,7 @@ bool Sphere::Intersection(const Ray& ray, double& t)
                 t = t1;
             else
                 t = t2;
-            return true;
         }
+        return true;
     }
 }
