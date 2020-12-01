@@ -5,7 +5,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 {
     switch (message)
     {
-    case WM_DESTROY:
+    case WM_DESTROY:    //Check if window is destroyed
         PostQuitMessage(0);
         return 0;
     default:

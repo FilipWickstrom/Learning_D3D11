@@ -4,10 +4,9 @@ bool CreateInterfaces(UINT width, UINT height, HWND window, ID3D11Device*& devic
 {
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
 
-    //Read more about this in the book*******
     swapChainDesc.BufferDesc.Width = width;
     swapChainDesc.BufferDesc.Height = height;
-    swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;
+    swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;     //Refreshrate limit
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
     swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;  //8 bits for every R, G, B, A. UNORM: Goes from 0 - 1 instead of 0 - 255
     swapChainDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
@@ -28,8 +27,9 @@ bool CreateInterfaces(UINT width, UINT height, HWND window, ID3D11Device*& devic
     if (_DEBUG)
         flags = D3D11_CREATE_DEVICE_DEBUG;
 
-    D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
-    HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, featureLevels, 1, D3D11_SDK_VERSION, &swapChainDesc, &swapChain, &device, nullptr, &immediateContext);
+    D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 }; //What versions for hardware to support
+    HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, featureLevels, 1, 
+                 D3D11_SDK_VERSION, &swapChainDesc, &swapChain, &device, nullptr, &immediateContext);
 
     return !FAILED(hr);
 }
