@@ -19,12 +19,5 @@ struct SimpleVertex
 	}
 };
 
-struct ConstantBuffer
-{
-	DirectX::XMFLOAT4X4 World;
-	//DirectX::XMFLOAT4X4 View;
-	//DirectX::XMFLOAT4X4 Projection;
-};
-
 bool SetupPipeline(ID3D11Device* device, ID3D11Buffer*& vertexBuffer, ID3D11VertexShader*& vShader, ID3D11PixelShader*& pShader, ID3D11InputLayout*& inputLayout, 
-				   ID3D11DeviceContext*& immediateContext, ID3D11Texture2D*& texture, ID3D11ShaderResourceView*& textureSRV, ID3D11SamplerState*& sampler);
+				   ID3D11Texture2D*& texture, ID3D11ShaderResourceView*& textureSRV, ID3D11SamplerState*& sampler);

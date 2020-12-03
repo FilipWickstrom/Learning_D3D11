@@ -13,7 +13,7 @@ bool LoadShaders(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11Pixel
     std::ifstream reader;
     
     //Vertexshader
-    reader.open("../Debug/VertexShader.cso", std::ios::binary | std::ios::ate); //Fix link...***
+    reader.open("VertexShader.cso", std::ios::binary | std::ios::ate);
     if (!reader.is_open())
     {
         std::cerr << "Could not open vertex shader..." << std::endl;
@@ -36,7 +36,7 @@ bool LoadShaders(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11Pixel
     reader.close();
     
     //Pixelshader
-    reader.open("../Debug/PixelShader.cso", std::ios::binary | std::ios::ate);  //Fix link...***
+    reader.open("PixelShader.cso", std::ios::binary | std::ios::ate);
     if (!reader.is_open())
     {
         std::cerr << "Could not open pixel shader..." << std::endl;
@@ -71,59 +71,6 @@ bool CreateInputLayout(ID3D11Device* device, ID3D11InputLayout*& inputLayout, co
     return !FAILED(hr);
 }
 
-bool CreateWVP(ID3D11Device* device, ID3D11DeviceContext*& immediateContext)
-{
-    //Projection matrix info
-    float angle = DirectX::XM_PI * 0.45f; //81 degrees
-    float aspectRatio = 16.0f / 9.0f;
-    float farClipDistance = 15.0f;
-    float nearClipDistance = 0.1f;
-    ConstantBuffer cbCamera;
-
-    //World matrix
-    //DirectX::XMStoreFloat4x4(&cbCamera.World, DirectX::XMMatrixScaling(0.5f, 0.5f, 0.5f) * DirectX::XMMatrixRotationY(angle) * DirectX::XMMatrixTranslation(0, 0, 1));
-    //DirectX::XMStoreFloat4x4(&cbCamera.World, DirectX::XMMatrixTranspose(DirectX::XMMatrixScaling(9.0f/16.0f, 1.0f, 1.0f) * DirectX::XMMatrixRotationZ(0.0f) * DirectX::XMMatrixTranslation(9.0f/16.0f, 1.0f, 1.0f)));
-
-    //View matrix
-    /*DirectX::XMVECTOR eyepos = { 0.0f, 0.0f, 0.0f };
-    DirectX::XMVECTOR focus = { 0.5f, 0.0f, 1.0f };
-    DirectX::XMVECTOR updir = { 0.0f, 1.0f, 0.0f };
-    DirectX::XMStoreFloat4x4(&cbCamera.View, DirectX::XMMatrixLookAtLH(eyepos, focus, updir));*/
-
-    //Projection matrix
-    //DirectX::XMStoreFloat4x4(&cbCamera.Projection, DirectX::XMMatrixPerspectiveFovLH(angle, aspectRatio, nearClipDistance, farClipDistance));
-
-    ID3D11Buffer* pConstBuf = nullptr;
-    D3D11_BUFFER_DESC constBufDesc;
-    constBufDesc.ByteWidth = sizeof(cbCamera);
-    constBufDesc.Usage = D3D11_USAGE_DYNAMIC;
-    constBufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    constBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    constBufDesc.MiscFlags = 0;
-    constBufDesc.StructureByteStride = 0;
-
-    D3D11_SUBRESOURCE_DATA data;
-    data.pSysMem = &cbCamera;
-    data.SysMemPitch = 0;
-    data.SysMemSlicePitch = 0;
-
-    HRESULT hr = device->CreateBuffer(&constBufDesc, &data, &pConstBuf);
-
-    if (FAILED(hr))
-    {
-        pConstBuf->Release();
-        return false;
-    }   
-    else
-    {
-        //Sets the buffer
-        immediateContext->VSSetConstantBuffers(0, 1, &pConstBuf);
-        return true;
-    }
-    //pConstBuf->Release();
-}
-
-
 bool CreateVertexBuffer(ID3D11Device* device, ID3D11Buffer*& vertexBuffer)
 {
     //Hardcoded quad where order is important               //Should later have: position,UV,normal***
@@ -134,6 +81,12 @@ bool CreateVertexBuffer(ID3D11Device* device, ID3D11Buffer*& vertexBuffer)
         { { 0.5f, -0.5f, 0.0f}, {1.0f, 1.0f} },    //Down right
         { { 0.5f,  0.5f, 0.0f}, {1.0f, 0.0f} }     //Up right
     };
+
+    //INDEX buffer
+    /*const unsigned short indeces[] =
+    {
+
+    };*/
 
     D3D11_BUFFER_DESC bufferDesc;
     bufferDesc.ByteWidth = sizeof(quad);
@@ -209,7 +162,7 @@ bool CreateSamplerState(ID3D11Device* device, ID3D11SamplerState*& sampler)
 
 
 bool SetupPipeline(ID3D11Device* device, ID3D11Buffer*& vertexBuffer, ID3D11VertexShader*& vShader, ID3D11PixelShader*& pShader, ID3D11InputLayout*& inputLayout, 
-                   ID3D11DeviceContext*& immediateContext, ID3D11Texture2D*& texture, ID3D11ShaderResourceView*& textureSRV, ID3D11SamplerState*& sampler)
+                   ID3D11Texture2D*& texture, ID3D11ShaderResourceView*& textureSRV, ID3D11SamplerState*& sampler)
 {
     std::string vShaderByteCode;
     if (!LoadShaders(device, vShader, pShader, vShaderByteCode))
@@ -223,12 +176,6 @@ bool SetupPipeline(ID3D11Device* device, ID3D11Buffer*& vertexBuffer, ID3D11Vert
         std::cerr << "Error creating input layout..." << std::endl;
         return false;
     }
-
-    /*if (!CreateWVP(device, immediateContext))
-    {
-        std::cerr << "Error creating world view projection buffer..." << std::endl;
-        return false;
-    }*/
 
     if (!CreateVertexBuffer(device, vertexBuffer))
     {
