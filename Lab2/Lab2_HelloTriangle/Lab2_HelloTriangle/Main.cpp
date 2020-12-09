@@ -2,9 +2,8 @@
 #include <iostream>
 #include <d3d11.h>
 #include <chrono>
-
-//#include <string>
-//#include <sstream> //writing in setwindowtext
+#include <string>
+#include <sstream> //writing in setwindowtext
 
 //For console
 #include <fcntl.h>
@@ -23,11 +22,8 @@ void RedirectIOToConsole()
 	stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 	hConsole = _open_osfhandle((intptr_t)stdHandle, _O_TEXT);
 	fp = _fdopen(hConsole, "w");
-
 	freopen_s(&fp, "CONOUT$", "w", stdout);
-
-	printf("Hello console on\n");
-	std::cout << "Windows 10" << std::endl;
+	std::cout << "Console is active" << std::endl;
 }
 
 
@@ -56,34 +52,34 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return -1;
 
 	//Setup the constant buffer
-	if (!renderer.loadConstBuffer())
+	if (!renderer.loadConstBuffer(WIDTH, HEIGHT))
 		return -1;
 
 	MSG msg = {};
-	static float rotation = 0.0f;
-	//double dt = 0.0f;****
+	float dt = 0.0f;
+	float speed = 0.5f;	//Base speed of the rotation
 
 	//Gameloop
 	while (msg.message != WM_QUIT)
 	{
-		//Start timer
-		//auto start = std::chrono::steady_clock::now();
+		auto start = std::chrono::steady_clock::now();
 
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		rotation += 0.005f;
-		renderer.Draw(rotation, WIDTH, HEIGHT);
+		renderer.Draw(dt*speed, WIDTH, HEIGHT);
 
-		//End timer
-		//auto end = std::chrono::steady_clock::now();
-		//std::chrono::duration<double>deltatime = end - start;
-		//std::wstringstream windowtext;
-		//windowtext << L"Hello Triangle Window | FPS: " << (int)(1.0f / deltatime.count()) << " | TimePerFrame : " << deltatime.count() << "ms";
-		//SetWindowText(window, windowtext.str().c_str());
-		//dt = deltatime.count();	//use this for rotation later.
+		//Calculates deltatime
+		auto end = std::chrono::steady_clock::now();
+		std::chrono::duration<double>deltatime = end - start;
+		dt += (float)deltatime.count();
+		
+		//Update the window text
+		std::wstringstream windowtext;
+		windowtext << L"Hello Triangle Window | FPS: " << (int)(1.0f / deltatime.count()) << " | TimePerFrame : " << deltatime.count() << "s";
+		SetWindowText(window, windowtext.str().c_str());
 	}
 
 	return 0;

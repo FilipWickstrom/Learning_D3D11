@@ -20,7 +20,7 @@ bool CreateInterfaces(UINT width, UINT height, HWND window, ID3D11Device*& devic
     swapChainDesc.BufferCount = 1;
     swapChainDesc.OutputWindow = window;
     swapChainDesc.Windowed = true;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;    //Works but not the most effient
     swapChainDesc.Flags = 0;
 
     UINT flags = 0;

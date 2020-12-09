@@ -23,23 +23,22 @@ private:
 	ID3D11InputLayout* inputLayout;
 	ID3D11Buffer* vertexbuffer;
 
-	//WVP
-	ID3D11Buffer* constBufferPerFrame;
-
 	//Texture
 	ID3D11Texture2D* texture2d;
 	ID3D11ShaderResourceView* textureShaderResourceView;
 	ID3D11SamplerState* samplerState;	//Settings for sampling
 
-	//Some kind of light buffer
+	ID3D11Buffer* constBufPerFrameWVP;
 
-	struct ConstantBuffer
+	struct constBufWVP
 	{
-		DirectX::XMMATRIX world;
-		DirectX::XMMATRIX view;
-		DirectX::XMMATRIX projection;
+		DirectX::XMFLOAT4X4 world;
+		DirectX::XMFLOAT4X4 view;
+		DirectX::XMFLOAT4X4 projection;
 	};
-	ConstantBuffer constBuf;
+	constBufWVP cbWVP;
+
+	//Some kind of light buffer
 
 public:
 	Renderer() = default;
@@ -49,7 +48,7 @@ public:
 	bool InitPipeline();
 	void Draw(float rotation, UINT width, UINT height);
 
-	bool loadConstBuffer();
+	bool loadConstBuffer(UINT width, UINT height);
 	void updateConstBuffer(float rotation, UINT width, UINT height);
 
 };

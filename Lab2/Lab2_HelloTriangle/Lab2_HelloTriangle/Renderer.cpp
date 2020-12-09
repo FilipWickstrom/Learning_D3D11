@@ -12,12 +12,11 @@ Renderer::~Renderer()
 	this->pixelShader->Release();
 	this->inputLayout->Release();
 	this->vertexbuffer->Release();
-
-	this->constBufferPerFrame->Release();
-
 	this->texture2d->Release();
 	this->textureShaderResourceView->Release();
 	this->samplerState->Release();
+
+	this->constBufPerFrameWVP->Release();
 }
 
 bool Renderer::InitD3D11(UINT width, UINT height, HWND window)
@@ -58,6 +57,7 @@ void Renderer::Draw(float angle, UINT width, UINT height)
 	UINT offset = 0;	//Where to start in the array
 	deviceContext->IASetVertexBuffers(0, 1, &vertexbuffer, &stride, &offset);
 
+	deviceContext->VSSetConstantBuffers(0, 1, &constBufPerFrameWVP);
 	updateConstBuffer(angle, width, height);
 	//light
 	//deviceContext->PSSetConstantBuffers(0, 1, &constlightbuffer);
@@ -69,43 +69,52 @@ void Renderer::Draw(float angle, UINT width, UINT height)
 	//Where to draw and present the vertices
 	deviceContext->RSSetViewports(1, &viewport);
 	deviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView); //OM = outputmerge
-	deviceContext->Draw(4, 0);	//Drawing the 4 vertices
+	deviceContext->Draw(8, 0);	//Drawing all the vertices
 	swapChain->Present(1, 0);	//Syncing with Vsync
 }
 
-bool Renderer::loadConstBuffer()
+bool Renderer::loadConstBuffer(UINT width, UINT height)
 {
 	D3D11_BUFFER_DESC desc;
-	desc.ByteWidth = sizeof(ConstantBuffer);
-	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.ByteWidth = sizeof(constBufWVP);
+	desc.Usage = D3D11_USAGE_DYNAMIC;				//Needed as the constant buffer is going to be updated
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	desc.CPUAccessFlags = 0;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	//Also needed for constant buffer
 	desc.MiscFlags = 0;
 	desc.StructureByteStride = 0;
 
+	//Value for where the camera is looking
+	DirectX::XMVECTOR eyePos = { 0.0f, 0.0f, 0.0f };
+	DirectX::XMVECTOR focus = { 0.0f, 0.0f, 1.0f };
+	DirectX::XMVECTOR up = { 0.0f, 1.0f, 0.0f };
+	DirectX::XMStoreFloat4x4(&cbWVP.view, DirectX::XMMatrixLookAtLH(eyePos, focus, up));
+
+	//Perspective and how long the camera can see
+	DirectX::XMStoreFloat4x4(&cbWVP.projection, DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PI * 0.45f, float(width) / height, 0.1f, 5.0f));
+		
+	//First param is the scale of the world, second is for the rotation and third is for how far away you are from the object
+	DirectX::XMStoreFloat4x4(&cbWVP.world, DirectX::XMMatrixScaling(0.8f, 0.8f, 0.8f) * DirectX::XMMatrixRotationY(0) * DirectX::XMMatrixTranslation(0, 0, 1));
+
 	D3D11_SUBRESOURCE_DATA initdata;
-	initdata.pSysMem = &constBuf;
+	initdata.pSysMem = &cbWVP;
 	initdata.SysMemPitch = 0;
 	initdata.SysMemSlicePitch = 0;
 
-	HRESULT hr = device->CreateBuffer(&desc, &initdata, &constBufferPerFrame);
-
+	HRESULT hr = device->CreateBuffer(&desc, &initdata, &constBufPerFrameWVP);
 	return !FAILED(hr);
 }
 
 void Renderer::updateConstBuffer(float rotation, UINT width, UINT height)
 {	
-	//First is the worlds scale, second is for the rotation and third is for ...???...*** 
-	constBuf.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) * DirectX::XMMatrixRotationY(rotation) * DirectX::XMMatrixTranslation(0, 0, 1));
+	//Updates the world matrix as it is going to rotate. View- and projection-matrix still the same in this laboration
 
-	DirectX::XMVECTOR eyePos = { 0.0f, 0.0f, 0.0f };
-	DirectX::XMVECTOR focus = { 0.0f, 0.0f, 1.0f };
-	DirectX::XMVECTOR up = { 0.0f, 1.0f, 0.0f };
+	//First param is the scale of the world, second is for the rotation and third is for how far away you are from the object
+	DirectX::XMStoreFloat4x4(&cbWVP.world, DirectX::XMMatrixScaling(0.8f, 0.8f, 0.8f) * DirectX::XMMatrixRotationY(rotation) * DirectX::XMMatrixTranslation(0, 0, 1));
 
-	//Where the camera is looking
-	constBuf.view = DirectX::XMMatrixTranspose(DirectX::XMMatrixLookAtLH(eyePos, focus, up));
-	constBuf.projection = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PI * 0.45f, float(width)/height, 0.1f, 15.0f));
-
-	deviceContext->UpdateSubresource(constBufferPerFrame, 0, nullptr, &constBuf, 0, 0);
-	deviceContext->VSSetConstantBuffers(0, 1, &constBufferPerFrame);
+	//Mapping the constantbuffers information to GPU memory
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	deviceContext->Map(constBufPerFrameWVP, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &cbWVP, sizeof(constBufWVP));
+	deviceContext->Unmap(constBufPerFrameWVP, 0);
+	//Map uses less CPU time then updatesubresource
 }

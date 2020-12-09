@@ -59,34 +59,35 @@ bool LoadShaders(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11Pixel
 
 bool CreateInputLayout(ID3D11Device* device, ID3D11InputLayout*& inputLayout, const std::string& vShaderByteCode)
 {
-    D3D11_INPUT_ELEMENT_DESC inputDesc[2] =
+    D3D11_INPUT_ELEMENT_DESC inputDesc[3] =
     {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
-        //{"COLOUR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
-    HRESULT hr = device->CreateInputLayout(inputDesc, 2, vShaderByteCode.c_str(), vShaderByteCode.length(), &inputLayout);
+    HRESULT hr = device->CreateInputLayout(inputDesc, 3, vShaderByteCode.c_str(), vShaderByteCode.length(), &inputLayout);
 
     return !FAILED(hr);
 }
 
 bool CreateVertexBuffer(ID3D11Device* device, ID3D11Buffer*& vertexBuffer)
 {
-    //Hardcoded quad where order is important               //Should later have: position,UV,normal***
-    SimpleVertex quad[4] =
+    //Hardcoded quad where order is important. Clockwise order               //Should later have: position,UV,normal***
+    SimpleVertex quad[8] =
     {
-        { {-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f} },    //Down left
-        { {-0.5f,  0.5f, 0.0f}, {0.0f, 0.0f} },    //Up left
-        { { 0.5f, -0.5f, 0.0f}, {1.0f, 1.0f} },    //Down right
-        { { 0.5f,  0.5f, 0.0f}, {1.0f, 0.0f} }     //Up right
+        //Frontside
+        { {-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, -1.0f} },    //Down left
+        { {-0.5f,  0.5f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, -1.0f} },    //Up left
+        { { 0.5f, -0.5f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, -1.0f} },    //Down right
+        { { 0.5f,  0.5f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, -1.0f} },    //Up right
+
+        //Backside - Not needed but looks cool. Counterclockwise to point to the other side    
+        { { 0.5f,  0.5f, 0.0f}, {1.0f, 0.0f}, {0.0f, 0.0f, 1.0f} },
+        { {-0.5f,  0.5f, 0.0f}, {0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} },
+        { { 0.5f, -0.5f, 0.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f} },
+        { {-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f} }
     };
-
-    //INDEX buffer
-    /*const unsigned short indeces[] =
-    {
-
-    };*/
 
     D3D11_BUFFER_DESC bufferDesc;
     bufferDesc.ByteWidth = sizeof(quad);

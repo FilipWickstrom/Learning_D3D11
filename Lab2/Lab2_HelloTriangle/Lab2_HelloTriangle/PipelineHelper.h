@@ -7,12 +7,14 @@ struct SimpleVertex
 {
 	float pos[3];
 	float uv[2];
+	float norm[3];
 
-	SimpleVertex(const std::array<float, 3>& position, const std::array<float, 2> uvCoords/*, const std::array<float, 3> colour*/)
+	SimpleVertex(const std::array<float, 3>& position, const std::array<float, 2> uvCoords, const std::array<float, 3>& normal)
 	{
 		for (int i = 0; i < 3; ++i)
 		{
 			pos[i] = position[i];
+			norm[i] = normal[i];
 		}
 		uv[0] = uvCoords[0];
 		uv[1] = uvCoords[1];
