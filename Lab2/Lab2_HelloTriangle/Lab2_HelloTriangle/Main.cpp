@@ -45,15 +45,31 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	//Setup d3d11
 	if (!renderer.InitD3D11(WIDTH, HEIGHT, window))
+	{
+		std::cerr << "Failed to setup d3d11..." << std::endl;
 		return -1;
+	}
 	
 	//Setup pipeline
 	if (!renderer.InitPipeline())
+	{
+		std::cerr << "Failed to setup pipeline..." << std::endl;
 		return -1;
+	}
 
-	//Setup the constant buffer
-	if (!renderer.loadConstBuffer(WIDTH, HEIGHT))
+	//Setup the constant buffer for wvp
+	if (!renderer.LoadWVP(WIDTH, HEIGHT))
+	{
+		std::cerr << "Failed to setup constant buffer for wvp..." << std::endl;
 		return -1;
+	}
+
+	//Setup the constant buffer for the light
+	if (!renderer.LoadLight())
+	{
+		std::cerr << "Failed to setup constant buffer for the light..." << std::endl;
+		return -1;
+	}
 
 	MSG msg = {};
 	float dt = 0.0f;

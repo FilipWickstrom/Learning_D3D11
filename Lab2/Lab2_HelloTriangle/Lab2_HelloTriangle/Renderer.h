@@ -29,6 +29,7 @@ private:
 	ID3D11SamplerState* samplerState;	//Settings for sampling
 
 	ID3D11Buffer* constBufPerFrameWVP;
+	ID3D11Buffer* constBufPerFrameLight;
 
 	struct constBufWVP
 	{
@@ -38,7 +39,17 @@ private:
 	};
 	constBufWVP cbWVP;
 
-	//Some kind of light buffer
+	//Pointlight
+	struct constBufLight
+	{
+		DirectX::XMFLOAT3 lightpos;
+		float padding0;
+		DirectX::XMFLOAT3 lightColour;
+		float lightRange;
+		DirectX::XMFLOAT3 camPos;
+		float padding1;
+	};
+	constBufLight cbLight;
 
 public:
 	Renderer() = default;
@@ -48,7 +59,9 @@ public:
 	bool InitPipeline();
 	void Draw(float rotation, UINT width, UINT height);
 
-	bool loadConstBuffer(UINT width, UINT height);
-	void updateConstBuffer(float rotation, UINT width, UINT height);
+	bool LoadWVP(UINT width, UINT height);
+	bool LoadLight();
 
+	void UpdateWVP(float rotation, UINT width, UINT height);
+	void UpdateLight();
 };
