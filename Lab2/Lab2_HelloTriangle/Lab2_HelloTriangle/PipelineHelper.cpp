@@ -72,7 +72,7 @@ bool CreateInputLayout(ID3D11Device* device, ID3D11InputLayout*& inputLayout, co
 
 bool CreateVertexBuffer(ID3D11Device* device, ID3D11Buffer*& vertexBuffer)
 {
-    //Hardcoded quad where order is important. Clockwise order               //Should later have: position,UV,normal***
+    //Hardcoded quad where order is important. Clockwise order
     SimpleVertex quad[8] =
     {
         //Frontside

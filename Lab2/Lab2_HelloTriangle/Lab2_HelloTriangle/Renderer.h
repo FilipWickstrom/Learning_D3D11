@@ -28,6 +28,7 @@ private:
 	ID3D11ShaderResourceView* textureShaderResourceView;
 	ID3D11SamplerState* samplerState;	//Settings for sampling
 
+	//Constant buffers and structs for them
 	ID3D11Buffer* constBufPerFrameWVP;
 	ID3D11Buffer* constBufPerFrameLight;
 
@@ -39,7 +40,6 @@ private:
 	};
 	constBufWVP cbWVP;
 
-	//Pointlight
 	struct constBufLight
 	{
 		DirectX::XMFLOAT3 lightpos;

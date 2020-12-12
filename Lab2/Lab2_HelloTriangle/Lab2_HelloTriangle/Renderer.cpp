@@ -15,7 +15,6 @@ Renderer::~Renderer()
 	this->texture2d->Release();
 	this->textureShaderResourceView->Release();
 	this->samplerState->Release();
-
 	this->constBufPerFrameWVP->Release();
 	this->constBufPerFrameLight->Release();
 }
@@ -55,7 +54,7 @@ void Renderer::Draw(float angle, UINT width, UINT height)
 	deviceContext->PSSetShader(pixelShader, nullptr, 0);
 
 	UINT stride = sizeof(SimpleVertex);		//Distance between vertices in bytes
-	UINT offset = 0;	//Where to start in the array
+	UINT offset = 0;						//Where to start in the array
 	deviceContext->IASetVertexBuffers(0, 1, &vertexbuffer, &stride, &offset);
 
 	//For texture
@@ -68,7 +67,7 @@ void Renderer::Draw(float angle, UINT width, UINT height)
 	
 	//Light
 	deviceContext->PSSetConstantBuffers(0, 1, &constBufPerFrameLight);
-	UpdateLight();
+	//UpdateLight();
 
 	//Where to draw and present the vertices
 	deviceContext->RSSetViewports(1, &viewport);
@@ -88,17 +87,14 @@ bool Renderer::LoadWVP(UINT width, UINT height)
 	desc.StructureByteStride = 0;
 
 	//Value for where the camera is positioned and looking
-	DirectX::XMVECTOR eyePos = { 0.0f, 0.0f, 0.0f };
-	DirectX::XMVECTOR focus = { 0.0f, 0.0f, 1.0f };
-	DirectX::XMVECTOR up = { 0.0f, 1.0f, 0.0f };
+	DirectX::XMVECTOR eyePos = { 0.0f, 0.0f, 0.0f };	//Camera location
+	DirectX::XMVECTOR focus = { 0.0f, 0.0f, 1.0f };		//Direction looking
+	DirectX::XMVECTOR up = { 0.0f, 1.0f, 0.0f };		//Points towards which axis is up
 	DirectX::XMStoreFloat4x4(&cbWVP.view, DirectX::XMMatrixLookAtLH(eyePos, focus, up));
 
-	//Perspective and how long the camera can see
-	DirectX::XMStoreFloat4x4(&cbWVP.projection, DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PI * 0.45f, float(width) / height, 0.1f, 15.0f));	//***change later from 50?
-		
-	//First param is the scale of the world, second is for the rotation and third is for how far away you are from the object
-	//DirectX::XMStoreFloat4x4(&cbWVP.world, DirectX::XMMatrixScaling(0.8f, 0.8f, 0.8f) * DirectX::XMMatrixRotationY(0) * DirectX::XMMatrixTranslation(0, 0, 1));
-
+	//Perspective and how long the camera can see. FOV: 90 degrees. Cutting off at 0.1f and 10.0f forward from the camera
+	DirectX::XMStoreFloat4x4(&cbWVP.projection, DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PI * 0.5f, float(width) / height, 0.1f, 10.0f));
+	
 	D3D11_SUBRESOURCE_DATA initdata;
 	initdata.pSysMem = &cbWVP;
 	initdata.SysMemPitch = 0;
@@ -118,12 +114,12 @@ bool Renderer::LoadLight()
 	desc.MiscFlags = 0;
 	desc.StructureByteStride = 0;
 
-	//Default values
-	this->cbLight.lightpos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);	//should make it relative to world...***
+	//Default values - padding needed for constant buffers as it takes 16 bytes at a time
+	this->cbLight.lightpos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
 	this->cbLight.padding0 = 0.0f;
-	this->cbLight.lightColour = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);
-	this->cbLight.lightRange = 10.0f;
-	this->cbLight.camPos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);		//should be relative to world?***
+	this->cbLight.lightColour = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);	//White light
+	this->cbLight.lightRange = 2.0f;
+	this->cbLight.camPos = DirectX::XMFLOAT3(this->cbWVP.view._11, this->cbWVP.view._21, this->cbWVP.view._31);	//Copy the location of the camera
 	this->cbLight.padding1 = 0.0f;
 
 	D3D11_SUBRESOURCE_DATA initdata;
@@ -141,7 +137,7 @@ void Renderer::UpdateWVP(float rotation, UINT width, UINT height)
 
 	//First rotates face towards camera. Then moves forward. Rotates around the point and goes forward more
 	DirectX::XMStoreFloat4x4(&cbWVP.world, DirectX::XMMatrixRotationY(DirectX::XM_PI) * DirectX::XMMatrixTranslation(0, 0, 1) * 
-										   DirectX::XMMatrixRotationY(rotation) * DirectX::XMMatrixTranslation(0, 0, 2));
+										   DirectX::XMMatrixRotationY(rotation) * DirectX::XMMatrixTranslation(0, 0, 2));	
 
 	//Mapping the constantbuffers information to GPU memory
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -153,10 +149,9 @@ void Renderer::UpdateWVP(float rotation, UINT width, UINT height)
 
 void Renderer::UpdateLight()
 {
-	//update the lights position 
-	//cbLight.lightpos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	//Update here if needed - But in this case not needed, light is not changing
+	//Can change lights colour for example here
 
-	//Mapping the constantbuffers information to GPU memory
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	deviceContext->Map(constBufPerFrameLight, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &cbLight, sizeof(constBufLight));

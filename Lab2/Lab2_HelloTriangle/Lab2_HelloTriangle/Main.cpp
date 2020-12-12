@@ -1,16 +1,11 @@
-#include <Windows.h>
-#include <iostream>
-#include <d3d11.h>
-#include <chrono>
-#include <string>
-#include <sstream> //writing in setwindowtext
+#include <chrono>	//Time
+//#include <string>	
+#include <sstream>	//writing in setwindowtext
+#include <fcntl.h>	//Console
+#include <io.h>		//Console
 
-//For console
-#include <fcntl.h>
-#include <io.h>
-
-#include "WindowHelper.h"
-#include "Renderer.h"
+#include "WindowHelper.h"	//Includes windows, iostream
+#include "Renderer.h"		//Includes windows, d3d11
 
 //Make it possible to use the console window
 void RedirectIOToConsole()
@@ -73,7 +68,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	MSG msg = {};
 	float dt = 0.0f;
-	float speed = 0.5f;	//Base speed of the rotation
+	float speed = 0.5f;	//Basespeed of the rotation
 
 	//Gameloop
 	while (msg.message != WM_QUIT)

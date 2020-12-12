@@ -31,9 +31,11 @@ VertexShaderOutput main(VertexShaderInput input)
 	//Normalize the normal for the vertex
 	output.normal = normalize(mul(float4(input.normal, 0.0f), world).xyz);
 	
-	//Pixels position in the world
+	//The pixels position in the world
     output.pixelPosWorld = mul(float4(input.position, 1.0f), world).xyz;
 	
+	//Not going to change
 	output.uv = input.uv;
+	
 	return output;
 }
