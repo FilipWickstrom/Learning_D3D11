@@ -1,7 +1,7 @@
-Texture2D aTexture : register(t0); //t: texturebuffer register 0
-SamplerState aSampler : register(s0); //s: sampler register 0
+Texture2D theTexture : register(t0);      //t: texturebuffer register 0
+SamplerState theSampler : register(s0);   //s: sampler register 0
 
-cbuffer constBufLight : register(b0)
+cbuffer constBufLight : register(b0)    //b: constant buffer
 {
     float3 lightPos;
     float padding0;
@@ -28,11 +28,11 @@ float4 main(PixelShaderInput input) : SV_TARGET
     uint shininess = 64;
     
     //Texture
-    float4 textureColour = float4(aTexture.Sample(aSampler, input.uv).xyz, 1.0f);
+    float4 textureColour = float4(theTexture.Sample(theSampler, input.uv).xyz, 1.0f);
       
     //Vector from the positioned light to pixels location in the world. Calculates distance
-    float3 lightPosToPixel = lightPos - input.pixelPosWorld;
-    float distance = length(lightPosToPixel);
+    float3 pixelToLight = lightPos - input.pixelPosWorld;
+    float distance = length(pixelToLight);
     
     //Only let the light shine on what is in the range of the pointlight
     if (distance < lightRange)
@@ -41,13 +41,13 @@ float4 main(PixelShaderInput input) : SV_TARGET
         float attenuationFactor = max(0.0f, 1.0f - (distance / lightRange)); //From Practical rendering... s.505
         
         //Diffuse - Can be minimum 0.0f. Dot part = cos(angle)
-        float diffuseFactor = max(dot(normalize(input.normal), normalize(lightPosToPixel)), 0.0f);
+        float diffuseFactor = max(dot(normalize(input.normal), normalize(pixelToLight)), 0.0f);
         diffuseIntensity = float4(lightColour, 1.0f) * attenuationFactor * diffuseFactor;
     
         //Specular - Can be minimum 0.0f
-        float3 reflectDirVec = normalize(reflect(lightPosToPixel, input.normal));
-        float3 pixelToCamera = normalize(input.pixelPosWorld - cameraPos); 
-        float specularFactor = pow(max(dot(reflectDirVec, pixelToCamera), 0.0f), shininess);
+        float3 reflectedLight = normalize(reflect(-pixelToLight, input.normal));
+        float3 pixelToCamera = normalize(cameraPos - input.pixelPosWorld);
+        float specularFactor = pow(max(dot(reflectedLight, pixelToCamera), 0.0f), shininess);
         specularIntensity = float4(lightColour, 1.0f) * attenuationFactor * specularFactor;
     }
     

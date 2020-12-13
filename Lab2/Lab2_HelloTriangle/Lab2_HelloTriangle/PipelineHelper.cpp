@@ -1,9 +1,9 @@
 #include "PipelineHelper.h"
 #include <string>
-#include <fstream>
+#include <fstream>  //Reading file
 #include <iostream>
 
-//Reading a image file
+//Reading an image file
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -59,6 +59,7 @@ bool LoadShaders(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11Pixel
 
 bool CreateInputLayout(ID3D11Device* device, ID3D11InputLayout*& inputLayout, const std::string& vShaderByteCode)
 {
+    //Input structure for the vertex shader
     D3D11_INPUT_ELEMENT_DESC inputDesc[3] =
     {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -90,7 +91,7 @@ bool CreateVertexBuffer(ID3D11Device* device, ID3D11Buffer*& vertexBuffer)
 
     D3D11_BUFFER_DESC bufferDesc;
     bufferDesc.ByteWidth = sizeof(quad);
-    bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+    bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;   //Can only be read by GPU
     bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     bufferDesc.CPUAccessFlags = 0;
     bufferDesc.MiscFlags = 0;
@@ -120,19 +121,20 @@ bool CreateTexture(ID3D11Device* device, ID3D11Texture2D*& texture, ID3D11Shader
     desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;   //UNORM: 0 - 1
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
-    desc.Usage = D3D11_USAGE_IMMUTABLE;     //Cant be changed
-    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    desc.Usage = D3D11_USAGE_IMMUTABLE;     //Cant be changed only read from GPU
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;    //Bind texture to shader
     desc.CPUAccessFlags = 0;
     desc.MiscFlags = 0;
 
     D3D11_SUBRESOURCE_DATA data;
-    data.pSysMem = &image[0];
-    data.SysMemPitch = textureWidth * channels;
+    data.pSysMem = &image[0];   //Pointer to data
+    data.SysMemPitch = textureWidth * channels;     //Distance from one line to another
     data.SysMemSlicePitch = 0;
-
+    
     if (FAILED(device->CreateTexture2D(&desc, &data, &texture)))
     {
         std::cerr << "Failed to create texture..." << std::endl;
+        stbi_image_free(image);
         return false;
     }
 
@@ -146,9 +148,9 @@ bool CreateTexture(ID3D11Device* device, ID3D11Texture2D*& texture, ID3D11Shader
 bool CreateSamplerState(ID3D11Device* device, ID3D11SamplerState*& sampler)
 {
     D3D11_SAMPLER_DESC desc;
-    desc.Filter = D3D11_FILTER_ANISOTROPIC;     //Filter type
-    desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; //Can repeat the texture if needed
-    desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    desc.Filter = D3D11_FILTER_ANISOTROPIC;     //Anisotropic interpolation for sampling
+    desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; //Can repeat the texture if needed. 
+    desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP; //Have to go from 0 to >1 to repeat texture
     desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
     desc.MipLODBias = 0;
     desc.MaxAnisotropy = 16;    //Highest quality

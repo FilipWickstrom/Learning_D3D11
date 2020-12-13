@@ -6,24 +6,25 @@ bool CreateInterfaces(UINT width, UINT height, HWND window, ID3D11Device*& devic
 
     swapChainDesc.BufferDesc.Width = width;
     swapChainDesc.BufferDesc.Height = height;
-    swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;     //Refreshrate limit
+    swapChainDesc.BufferDesc.RefreshRate.Numerator = 0;     //Refreshrate limiter. 0 = no limit
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
     swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;  //8 bits for every R, G, B, A. UNORM: Goes from 0 - 1 instead of 0 - 255
     swapChainDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
     swapChainDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 
     //Default
-    swapChainDesc.SampleDesc.Count = 1;
-    swapChainDesc.SampleDesc.Quality = 0;
+    swapChainDesc.SampleDesc.Count = 1;     //How many times to do anti-alising on each pixel
+    swapChainDesc.SampleDesc.Quality = 0;   //Quality of anti-alising
 
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.BufferCount = 1;
+    swapChainDesc.BufferCount = 1;  //Only one frontbuffer
     swapChainDesc.OutputWindow = window;
     swapChainDesc.Windowed = true;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;    //Works but not the most effient
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;    //Works but not the most effient from what warning says
     swapChainDesc.Flags = 0;
 
     UINT flags = 0;
+    //Shows debug messages in this mode in output
     if (_DEBUG)
         flags = D3D11_CREATE_DEVICE_DEBUG;
 
@@ -53,12 +54,12 @@ bool CreateDepthStencil(ID3D11Device* device, UINT width, UINT height, ID3D11Tex
     D3D11_TEXTURE2D_DESC textureDesc;
     textureDesc.Width = width;
     textureDesc.Height = height;
-    textureDesc.MipLevels = 1;
-    textureDesc.ArraySize = 1;
+    textureDesc.MipLevels = 1;  //Multisampled texture
+    textureDesc.ArraySize = 1;  //Number of textures
     textureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; //24 bit 0 - 1
-    textureDesc.SampleDesc.Count = 1;
+    textureDesc.SampleDesc.Count = 1;   //Anti-alising
     textureDesc.SampleDesc.Quality = 0;
-    textureDesc.Usage = D3D11_USAGE_DEFAULT;
+    textureDesc.Usage = D3D11_USAGE_DEFAULT;    //How its going to be read and written to
     textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
     textureDesc.CPUAccessFlags = 0; //CPU is not needed for depthbuffer
     textureDesc.MiscFlags = 0;

@@ -1,6 +1,7 @@
 cbuffer constBufWVP : register(b0)  //Constant buffer register 0
 {
-	row_major float4x4 world;	//Transforming to row_major
+	//Transforming to row_major
+	row_major float4x4 world;
 	row_major float4x4 view;
 	row_major float4x4 projection;
 };
@@ -23,10 +24,10 @@ struct VertexShaderOutput
 VertexShaderOutput main(VertexShaderInput input)
 {
 	VertexShaderOutput output;
-	
-	//Positioning of vertex relative to the WVP
 	float4x4 WVP = mul(mul(world, view), projection);
-    output.position = mul(float4(input.position, 1.0f), WVP);
+    
+	//Positioning of vertex relative to the WVP
+	output.position = mul(float4(input.position, 1.0f), WVP);
 	
 	//Normalize the normal for the vertex
 	output.normal = normalize(mul(float4(input.normal, 0.0f), world).xyz);

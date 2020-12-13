@@ -1,9 +1,7 @@
-#include <chrono>	//Time
-//#include <string>	
-#include <sstream>	//writing in setwindowtext
-#include <fcntl.h>	//Console
-#include <io.h>		//Console
-
+#include <chrono>			//Time
+#include <sstream>			//Writing in setwindowtext
+#include <fcntl.h>			//Console
+#include <io.h>				//Console
 #include "WindowHelper.h"	//Includes windows, iostream
 #include "Renderer.h"		//Includes windows, d3d11
 
@@ -21,7 +19,6 @@ void RedirectIOToConsole()
 	std::cout << "Console is active" << std::endl;
 }
 
-
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
 	RedirectIOToConsole();
@@ -36,6 +33,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return -1;
 	}
 
+	//Holds some functions for the rendering
 	Renderer renderer;
 
 	//Setup d3d11
@@ -75,6 +73,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	{
 		auto start = std::chrono::steady_clock::now();
 
+		//Looks at the message and removes it from message queue
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);

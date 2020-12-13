@@ -61,13 +61,13 @@ void Renderer::Draw(float angle, UINT width, UINT height)
 	deviceContext->PSSetShaderResources(0, 1, &textureShaderResourceView);
 	deviceContext->PSSetSamplers(0, 1, &samplerState);
 
-	//WVP
+	//World-view-projection-matrix
 	deviceContext->VSSetConstantBuffers(0, 1, &constBufPerFrameWVP);
 	UpdateWVP(angle, width, height);
 	
 	//Light
 	deviceContext->PSSetConstantBuffers(0, 1, &constBufPerFrameLight);
-	//UpdateLight();
+	//UpdateLight();	//Not needed in this case
 
 	//Where to draw and present the vertices
 	deviceContext->RSSetViewports(1, &viewport);
@@ -80,7 +80,7 @@ bool Renderer::LoadWVP(UINT width, UINT height)
 {
 	D3D11_BUFFER_DESC desc;
 	desc.ByteWidth = sizeof(constBufWVP);
-	desc.Usage = D3D11_USAGE_DYNAMIC;				//Needed as the constant buffer is going to be updated
+	desc.Usage = D3D11_USAGE_DYNAMIC;				//Needed as the constant buffer is going to be updated on cpu-side
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	//Also needed for constant buffer
 	desc.MiscFlags = 0;
@@ -89,10 +89,10 @@ bool Renderer::LoadWVP(UINT width, UINT height)
 	//Value for where the camera is positioned and looking
 	DirectX::XMVECTOR eyePos = { 0.0f, 0.0f, 0.0f };	//Camera location
 	DirectX::XMVECTOR focus = { 0.0f, 0.0f, 1.0f };		//Direction looking
-	DirectX::XMVECTOR up = { 0.0f, 1.0f, 0.0f };		//Points towards which axis is up
+	DirectX::XMVECTOR up = { 0.0f, 1.0f, 0.0f };		//Which axis is up
 	DirectX::XMStoreFloat4x4(&cbWVP.view, DirectX::XMMatrixLookAtLH(eyePos, focus, up));
 
-	//Perspective and how long the camera can see. FOV: 90 degrees. Cutting off at 0.1f and 10.0f forward from the camera
+	//Perspective and how long the camera can see. FOV: 90 degrees. Cutting off/clipping at 0.1f and 10.0f forward from the camera
 	DirectX::XMStoreFloat4x4(&cbWVP.projection, DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PI * 0.5f, float(width) / height, 0.1f, 10.0f));
 	
 	D3D11_SUBRESOURCE_DATA initdata;
@@ -108,19 +108,19 @@ bool Renderer::LoadLight()
 {
 	D3D11_BUFFER_DESC desc;
 	desc.ByteWidth = sizeof(constBufLight);
-	desc.Usage = D3D11_USAGE_DYNAMIC;				//Needed as the constant buffer is going to be updated
+	desc.Usage = D3D11_USAGE_DYNAMIC;				//Needed as the constant buffer is going to be updated on cpu-side
 	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	//Also needed for constant buffer
 	desc.MiscFlags = 0;
 	desc.StructureByteStride = 0;
 
 	//Default values - padding needed for constant buffers as it takes 16 bytes at a time
-	this->cbLight.lightpos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
-	this->cbLight.padding0 = 0.0f;
-	this->cbLight.lightColour = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);	//White light
-	this->cbLight.lightRange = 2.0f;
-	this->cbLight.camPos = DirectX::XMFLOAT3(this->cbWVP.view._11, this->cbWVP.view._21, this->cbWVP.view._31);	//Copy the location of the camera
-	this->cbLight.padding1 = 0.0f;
+	cbLight.lightpos = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	cbLight.padding0 = 0.0f;
+	cbLight.lightColour = DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f);	//White light
+	cbLight.lightRange = 2.0f;
+	cbLight.camPos = DirectX::XMFLOAT3(cbWVP.view._11, cbWVP.view._21, cbWVP.view._31);	//Copy the location of the camera
+	cbLight.padding1 = 0.0f;
 
 	D3D11_SUBRESOURCE_DATA initdata;
 	initdata.pSysMem = &cbLight;
