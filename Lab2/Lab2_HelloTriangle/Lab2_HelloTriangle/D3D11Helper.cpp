@@ -56,7 +56,7 @@ bool CreateDepthStencil(ID3D11Device* device, UINT width, UINT height, ID3D11Tex
     textureDesc.Height = height;
     textureDesc.MipLevels = 1;  //Multisampled texture
     textureDesc.ArraySize = 1;  //Number of textures
-    textureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; //24 bit 0 - 1
+    textureDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; //24 bit depth and 8 bit stencil, 0.0 - 1.0
     textureDesc.SampleDesc.Count = 1;   //Anti-alising
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;    //How its going to be read and written to
@@ -78,8 +78,8 @@ void SetViewport(D3D11_VIEWPORT& viewport, UINT width, UINT height)
 {
     viewport.TopLeftX = 0;
     viewport.TopLeftY = 0;
-    viewport.Width = static_cast<float>(width);
-    viewport.Height = static_cast<float>(height);
+    viewport.Width = (float)width;
+    viewport.Height = (float)height;
     viewport.MinDepth = 0;
     viewport.MaxDepth = 1;
 }

@@ -13,17 +13,16 @@ bool LoadShaders(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11Pixel
     std::ifstream reader;
     
     //Vertexshader
-    reader.open("VertexShader.cso", std::ios::binary | std::ios::ate);
+    reader.open("VertexShader.cso", std::ios::binary | std::ios::ate);  //ate: Begins at the end
     if (!reader.is_open())
     {
         std::cerr << "Could not open vertex shader..." << std::endl;
         return false;
     }
 
-    reader.seekg(0, std::ios::end);
-    shaderData.reserve(static_cast<unsigned int>(reader.tellg()));
+    shaderData.reserve((unsigned int)reader.tellg());  //How many bytes to reserve in string. Reads from the pointer where it is
     reader.seekg(0, std::ios::beg);
-    shaderData.assign((std::istreambuf_iterator<char>(reader)), std::istreambuf_iterator<char>());
+    shaderData.assign((std::istreambuf_iterator<char>(reader)), std::istreambuf_iterator<char>());  //Copy data from start until string is filled
 
     if (FAILED(device->CreateVertexShader(shaderData.c_str(), shaderData.length(), nullptr, &vShader)))
     {
@@ -43,8 +42,7 @@ bool LoadShaders(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11Pixel
         return false;
     }
 
-    reader.seekg(0, std::ios::end);
-    shaderData.reserve(static_cast<unsigned int>(reader.tellg()));
+    shaderData.reserve((unsigned int)reader.tellg());
     reader.seekg(0, std::ios::beg);
     shaderData.assign((std::istreambuf_iterator<char>(reader)), std::istreambuf_iterator<char>());
 
@@ -148,7 +146,7 @@ bool CreateTexture(ID3D11Device* device, ID3D11Texture2D*& texture, ID3D11Shader
 bool CreateSamplerState(ID3D11Device* device, ID3D11SamplerState*& sampler)
 {
     D3D11_SAMPLER_DESC desc;
-    desc.Filter = D3D11_FILTER_ANISOTROPIC;     //Anisotropic interpolation for sampling
+    desc.Filter = D3D11_FILTER_ANISOTROPIC;     //Anisotropic interpolation for sampling. Best quality of samling
     desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP; //Can repeat the texture if needed. 
     desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP; //Have to go from 0 to >1 to repeat texture
     desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;

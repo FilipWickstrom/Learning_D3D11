@@ -67,7 +67,7 @@ void Renderer::Draw(float angle, UINT width, UINT height)
 {
 	//Overriting screen with this colour before new frame
 	deviceContext->ClearRenderTargetView(renderTargetView, clearColour);	//Clearing backbuffer
-	deviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
+	deviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH, 1, 0);
 
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 	deviceContext->IASetInputLayout(inputLayout);
@@ -110,7 +110,7 @@ bool Renderer::LoadWVP(UINT width, UINT height)
 
 	//Value for where the camera is positioned and looking
 	DirectX::XMVECTOR eyePos = { 0.0f, 0.0f, 0.0f };	//Camera location
-	DirectX::XMVECTOR focus = { 0.0f, 0.0f, 1.0f };		//Direction looking
+	DirectX::XMVECTOR focus = { 0.0f, 0.0f, 1.0f };		//Focus point
 	DirectX::XMVECTOR up = { 0.0f, 1.0f, 0.0f };		//Which axis is up
 	DirectX::XMStoreFloat4x4(&cbWVP.view, DirectX::XMMatrixLookAtLH(eyePos, focus, up));
 

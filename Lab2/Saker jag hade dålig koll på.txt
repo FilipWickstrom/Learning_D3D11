@@ -1,0 +1,29 @@
+D3D11_TEXTURE2D_DESC.format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	* 24 bits for depth och 8 bits för stencil
+	* Floating points 0.0 till 1.0
+
+Stencil buffer (Renderer rad 70): 	
+	* D3D11_CLEAR_STENCIL
+
+	* Stencilen är en del skillnad på från depth
+ 	* Depth sköter z-buffer. Vad som är närmast
+	* Stencilen klipper bort onödigt längst fram
+	* Viktor skickade bild	
+
+Anisotropiskt (PipelineHelper rad 151):
+	* Filter är vilken metod som samplingen av texturen sker med
+	* Interpolering
+	* Fanns andra varianter där man kan jämföra med olika värden 
+	* 
+	* Finaste varianten. Snyggast övergång
+	* Finns endast anisoptropiskt, linjärt och punktvis
+
+
+Assign (Pipelinehelper rad 26):
+	* Ate: Söker direkt till slutet av streamen
+	* shaderData.assign()
+		* Lägger över all data som den läst till strängen.	
+
+CreateWindowEX(WindowHelper rad 30):
+	* Overlapped, pop-up window
+	* EX = Extended style of the window
