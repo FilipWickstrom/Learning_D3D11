@@ -1,7 +1,6 @@
 #pragma once
 #include <array>
 #include <d3d11.h>
-#include <DirectXMath.h>
 
 struct SimpleVertex
 {

@@ -29,10 +29,10 @@ VertexShaderOutput main(VertexShaderInput input)
 	//Positioning of vertex relative to the WVP
 	output.position = mul(float4(input.position, 1.0f), WVP);
 	
-	//Normalize the normal for the vertex
+	//Normalize the normal for the vertex in worldspace
 	output.normal = normalize(mul(float4(input.normal, 0.0f), world).xyz);
 	
-	//The pixels position in the world
+	//The pixels position in the worldspace
     output.pixelPosWorld = mul(float4(input.position, 1.0f), world).xyz;
 	
 	//Not going to change

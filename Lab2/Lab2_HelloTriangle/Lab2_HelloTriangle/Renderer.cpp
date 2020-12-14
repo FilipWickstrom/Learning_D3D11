@@ -1,5 +1,27 @@
 #include "Renderer.h"
 
+Renderer::Renderer()
+{
+	this->device = nullptr;
+	this->deviceContext = nullptr;
+	this->swapChain = nullptr;
+	this->renderTargetView = nullptr;
+	this->depthStencilTexture = nullptr;
+	this->depthStencilView = nullptr;
+	this->vertexShader = nullptr;
+	this->pixelShader = nullptr;
+	this->inputLayout = nullptr;
+	this->vertexbuffer = nullptr;
+	this->texture2d = nullptr;
+	this->textureShaderResourceView = nullptr;
+	this->samplerState = nullptr;
+	this->constBufPerFrameWVP = nullptr;
+	this->constBufPerFrameLight = nullptr;
+	this->viewport = {};
+	this->cbWVP = {};
+	this->cbLight = {};
+}
+
 Renderer::~Renderer()
 {
 	this->device->Release();

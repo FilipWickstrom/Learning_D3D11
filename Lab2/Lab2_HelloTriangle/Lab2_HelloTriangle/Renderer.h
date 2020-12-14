@@ -1,4 +1,5 @@
 #pragma once
+#include <DirectXMath.h>
 #include "D3D11Helper.h"
 #include "PipelineHelper.h"
 
@@ -51,7 +52,7 @@ private:
 	constBufLight cbLight;
 
 public:
-	Renderer() = default;
+	Renderer();
 	~Renderer();
 	
 	bool InitD3D11(UINT width, UINT height, HWND window);
