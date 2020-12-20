@@ -8,14 +8,11 @@ Stencil buffer (Renderer rad 70):
 	* Stencilen är en del skillnad på från depth
  	* Depth sköter z-buffer. Vad som är närmast
 	* Stencilen klipper bort onödigt längst fram
-	* Viktor skickade bild
-	
+	* Viktor skickade bild	
 
 Anisotropiskt (PipelineHelper rad 151):
 	* Filter är vilken metod som samplingen av texturen sker med
-	* Fanns väldigt många. Var dum. Blandat ihop med annat
 	* Interpolering
-	* För minification, magnification och Mip-level sampling
 	* Fanns andra varianter där man kan jämföra med olika värden 
 	* 
 	* Finaste varianten. Snyggast övergång
@@ -25,8 +22,7 @@ Anisotropiskt (PipelineHelper rad 151):
 Assign (Pipelinehelper rad 26):
 	* Ate: Söker direkt till slutet av streamen
 	* shaderData.assign()
-		* Lägger över all data som den läst till strängen.
-		* Börjar 	
+		* Lägger över all data som den läst till strängen.	
 
 CreateWindowEX(WindowHelper rad 30):
 	* Overlapped, pop-up window
