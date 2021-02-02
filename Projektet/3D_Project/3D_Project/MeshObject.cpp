@@ -5,15 +5,7 @@
 #include "stb_image.h"
 
 MeshObject::MeshObject()
-	:m_vertexCount(0), m_objFilename("")
-{
-	m_vertexBuffer = nullptr;
-	m_texture = nullptr;
-	m_textureSRV = nullptr;
-}
-
-MeshObject::MeshObject(std::string filename)
-	:m_vertexCount(0), m_objFilename(filename)
+	:m_vertexCount(0)
 {
 	m_vertexBuffer = nullptr;
 	m_texture = nullptr;
@@ -30,7 +22,7 @@ MeshObject::~MeshObject()
 		m_textureSRV->Release();
 }
 
-bool MeshObject::ReadOBJ(std::string filepath, ID3D11Device* device)
+bool MeshObject::LoadOBJ(std::string filepath, ID3D11Device* device)
 {
 	//Start reading from file
 	std::ifstream file;
@@ -93,7 +85,7 @@ bool MeshObject::ReadOBJ(std::string filepath, ID3D11Device* device)
 					vertices.push_back(thevertex);
 				}
 			}
-			//If matllib???
+			//If matllib???	*** FIX LATER
 			//if usemtl
 		}
 		file.close();
@@ -167,18 +159,17 @@ bool MeshObject::LoadTextures(std::string filepath, ID3D11Device* device)
 	return !FAILED(hr);
 }
 
-bool MeshObject::Load(ID3D11Device* device)
+bool MeshObject::Load(ID3D11Device* device, std::string objfile, std::string texturefile)
 {
 	bool success = true;
 
-	//Load obj
-	if (ReadOBJ("ObjFiles/smallcat2.obj", device))
+	//Load the obj-file
+	if (LoadOBJ("ObjFiles/" + objfile, device))
 	{
-		//Save name from obj file to the texture. Use it later
-		//std::string textureFilepath = //returnvalue of readobj?
+		//LATER FIX: Read from mtl file which texture to use	***
 
 		//Load in texture
-		if (!LoadTextures("Textures/Grey.png", device))
+		if (!LoadTextures("Textures/"+ texturefile, device))
 		{
 			std::cerr << "Failed to load texture..." << std::endl;
 			success = false;
@@ -186,7 +177,7 @@ bool MeshObject::Load(ID3D11Device* device)
 	}
 	else
 	{
-		std::cerr << "Failed to read obj..." << std::endl;
+		std::cerr << "Failed to load file... Can only take '.obj'-files..." << std::endl;
 		success = false;
 	}
 	return success;

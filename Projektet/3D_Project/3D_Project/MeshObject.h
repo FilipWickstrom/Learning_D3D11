@@ -10,9 +10,6 @@
 class MeshObject
 {
 private:
-	std::string m_objFilename;
-	//std::string m_
-
 	// Number of vertices and the buffer which holds them
 	UINT m_vertexCount;
 	ID3D11Buffer* m_vertexBuffer;
@@ -22,14 +19,13 @@ private:
 	ID3D11ShaderResourceView* m_textureSRV;
 
 private:
-	bool ReadOBJ(std::string filepath, ID3D11Device* device);
+	bool LoadOBJ(std::string filepath, ID3D11Device* device);
 	bool LoadTextures(std::string filepath, ID3D11Device* device);
 
 public:
 	MeshObject();
-	MeshObject(std::string filename);
 	~MeshObject();
 
-	bool Load(ID3D11Device* device);
+	bool Load(ID3D11Device* device, std::string objfile, std::string texturefile);
 	void Render(ID3D11DeviceContext* deviceContext);
 };

@@ -24,13 +24,19 @@ private:
 	//Shaders
 	ID3D11VertexShader* m_vertexShader;
 	ID3D11PixelShader* m_pixelShader;
+	//ID3D11VertexShader* m_firstPassVS;
+	//ID3D11VertexShader* m_secondPassVS;
+	//ID3D11PixelShader* m_firstPassPS;
+	//ID3D11PixelShader* m_secondPassPS;
+
 	ID3D11InputLayout* m_inputLayout;
 	ID3D11SamplerState* m_samplerState;
 
+	MeshObject m_mesh0;
 	MeshObject m_mesh1;
 
-	constantBufferWVP m_cbWVP;
-	ID3D11Buffer* m_WVPBuffer;
+	constantBufferWVP m_cbWVP;	//change name??
+	ID3D11Buffer* m_WVPBuffer;	//change name??
 	
 	
 	//Camera* m_camera;
@@ -38,7 +44,9 @@ private:
 	float m_rotationtest;
 	//Deltatime
 private:
-	bool setupWVP_CB();
+	//keyboardmovement();
+	bool SetupWVP_CB();
+	void Render();
 
 public:
 	Renderer(UINT winWidth, UINT winHeight);
@@ -48,7 +56,6 @@ public:
 	bool Setup(HINSTANCE hInstance, int nCmdShow, HWND& window);
 
 	//Game loop
-	void Update();
-	void Draw();	//Make private?
+	void StartGameLoop();
 
 };

@@ -1,6 +1,6 @@
 #include "Renderer.h"
 
-bool Renderer::setupWVP_CB()
+bool Renderer::SetupWVP_CB()
 {
 	D3D11_BUFFER_DESC cb_desc = {};
 	cb_desc.ByteWidth = sizeof(constantBufferWVP);
@@ -37,6 +37,46 @@ bool Renderer::setupWVP_CB()
 	return !FAILED(hr);
 }
 
+void Renderer::Render()
+{
+	//Clearing the screen
+	float clearColour[4] = { 0.0f,0.0f,0.0f,0.0f };	//Black
+	m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColour);
+	m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1, 0);
+
+	//Set viewport and what to render to
+	m_deviceContext->RSSetViewports(1, &m_viewport);
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+
+	//
+	m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_deviceContext->IASetInputLayout(m_inputLayout);
+
+	m_deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
+	m_deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
+	m_deviceContext->PSSetSamplers(0, 1, &m_samplerState);
+
+	//WVP
+	m_deviceContext->VSSetConstantBuffers(0, 1, &m_WVPBuffer);
+
+	//update lights?
+	//m_device->CreateDeferredContext()
+
+	m_mesh0.Render(m_deviceContext);
+	m_mesh1.Render(m_deviceContext);
+
+	//FIRST PASS - GEOMETRY
+	//	only outputs the geometric and matrial data to the g-buffer
+
+
+
+	//SECOND PASS - LIGHTNING
+	//	uses the g-buffer information
+	//	compute lightning
+
+	m_swapChain->Present(1, 0);
+}
+
 Renderer::Renderer(UINT winWidth, UINT winHeight)
 	:m_winWidth(winWidth), m_winHeight(winHeight)
 {
@@ -53,33 +93,39 @@ Renderer::Renderer(UINT winWidth, UINT winHeight)
 	m_vertexShader = nullptr;
 	m_pixelShader = nullptr;
 	m_inputLayout = nullptr;
-
 	m_samplerState = nullptr;
 
 	//m_camera = nullptr;
 	m_WVPBuffer = nullptr;
 	m_cbWVP = {};
 
-	//TESTING
-	m_rotationtest = 0.0f;
+	m_rotationtest = 0.0f;	//*****for testing
 }
 
 Renderer::~Renderer()
 {
-	m_device->Release();
-	m_deviceContext->Release();
-	m_swapChain->Release();
-	m_renderTargetView->Release();
-	m_depthStencilTexture->Release();
-	m_depthStencilView->Release();
-	m_vertexShader->Release();
-	m_pixelShader->Release();
-	m_inputLayout->Release();
-	
-	//TEMP
+	//Releases all which is pointing at something
+	if (m_device != nullptr)
+		m_device->Release();
+	if (m_deviceContext != nullptr)
+		m_deviceContext->Release();
+	if (m_swapChain != nullptr)
+		m_swapChain->Release();
+	if (m_renderTargetView != nullptr)
+		m_renderTargetView->Release();
+	if (m_depthStencilTexture != nullptr)
+		m_depthStencilTexture->Release();
+	if (m_depthStencilView != nullptr)
+		m_depthStencilView->Release();
+	if (m_vertexShader != nullptr)
+		m_vertexShader->Release();
+	if (m_pixelShader != nullptr)
+		m_pixelShader->Release();
+	if (m_inputLayout != nullptr)
+		m_inputLayout->Release();
 	if (m_samplerState != nullptr)
 		m_samplerState->Release();
-
+	//
 	if (m_WVPBuffer != nullptr)
 		m_WVPBuffer->Release();
 
@@ -111,17 +157,23 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
+	// FIX IN ARRAY LATER
 	//Setup meshes
-	if (!m_mesh1.Load(m_device))
+	if (!m_mesh0.Load(m_device, "smallcat.obj", "Grey.png"))
 	{
-		std::cerr << "Failed to load mesh..." << std::endl;
+		std::cerr << "Failed to load mesh0..." << std::endl;
+		return false;
+	}
+	if (!m_mesh1.Load(m_device, "cube.obj", "TechFlip.png"))
+	{
+		std::cerr << "Failed to load mesh1..." << std::endl;
 		return false;
 	}
 
 	//m_camera = new Camera(m_winWidth, m_winHeight);
 
 	//Setup the world view projection matrixes
-	if (!setupWVP_CB())
+	if (!SetupWVP_CB())
 	{
 		std::cerr << "Failed to setup world view matrixes..." << std::endl;
 		return false;
@@ -133,7 +185,7 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 	return true;
 }
 
-void Renderer::Update()
+void Renderer::StartGameLoop()
 {
 	MSG msg = {};
 	while (msg.message != WM_QUIT)
@@ -218,47 +270,6 @@ void Renderer::Update()
 		m_deviceContext->Unmap(m_WVPBuffer, 0);
 
 		//Draw the scene
-		Draw();
+		Render();
 	}
 }
-
-void Renderer::Draw()
-{
-	//Clearing the screen
-	float clearColour[4] = { 0.0f,0.0f,0.0f,0.0f };	//Black
-	m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColour);
-	m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1, 0);
-
-	//Set viewport and what to render to
-	m_deviceContext->RSSetViewports(1, &m_viewport);
-	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
-
-	//
-	m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_deviceContext->IASetInputLayout(m_inputLayout);
-
-	m_deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
-	m_deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
-
-	m_deviceContext->PSSetSamplers(0, 1, &m_samplerState);
-
-	//WVP
-	m_deviceContext->VSSetConstantBuffers(0, 1, &m_WVPBuffer);
-
-	//update lights?
-	//m_device->CreateDeferredContext()
-
-	m_mesh1.Render(m_deviceContext);
-
-	//FIRST PASS - GEOMETRY
-	//	only outputs the geometric and matrial data to the g-buffer
-
-
-
-	//SECOND PASS - LIGHTNING
-	//	uses the g-buffer information
-	//	compute lightning
-	
-	m_swapChain->Present(1, 0);
-}
-

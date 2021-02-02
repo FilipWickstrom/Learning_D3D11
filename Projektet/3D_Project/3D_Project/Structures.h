@@ -26,3 +26,12 @@ struct constantBufferWVP
 	DirectX::XMFLOAT4X4 view;
 	DirectX::XMFLOAT4X4 projection;
 };
+
+/*
+struct lightCB
+{
+	DirectX::XMFLOAT4 lightpos
+	colour
+
+};
+*/

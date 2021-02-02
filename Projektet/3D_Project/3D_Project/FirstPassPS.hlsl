@@ -4,6 +4,9 @@ Texture2D texture0 : register(t0); //first texture
 //Sampler
 SamplerState sampler0 : register(s0);
 
+//Texture2D gbuffer0 : register(t1);???
+//Texture2D gbuffer1 : register(t2);???
+
 //Input from the vertex shader in first pass
 struct PixelInput
 {
