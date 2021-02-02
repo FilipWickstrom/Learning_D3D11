@@ -4,6 +4,7 @@
 #include "PipelineHandler.h"
 
 #include "MeshObject.h"
+#include "Camera.h"
 
 class Renderer
 {
@@ -24,17 +25,20 @@ private:
 	ID3D11VertexShader* m_vertexShader;
 	ID3D11PixelShader* m_pixelShader;
 	ID3D11InputLayout* m_inputLayout;
-
-	//Textures
-	ID3D11Texture2D* m_2dtexture;
-	ID3D11ShaderResourceView* m_textureShaderResourceView;
 	ID3D11SamplerState* m_samplerState;
 
 	MeshObject m_mesh1;
 
-	//Constant buffers
+	constantBufferWVP m_cbWVP;
+	ID3D11Buffer* m_WVPBuffer;
+	
+	
+	//Camera* m_camera;
+	//std::vector <MeshObject> m_meshes;
+	float m_rotationtest;
 	//Deltatime
-	//Nr of vertices in scene? How many to draw
+private:
+	bool setupWVP_CB();
 
 public:
 	Renderer(UINT winWidth, UINT winHeight);

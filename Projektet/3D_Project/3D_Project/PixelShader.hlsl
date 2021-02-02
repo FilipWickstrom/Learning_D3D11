@@ -1,9 +1,13 @@
 //TIPS KOLLA I BOKEN PÅ SIDA 507
 
-//Texture2D texture : register (t0); 
-//SamplerState sampler : register (so);	//anisotropisk sampler?
+//Texture2D gBuffColour;
+//Texture2D gBuffNormal;
+//Texture2D gBuffPosition;
 
-//cbuffer Lightning
+Texture2D theTexture : register (t0); 
+SamplerState AnisoSampler : register (s0);
+
+//cbuffer Lightning		//Once per fragment
 //{
 //	//lightPosition[] vec3/float3
 //	//lightColor[] vec3/float3
@@ -18,15 +22,27 @@
 
 struct PS_INPUT
 {
-	float4 position : SV_Position;
-    float3 colour : COLOUR;
-	float3 normal : NORMAL;
-	//float2 uv : UV;
-	//float3 pixelInWorld???;
+	float4 Position		: SV_POSITION;
+    float3 Normal		: NORMAL;
+	float2 TexCoord		: TEXCOORD;
+    //float3 PositionWS	: POSITIONWS;
 };
+
+//float3 DoLight(position, normal, color, specular, lightPos, lightColour, lightRange)
+//	*Follow phong lightning
+//	return shading;
+
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
+	//FOR EACH FRAGMENT TOUCHED - READ G-BUFFERS - COMPUTE SHADING
+	//	read g-buffer
+	//	for each light that is touching the pizel
+	//		compute shading
+	//		accumulate
+	//	write frame buffer
+	
+	
 	//FIX PHONG LIGHTNING
 	//Loop through all the lights
 	
@@ -35,7 +51,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	//Normalisera normalen
 	
 	//
-	
-	//return PS_OUTPUT ()
-    return float4(input.colour, 1.0f);
+    float4 output = float4(theTexture.Sample(AnisoSampler, input.TexCoord).xyz, 1.0f);
+
+    return output;
 }

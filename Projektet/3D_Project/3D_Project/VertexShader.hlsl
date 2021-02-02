@@ -1,40 +1,24 @@
-/*cbuffer Transforms : register(b0)
+cbuffer constantBufferWVP : register(b0)
 {
-    //float4x4 world
-    //float4x4 view
-    //float4x4 projection
-};*/
+    row_major float4x4 cb_world;
+    row_major float4x4 cb_view;
+    row_major float4x4 cb_projection;
+};
 
 
-
-//struct VS_INPUT
-//{
-//    float4 Position     : POSITION;		//4 eller 3?
-//    float3 Normal       : NORMAL;
-//	float2 TexCoord     : TEXCOORD;     //UV
-//};
-
-//struct VS_OUTPUT
-//{
-//    float4 Position     : SV_Position;
-//    float3 Normal       : NORMAL_WS;     //normal in world space
-//    float TexCoord      : TEXCOORD;
-//    float3 PositionWS   : POSITION_WS;  //Pixels position in the world
-//};
-
-//FOR TESTING***
 struct VS_INPUT
 {
-    float3 Position : POSITION;
-    float3 Colour   : COLOUR;
-    float3 Normal   : NORMAL;
+    float3 Position     : POSITION;
+    float3 Normal       : NORMAL;
+    float2 TexCoord     : TEXCOORD;
 };
 
 struct VS_OUTPUT
 {
-    float4 Position : SV_Position;
-    float3 Colour   : COLOUR;
-    float3 Normal   : NORMAL;
+    float4 Position     : SV_POSITION;
+    float3 Normal       : NORMAL;
+    float2 TexCoord     : TEXCOORD;
+    //float3 PositionWS   : POSITIONWS;
 };
 
 VS_OUTPUT main(const VS_INPUT input)
@@ -42,14 +26,21 @@ VS_OUTPUT main(const VS_INPUT input)
     VS_OUTPUT output;
     
     //Convert to world space (position och normal)
-    
     //Clip space?
-	
     //Send forward the texture coordinate
     
-    //TEST
-    output.Position = float4(input.Position, 1.0f);
-    output.Colour = input.Colour;
-    output.Normal = input.Normal;
+    float4x4 WVP = mul(mul(cb_world, cb_view), cb_projection);
+    
+    //
+    output.Position = mul(float4(input.Position, 1.0f), WVP);
+     
+    //Positioning of the normal relative to the world
+    output.Normal = normalize(mul(float4(input.Normal, 1.0f), cb_world).xyz);
+    
+    output.TexCoord = input.TexCoord;
+    
+    //Position in the world
+    //output.PositionWS = mul(float4(input.Position, 1.0f), cb_world);
+    
 	return output;
 }

@@ -1,60 +1,35 @@
 #pragma once
 #include <d3d11.h>
-#include <string>
+#include <iostream>	// Error handling
+#include <vector>
 #include <array>
-#include <iostream>	//Error handling
+#include <fstream>	// Reading from file
+#include <sstream>	// For reading parts of strings
+#include "Structures.h"
 
 class MeshObject
 {
 private:
-	//std::string m_filename;
-	ID3D11Buffer* m_vertexBuffer;
-	ID3D11Buffer* m_indexBuffer;
+	std::string m_objFilename;
+	//std::string m_
+
+	// Number of vertices and the buffer which holds them
 	UINT m_vertexCount;
-	UINT m_indexCount;
+	ID3D11Buffer* m_vertexBuffer;
+	
+	//Texture information
+	ID3D11Texture2D* m_texture;
+	ID3D11ShaderResourceView* m_textureSRV;
 
-	struct SimpleVertex		//CHANGE NAME OF IT?
-	{
-		float pos[3];
-		float col[3];
-		float norm[3];
-
-		SimpleVertex(const std::array<float, 3>& position, const std::array<float, 3>& colour, const std::array<float, 3>& normal)
-		{
-			for (int i = 0; i < 3; i++)
-			{
-				pos[i] = position[i];
-				col[i] = colour[i];
-				norm[i] = normal[i];
-			}
-		}
-	};
-
-	//USE THIS ONE INSTEAD LATER ON
-	/*struct SimpleVertex
-	{
-		float pos[3];
-		float uv[2];
-		float norm[3];
-
-		SimpleVertex(const std::array<float, 3>& position, const std::array<float, 2>& uvCoords, const std::array<float, 3>& normal)
-		{
-			for (int i = 0; i < 3; i++)
-			{
-				pos[i] = position[i];
-				norm[i] = normal[i];
-			}
-			uv[0] = uvCoords[0];
-			uv[1] = uvCoords[1];
-		}
-	};*/
+private:
+	bool ReadOBJ(std::string filepath, ID3D11Device* device);
+	bool LoadTextures(std::string filepath, ID3D11Device* device);
 
 public:
 	MeshObject();
+	MeshObject(std::string filename);
 	~MeshObject();
 
 	bool Load(ID3D11Device* device);
-	//LOAD TEXTURE FOR IT???
-
 	void Render(ID3D11DeviceContext* deviceContext);
 };

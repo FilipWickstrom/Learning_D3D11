@@ -1,9 +1,5 @@
 #include "PipelineHandler.h"
 
-//Reading an image file
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 //Reads the cso files and saves them to vertex shader at the device
 bool LoadShaders(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11PixelShader*& pShader, std::string& vShaderByteCode)
 {
@@ -59,50 +55,11 @@ bool CreateInputLayout(ID3D11Device* device, ID3D11InputLayout*& inputLayout, co
     D3D11_INPUT_ELEMENT_DESC inputDesc[3] =
     {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"COLOUR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0}
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0}
     };
 
     HRESULT hr = device->CreateInputLayout(inputDesc, 3, vShaderByteCode.c_str(), vShaderByteCode.length(), &inputLayout);
-    return !FAILED(hr);
-}
-
-bool CreateTexture(ID3D11Device* device, ID3D11Texture2D*& texture, ID3D11ShaderResourceView*& textureSRV)
-{
-    int textureWidth, textureHeight, channels;
-    //Unsigned char because 1 byte (8 bits) which is good for format later on
-    unsigned char* image = stbi_load("../Textures/TechFlip.png", &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
-
-    //Description
-    D3D11_TEXTURE2D_DESC desc;
-    desc.Width = textureWidth;
-    desc.Height = textureHeight;
-    desc.MipLevels = 1;
-    desc.ArraySize = 1;
-    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;   //UNORM: 0 - 1
-    desc.SampleDesc.Count = 1;
-    desc.SampleDesc.Quality = 0;
-    desc.Usage = D3D11_USAGE_IMMUTABLE;     //Only reads from GPU
-    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;    //Bind texture to shader
-    desc.CPUAccessFlags = 0;
-    desc.MiscFlags = 0;
-
-    D3D11_SUBRESOURCE_DATA data;
-    data.pSysMem = &image[0];   //Pointer to data
-    data.SysMemPitch = textureWidth * channels;     //Distance from one line to another
-    data.SysMemSlicePitch = 0;
-
-    if (FAILED(device->CreateTexture2D(&desc, &data, &texture)))
-    {
-        std::cerr << "Failed to create texture..." << std::endl;
-        stbi_image_free(image);
-        return false;
-    }
-
-    //Freeing memory
-    stbi_image_free(image);
-
-    HRESULT hr = device->CreateShaderResourceView(texture, nullptr, &textureSRV);
     return !FAILED(hr);
 }
 
@@ -124,8 +81,7 @@ bool CreateSamplerState(ID3D11Device* device, ID3D11SamplerState*& sampler)
 }
 
 bool SetupPipeline(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11PixelShader*& pShader,
-                   ID3D11InputLayout*& inputLayout, ID3D11Texture2D*& texture,
-                   ID3D11ShaderResourceView*& textureSRV, ID3D11SamplerState*& sampler)
+                   ID3D11InputLayout*& inputLayout, ID3D11SamplerState*& sampler)
 {
     std::string vShaderByteCode;
     if (!LoadShaders(device, vShader, pShader, vShaderByteCode))
@@ -139,12 +95,6 @@ bool SetupPipeline(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11Pix
         std::cerr << "Failed to create input layout..." << std::endl;
         return false;
     }
-
-    /*if (!CreateTexture(device, texture, textureSRV))
-    {
-        std::cerr << "Failed to create texture or srv..." << std::endl;
-        return false;
-    }*/
 
     if (!CreateSamplerState(device, sampler))
     {
