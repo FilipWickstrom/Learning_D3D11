@@ -1,5 +1,47 @@
 #include "Renderer.h"
 
+Renderer::Renderer(UINT winWidth, UINT winHeight)
+	:m_winWidth(winWidth), m_winHeight(winHeight)
+{
+	//Directx
+	m_device = nullptr;
+	m_deviceContext = nullptr;
+	m_swapChain = nullptr;
+	m_renderTargetView = nullptr;
+	m_depthStencilTexture = nullptr;
+	m_depthStencilView = nullptr;
+	m_viewport = {};
+	
+	//m_camera = nullptr;
+	m_WVPBuffer = nullptr;
+	m_cbWVP = {};
+
+	m_rotationtest = 0.0f;	//*****for testing
+}
+
+Renderer::~Renderer()
+{
+	//Releases all which is pointing at something
+	if (m_device != nullptr)
+		m_device->Release();
+	if (m_deviceContext != nullptr)
+		m_deviceContext->Release();
+	if (m_swapChain != nullptr)
+		m_swapChain->Release();
+	if (m_renderTargetView != nullptr)
+		m_renderTargetView->Release();
+	if (m_depthStencilTexture != nullptr)
+		m_depthStencilTexture->Release();
+	if (m_depthStencilView != nullptr)
+		m_depthStencilView->Release();
+	//
+	if (m_WVPBuffer != nullptr)
+		m_WVPBuffer->Release();
+
+	//delete m_camera; //still gives some leaks
+	
+}
+
 bool Renderer::SetupWVP_CB()
 {
 	D3D11_BUFFER_DESC cb_desc = {};
@@ -47,14 +89,10 @@ void Renderer::Render()
 	//Set viewport and what to render to
 	m_deviceContext->RSSetViewports(1, &m_viewport);
 	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
-
-	//
 	m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_deviceContext->IASetInputLayout(m_inputLayout);
 
-	m_deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
-	m_deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
-	m_deviceContext->PSSetSamplers(0, 1, &m_samplerState);
+
+	m_firstpass.Render(m_deviceContext);
 
 	//WVP
 	m_deviceContext->VSSetConstantBuffers(0, 1, &m_WVPBuffer);
@@ -77,62 +115,6 @@ void Renderer::Render()
 	m_swapChain->Present(1, 0);
 }
 
-Renderer::Renderer(UINT winWidth, UINT winHeight)
-	:m_winWidth(winWidth), m_winHeight(winHeight)
-{
-	//Directx
-	m_device = nullptr;
-	m_deviceContext = nullptr;
-	m_swapChain = nullptr;
-	m_renderTargetView = nullptr;
-	m_depthStencilTexture = nullptr;
-	m_depthStencilView = nullptr;
-	m_viewport = {};
-	
-	//Shaders
-	m_vertexShader = nullptr;
-	m_pixelShader = nullptr;
-	m_inputLayout = nullptr;
-	m_samplerState = nullptr;
-
-	//m_camera = nullptr;
-	m_WVPBuffer = nullptr;
-	m_cbWVP = {};
-
-	m_rotationtest = 0.0f;	//*****for testing
-}
-
-Renderer::~Renderer()
-{
-	//Releases all which is pointing at something
-	if (m_device != nullptr)
-		m_device->Release();
-	if (m_deviceContext != nullptr)
-		m_deviceContext->Release();
-	if (m_swapChain != nullptr)
-		m_swapChain->Release();
-	if (m_renderTargetView != nullptr)
-		m_renderTargetView->Release();
-	if (m_depthStencilTexture != nullptr)
-		m_depthStencilTexture->Release();
-	if (m_depthStencilView != nullptr)
-		m_depthStencilView->Release();
-	if (m_vertexShader != nullptr)
-		m_vertexShader->Release();
-	if (m_pixelShader != nullptr)
-		m_pixelShader->Release();
-	if (m_inputLayout != nullptr)
-		m_inputLayout->Release();
-	if (m_samplerState != nullptr)
-		m_samplerState->Release();
-	//
-	if (m_WVPBuffer != nullptr)
-		m_WVPBuffer->Release();
-
-	//delete m_camera; //still gives some leaks
-	
-}
-
 bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 {
 	//Setting up the window settings
@@ -150,12 +132,8 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-	//Setup pipeline
-	if (!SetupPipeline(m_device, m_vertexShader, m_pixelShader, m_inputLayout, m_samplerState))
-	{
-		std::cerr << "Failed to setup pipeline..." << std::endl;
-		return false;
-	}
+	//Setup the first pass
+	m_firstpass.Initialize(m_device, "VertexShader.cso", "PixelShader.cso");
 
 	// FIX IN ARRAY LATER
 	//Setup meshes

@@ -1,7 +1,7 @@
 #pragma once
 #include "WindowHandler.h"
 #include "D3D11Handler.h"
-#include "PipelineHandler.h"
+#include "FirstPassShader.h"
 
 #include "MeshObject.h"
 #include "Camera.h"
@@ -20,17 +20,9 @@ private:
 	ID3D11Texture2D* m_depthStencilTexture;
 	ID3D11DepthStencilView* m_depthStencilView;
 	D3D11_VIEWPORT m_viewport;
-
-	//Shaders
-	ID3D11VertexShader* m_vertexShader;
-	ID3D11PixelShader* m_pixelShader;
-	//ID3D11VertexShader* m_firstPassVS;
-	//ID3D11VertexShader* m_secondPassVS;
-	//ID3D11PixelShader* m_firstPassPS;
-	//ID3D11PixelShader* m_secondPassPS;
-
-	ID3D11InputLayout* m_inputLayout;
-	ID3D11SamplerState* m_samplerState;
+	
+	FirstPassShader m_firstpass;
+	//SecondPassShader m_secondpass
 
 	MeshObject m_mesh0;
 	MeshObject m_mesh1;
