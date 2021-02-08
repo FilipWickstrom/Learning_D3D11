@@ -4,13 +4,10 @@ Texture2D texture0 : register(t0); //first texture
 //Sampler
 SamplerState sampler0 : register(s0);
 
-//Texture2D gbuffer0 : register(t1);???
-//Texture2D gbuffer1 : register(t2);???
-
 //Input from the vertex shader in first pass
 struct PixelInput
 {
-	float4 Position	: SV_Position;
+    float4 Position : SV_POSITION;
 	float3 Normal	: NORMAL;
     float2 TexCoord : TEXCOORD; 
 };

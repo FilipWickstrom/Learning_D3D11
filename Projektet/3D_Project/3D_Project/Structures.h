@@ -20,6 +20,20 @@ struct SimpleVertex
 	}
 };
 
+struct ScreenVertex
+{
+	float pos[3];
+	float tex[2];
+
+	ScreenVertex(const std::array<float, 3>& position, const std::array<float, 2>& texCoord)
+	{
+		for (int i = 0; i < 3; i++)
+			pos[i] = position[i];
+		tex[0] = texCoord[0];
+		tex[1] = texCoord[1];
+	}
+};
+
 struct constantBufferWVP
 {
 	DirectX::XMFLOAT4X4 world;

@@ -7,10 +7,6 @@ Renderer::Renderer(UINT winWidth, UINT winHeight)
 	m_device = nullptr;
 	m_deviceContext = nullptr;
 	m_swapChain = nullptr;
-	m_renderTargetView = nullptr;
-	m_depthStencilTexture = nullptr;
-	m_depthStencilView = nullptr;
-	m_viewport = {};
 	
 	//m_camera = nullptr;
 	m_WVPBuffer = nullptr;
@@ -22,24 +18,57 @@ Renderer::Renderer(UINT winWidth, UINT winHeight)
 Renderer::~Renderer()
 {
 	//Releases all which is pointing at something
-	if (m_device != nullptr)
+	if (m_device)
 		m_device->Release();
-	if (m_deviceContext != nullptr)
+	if (m_deviceContext)
 		m_deviceContext->Release();
-	if (m_swapChain != nullptr)
+	if (m_swapChain)
 		m_swapChain->Release();
-	if (m_renderTargetView != nullptr)
-		m_renderTargetView->Release();
-	if (m_depthStencilTexture != nullptr)
-		m_depthStencilTexture->Release();
-	if (m_depthStencilView != nullptr)
-		m_depthStencilView->Release();
+
 	//
-	if (m_WVPBuffer != nullptr)
+	if (m_WVPBuffer)
 		m_WVPBuffer->Release();
 
 	//delete m_camera; //still gives some leaks
+
+	//Cleaning up objects. Do not won't memory leaks
+	for (MeshObject* obj : m_objects)
+	{
+		delete obj;
+		obj = nullptr;
+	}
 	
+}
+
+bool Renderer::CreateDeviceAndSwapChain(HWND window)
+{
+	DXGI_SWAP_CHAIN_DESC desc = {};
+	desc.BufferDesc.Width = m_winWidth;
+	desc.BufferDesc.Height = m_winHeight;
+	desc.BufferDesc.RefreshRate.Numerator = 0;				//Refreshrate limiter. 0 = no limit
+	desc.BufferDesc.RefreshRate.Denominator = 1;
+	desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;	//8 bits for every R, G, B, A - with values from 0.0 - 1.0
+	desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+	desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	desc.SampleDesc.Count = 1;								//Nr of multisamples per pixel. 1 = does not use it
+	desc.SampleDesc.Quality = 0;							//Quality of anti-alising
+	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	desc.BufferCount = 2;									//Need to have two buffers for ...flip_discard
+	desc.OutputWindow = window;
+	desc.Windowed = true;
+	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;		//Better performance and lower power usage (https://devblogs.microsoft.com/directx/dxgi-flip-model/)
+	desc.Flags = 0;
+
+	//In debugging mode, show messages
+	UINT flags = 0;
+	if (_DEBUG)
+		flags = D3D11_CREATE_DEVICE_DEBUG;
+
+	D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 }; //Versions of hardware to support
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, featureLevels, 1,
+		D3D11_SDK_VERSION, &desc, &m_swapChain, &m_device, nullptr, &m_deviceContext);
+
+	return !FAILED(hr);
 }
 
 bool Renderer::SetupWVP_CB()
@@ -79,42 +108,6 @@ bool Renderer::SetupWVP_CB()
 	return !FAILED(hr);
 }
 
-void Renderer::Render()
-{
-	//Clearing the screen
-	float clearColour[4] = { 0.0f,0.0f,0.0f,0.0f };	//Black
-	m_deviceContext->ClearRenderTargetView(m_renderTargetView, clearColour);
-	m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1, 0);
-
-	//Set viewport and what to render to
-	m_deviceContext->RSSetViewports(1, &m_viewport);
-	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
-	m_deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-
-	m_firstpass.Render(m_deviceContext);
-
-	//WVP
-	m_deviceContext->VSSetConstantBuffers(0, 1, &m_WVPBuffer);
-
-	//update lights?
-	//m_device->CreateDeferredContext()
-
-	m_mesh0.Render(m_deviceContext);
-	m_mesh1.Render(m_deviceContext);
-
-	//FIRST PASS - GEOMETRY
-	//	only outputs the geometric and matrial data to the g-buffer
-
-
-
-	//SECOND PASS - LIGHTNING
-	//	uses the g-buffer information
-	//	compute lightning
-
-	m_swapChain->Present(1, 0);
-}
-
 bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 {
 	//Setting up the window settings
@@ -124,29 +117,48 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-	//Setup the directx structures
-	if (!SetupD3D11(m_winWidth, m_winHeight, window, m_device, m_deviceContext, m_swapChain,
-					m_renderTargetView, m_depthStencilTexture, m_depthStencilView, m_viewport))
+	//Prepares and setups the swapchain with device and devicecontext
+	if (!CreateDeviceAndSwapChain(window))
 	{
-		std::cerr << "Failed to setup directx..." << std::endl;
+		std::cerr << "Failed to create device and swap chain..." << std::endl;
 		return false;
 	}
 
-	//Setup the first pass
-	m_firstpass.Initialize(m_device, "VertexShader.cso", "PixelShader.cso");
+	//Reads the ico-files for the shaders and saves to buffers
+	if (!m_firstPass.Initialize(m_device, m_winWidth, m_winHeight))
+	{
+		std::cerr << "Failed to initialize the first pass..." << std::endl;
+		return false;
+	}
+	if (!m_secondPass.Initialize(m_device, m_winWidth, m_winHeight, m_swapChain))
+	{
+		std::cerr << "Failed to initialize the second pass..." << std::endl;
+		return false;
+	}
 
-	// FIX IN ARRAY LATER
-	//Setup meshes
-	if (!m_mesh0.Load(m_device, "smallcat.obj", "Grey.png"))
+	if (!m_screenQuad.Initialize(m_device, m_winWidth, m_winHeight))
+	{
+		std::cerr << "Failed to initialize the screenquad..." << std::endl;
+		return false;
+	}
+
+	//---------FIX SEPARATE FUNCTION FOR ALL LOADING OF OBJECTS----------------
+	MeshObject* mesh0 = new MeshObject();
+	if (!mesh0->Load(m_device, "smallcat.obj", "Grey.png"))
 	{
 		std::cerr << "Failed to load mesh0..." << std::endl;
 		return false;
 	}
-	if (!m_mesh1.Load(m_device, "cube.obj", "TechFlip.png"))
+	m_objects.push_back(mesh0);
+
+	MeshObject* mesh1 = new MeshObject();
+	if (!mesh1->Load(m_device, "cube.obj", "TechFlip.png"))
 	{
 		std::cerr << "Failed to load mesh1..." << std::endl;
 		return false;
 	}
+	m_objects.push_back(mesh1);
+	//-------------------------------------------------------------------------
 
 	//m_camera = new Camera(m_winWidth, m_winHeight);
 
@@ -161,6 +173,33 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 
 
 	return true;
+}
+
+void Renderer::Render()
+{
+	//First pass - Only for geometry - outputs data to the g-buffers. 
+	//Binds the right targets and clears them before new information
+	m_firstPass.Bind(m_deviceContext);
+
+	//WVP
+	m_deviceContext->VSSetConstantBuffers(0, 1, &m_WVPBuffer);
+
+
+	//Render all objects - sents to 
+	for (MeshObject* obj : m_objects)
+	{
+		obj->Render(m_deviceContext);
+	}
+	
+	//Second pass - Only for lightning - output to the final render target
+	//Uses the information saves in g-buffer and compute the lightning
+	m_secondPass.Bind(m_deviceContext, m_firstPass.GetShaderResourceView(0), m_firstPass.GetShaderResourceView(1));
+
+	//Render to the screen quad
+	m_screenQuad.RenderBuffer(m_deviceContext);
+
+
+	m_swapChain->Present(1, 0);
 }
 
 void Renderer::StartGameLoop()

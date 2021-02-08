@@ -22,6 +22,7 @@ MeshObject::~MeshObject()
 		m_textureSRV->Release();
 }
 
+//Some more work needs to be done...
 bool MeshObject::LoadOBJ(std::string filepath, ID3D11Device* device)
 {
 	//Start reading from file
@@ -188,6 +189,7 @@ void MeshObject::Render(ID3D11DeviceContext* deviceContext)
 	UINT stride = sizeof(SimpleVertex);
 	UINT offset = 0;
 	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	deviceContext->PSSetShaderResources(0, 1, &m_textureSRV);
 	deviceContext->Draw(m_vertexCount, 0);
 }
