@@ -7,13 +7,6 @@ FirstPass::FirstPass()
 	m_anisoSampler = nullptr;
 	m_inputLayout = nullptr;
 
-	for (int i = 0; i < NROFBUFFERS; i++)
-	{
-		m_renderTargetTextures[i] = nullptr;
-		m_renderTargetViews[i] = nullptr;
-		m_shaderResourceViews[i] = nullptr;
-	}
-
 	m_depthTexture = nullptr;
 	m_depthView = nullptr;
 	m_viewport = {};
@@ -182,21 +175,29 @@ bool FirstPass::Initialize(ID3D11Device* device, UINT winWidth, UINT winHeight)
 
 void FirstPass::Bind(ID3D11DeviceContext* deviceContext)
 {
+	//Clearing shader resources that was here before
+	deviceContext->PSSetShaderResources(0, NROFBUFFERS, m_nullptrs);
+
+	//Set the input layout to the correct for the vertex input
 	deviceContext->IASetInputLayout(m_inputLayout);
 
+	//Set viewport
 	deviceContext->RSSetViewports(1, &m_viewport);
 
-	deviceContext->OMSetRenderTargets(NROFBUFFERS, m_renderTargetViews, m_depthView);	//EFTER ETT VARV. SÅ BLIR DET KNAS HÄR...
+	//Set the gbuffers for the outputmerger where the data is going to get outputed to
+	deviceContext->OMSetRenderTargets(NROFBUFFERS, m_renderTargetViews, m_depthView);
 
-	//Clearing what to draw to
+	//Clearing the render targets to draw to and the depth buffer
 	for (int i = 0; i < NROFBUFFERS; i++)
 	{
 		deviceContext->ClearRenderTargetView(m_renderTargetViews[i], m_clearColour);
 	}
 	deviceContext->ClearDepthStencilView(m_depthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
+	//Setting what sampler to use in the pixelshader
 	deviceContext->PSSetSamplers(0, 1, &m_anisoSampler);
 
+	//What shaders to use
 	deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
 	deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
 }

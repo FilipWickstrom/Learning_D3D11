@@ -82,7 +82,7 @@ bool SecondPass::Initialize(ID3D11Device* device, UINT winWidth, UINT winHeight,
 		return false;
 	}
 
-	//initialize the m_shaderResourceView
+	//Initialize the backbuffer that we are going to render to at end
 	if (!InitRenderTargetView(device, swapChain))
 	{
 		std::cerr << "Failed to initialize the render target view..." << std::endl;
@@ -98,27 +98,43 @@ bool SecondPass::Initialize(ID3D11Device* device, UINT winWidth, UINT winHeight,
 
 	InitializeViewport(m_viewport, winWidth, winHeight);
 
+	//Initialize the screenquad to render final to
+	if (!m_screenQuad.Initialize(device, winWidth, winHeight))
+	{
+		std::cerr << "Failed to initialize the screenquad..." << std::endl;
+		return false;
+	}
+
 	return true;
 }
 
 void SecondPass::Bind(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* srv1, ID3D11ShaderResourceView* srv2)
 {
+	//Specific input layout for screen quad
 	deviceContext->IASetInputLayout(m_inputLayout);
 
+	//Set the viewport
 	deviceContext->RSSetViewports(1, &m_viewport);
 
+	//Set the rendertarget for the outputmerger to the backbuffer
 	deviceContext->OMSetRenderTargets(1, &m_backbuffer, m_depthView);
 	
+	//Clearing the views
 	deviceContext->ClearRenderTargetView(m_backbuffer, m_clearColour);
-
 	deviceContext->ClearDepthStencilView(m_depthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
+	//Set the sampler to use in the pixelshader
 	deviceContext->PSSetSamplers(0, 1, &m_anisoSampler);
 
+	//What shaders to use
 	deviceContext->VSSetShader(m_vertexShader, nullptr, 0);
 	deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
 
+	//Set so that the gbuffers can be used in the pixelshader
 	deviceContext->PSSetShaderResources(0, 1, &srv1);
 	deviceContext->PSSetShaderResources(1, 1, &srv2);
+
+	//Finally render to the screenquad
+	m_screenQuad.Render(deviceContext);
 }
 

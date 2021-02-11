@@ -2,13 +2,13 @@
 #include "WindowHandler.h"
 #include "FirstPass.h"
 #include "SecondPass.h"
-
+#include "ConstantBuffers.h"
 #include "MeshObject.h"
 #include "Camera.h"
+#include "FPSCounter.h"
 
-#include "ScreenQuad.h"
 
-//SOME SETTINGS?
+//Settings that can be changed. Put in separate file and read from later?
 //Vsync on/off
 //SSAO on/off later?
 
@@ -25,21 +25,20 @@ private:
 
 	FirstPass m_firstPass;
 	SecondPass m_secondPass;
-	ScreenQuad m_screenQuad;
 
 	std::vector<MeshObject*> m_objects;
 
-	constantBufferWVP m_cbWVP;	//change name??
-	ID3D11Buffer* m_WVPBuffer;	//change name??
+	ConstantBuffers m_constBuffers;
+
 	
-	
-	//Camera* m_camera;
-	float m_rotationtest;
-	//Deltatime
+	Camera m_camera;
+	float m_rotationtest;	//****remove
+
+
+	FPSCounter m_fpscounter;
+	float m_deltatime;
 private:
 	//keyboardmovement();
-	bool CreateDeviceAndSwapChain(HWND window);
-	bool SetupWVP_CB();
 	void Render();
 
 public:
@@ -50,6 +49,6 @@ public:
 	bool Setup(HINSTANCE hInstance, int nCmdShow, HWND& window);
 
 	//Game loop
-	void StartGameLoop();
+	void StartGameLoop(HWND& window);
 
 };

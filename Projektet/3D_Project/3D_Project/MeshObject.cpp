@@ -10,6 +10,8 @@ MeshObject::MeshObject()
 	m_vertexBuffer = nullptr;
 	m_texture = nullptr;
 	m_textureSRV = nullptr;
+
+	XMStoreFloat4x4(&m_modelMatrix, XMMatrixIdentity());
 }
 
 MeshObject::~MeshObject()
@@ -160,17 +162,22 @@ bool MeshObject::LoadTextures(std::string filepath, ID3D11Device* device)
 	return !FAILED(hr);
 }
 
-bool MeshObject::Load(ID3D11Device* device, std::string objfile, std::string texturefile)
+void MeshObject::SetupModelMatrix(std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
+{
+	UpdateModelMatrix(pos, scl, rot);
+}
+
+bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string texture, std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
 {
 	bool success = true;
 
 	//Load the obj-file
-	if (LoadOBJ("ObjFiles/" + objfile, device))
+	if (LoadOBJ("ObjFiles/" + obj, device))
 	{
 		//LATER FIX: Read from mtl file which texture to use	***
 
 		//Load in texture
-		if (!LoadTextures("Textures/"+ texturefile, device))
+		if (!LoadTextures("Textures/"+ texture, device))
 		{
 			std::cerr << "Failed to load texture..." << std::endl;
 			success = false;
@@ -181,7 +188,24 @@ bool MeshObject::Load(ID3D11Device* device, std::string objfile, std::string tex
 		std::cerr << "Failed to load file... Can only take '.obj'-files..." << std::endl;
 		success = false;
 	}
+
+	//Load in the modell matrix
+	SetupModelMatrix(pos, scl, rot);
+
 	return success;
+}
+
+void MeshObject::UpdateModelMatrix(std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
+{
+	float degToRad = XM_PI / 180;
+	XMStoreFloat4x4(&m_modelMatrix, XMMatrixScaling(scl[0], scl[1], scl[2]) *
+									XMMatrixRotationRollPitchYaw(rot[0]*degToRad, rot[1]*degToRad, rot[2]*degToRad) *
+									XMMatrixTranslation(pos[0], pos[1], pos[2]));
+}
+
+XMFLOAT4X4 MeshObject::GetModelMatrix() const
+{
+	return m_modelMatrix;
 }
 
 void MeshObject::Render(ID3D11DeviceContext* deviceContext)

@@ -51,11 +51,10 @@ bool ScreenQuad::Initialize(ID3D11Device* device, UINT winWidth, UINT winHeight)
 	return !FAILED(hr);
 }
 
-void ScreenQuad::RenderBuffer(ID3D11DeviceContext* deviceContext)
+void ScreenQuad::Render(ID3D11DeviceContext* deviceContext)
 {
 	UINT stride = sizeof(ScreenVertex);
 	UINT offset = 0;
-
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 	deviceContext->Draw(m_nrOfVertices, 0);

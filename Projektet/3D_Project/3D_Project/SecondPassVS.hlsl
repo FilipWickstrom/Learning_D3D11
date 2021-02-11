@@ -1,4 +1,6 @@
 
+//WVP if needed should be here
+
 struct VertexInput
 {
     float3 Position : POSITION;

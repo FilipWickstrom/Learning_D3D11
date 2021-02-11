@@ -1,4 +1,35 @@
-#include "PassInitFunc.h"
+#include "InitFunctions.h"
+
+bool CreateDeviceAndSwapChain(HWND window, UINT winWidth, UINT winHeight, IDXGISwapChain*& swapChain, ID3D11Device*& device, ID3D11DeviceContext*& deviceContext)
+{
+	DXGI_SWAP_CHAIN_DESC desc = {};
+	desc.BufferDesc.Width = winWidth;
+	desc.BufferDesc.Height = winHeight;
+	desc.BufferDesc.RefreshRate.Numerator = 0;				//Refreshrate limiter. 0 = no limit
+	desc.BufferDesc.RefreshRate.Denominator = 1;
+	desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;	//8 bits for every R, G, B, A - with values from 0.0 - 1.0
+	desc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+	desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	desc.SampleDesc.Count = 1;								//Nr of multisamples per pixel. 1 = does not use it
+	desc.SampleDesc.Quality = 0;							//Quality of anti-alising
+	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	desc.BufferCount = 2;									//Need to have two buffers for ...flip_discard
+	desc.OutputWindow = window;
+	desc.Windowed = true;
+	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;		//Better performance and lower power usage (https://devblogs.microsoft.com/directx/dxgi-flip-model/)
+	desc.Flags = 0;
+
+	//In debugging mode, show messages
+	UINT flags = 0;
+	if (_DEBUG)
+		flags = D3D11_CREATE_DEVICE_DEBUG;
+
+	D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 }; //Versions of hardware to support
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, featureLevels, 1,
+		D3D11_SDK_VERSION, &desc, &swapChain, &device, nullptr, &deviceContext);
+
+	return !FAILED(hr);
+}
 
 bool InitializeShaders(ID3D11Device* device, ID3D11VertexShader*& vertexShader, std::string vsPath, ID3D11PixelShader*& pixelShader, std::string psPath, std::string& vsByteCode)
 {

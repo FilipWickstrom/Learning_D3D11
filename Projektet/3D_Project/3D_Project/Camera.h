@@ -3,49 +3,54 @@
 #include <DirectXMath.h>
 using namespace DirectX;
 
-//HAVE TO FIX THIS ONE... NOT DONE AND NOT GOOD...
-
 class Camera
 {
 private:
-	XMFLOAT4X4 m_viewMatrix;
-	XMFLOAT4X4 m_projectionMatrix;
+	XMMATRIX m_viewMatrix;			//change to float4x4
+	XMMATRIX m_projectionMatrix;
 
-	XMFLOAT3 m_eyePos;	//Position of camera
-	XMFLOAT3 m_lookAtPos;
-	XMFLOAT3 m_upDir;
+	XMFLOAT3 m_eye;		//Posision
+	XMFLOAT3 m_target;	//Focus point
+	XMFLOAT3 m_up;		
+	XMFLOAT3 m_rotation;//Pitch, yaw, roll
 
 	float m_fieldOfView;
 	float m_aspectRatio;
 	float m_nearPlane;
 	float m_farPlane;
 
-	float m_cameraYawAngle;
-	float m_cameraPitchAngle;
+	XMVECTOR m_posVector;
+	XMVECTOR m_rotVector;		//pitch, yaw, roll
 
-	//World(probably not)
+	//Camera settings
+	float m_cameraSpeed;
+
+	const XMVECTOR m_defaultForward = {0.0f, 0.0f, 1.0f, 0.0f};
+	const XMVECTOR m_defaultUp = { 0.0f, 1.0f, 0.0f, 0.0f };
+
 private:
 	//Conversion between types
 	XMVECTOR Float3ToVector(XMFLOAT3& val);
 	XMFLOAT3 VectorToFloat3(XMVECTOR& vec);
 	XMFLOAT4X4 MatrixToFloat4x4(XMMATRIX& matrix);
-	XMMATRIX Float4x4ToMatrix(XMFLOAT4X4& floatMatrix);
+	XMMATRIX Float4x4ToMatrix(XMFLOAT4X4& floatMatrix);	//ta bort?
 
 public:
-	Camera(UINT winWidth, UINT winHeight);
+	Camera();
 	~Camera();
 
+	void Initialize(UINT winWidth, UINT winHeight, float fov, float nearPlane, float farPlane);
+
 	//Get functions
-	const XMFLOAT4X4 getViewMatrix();
-	const XMFLOAT4X4 getProjMatrix();
+	XMFLOAT4X4 getViewMatrix();
+	XMFLOAT4X4 getProjMatrix();
 
 	void UpdateViewMatrix();
 	void UpdateProjMatrix();
 
-	
-	//LookDirection(float3())
+	//Movement
 	void Move(XMFLOAT3 direction);
-	void Rotate(XMFLOAT3 axis, float degrees);	//Have to fix
-
+	//void UpdateCamera();
+	void RotateY(float angle);
 
 };

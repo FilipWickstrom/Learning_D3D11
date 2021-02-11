@@ -28,7 +28,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	if (renderer.Setup(hInstance, nCmdShow, window))
 	{
 		//Game loop
-		renderer.StartGameLoop();
+		renderer.StartGameLoop(window);
 	}
 	else
 	{

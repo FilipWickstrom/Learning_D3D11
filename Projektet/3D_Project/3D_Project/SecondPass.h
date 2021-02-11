@@ -1,5 +1,6 @@
 #pragma once
-#include "PassInitFunc.h"
+#include "InitFunctions.h"
+#include "ScreenQuad.h"
 
 class SecondPass
 {
@@ -11,14 +12,11 @@ private:
 	//constant buffer for transformatrix
 
 	ID3D11RenderTargetView* m_backbuffer;
+	ScreenQuad m_screenQuad;
 
-	//screen quad
-
-	ID3D11Texture2D* m_depthTexture;		//räcker med en...
-	ID3D11DepthStencilView* m_depthView;	//räcker med en... placera i renderer istället
+	ID3D11Texture2D* m_depthTexture;
+	ID3D11DepthStencilView* m_depthView;
 	D3D11_VIEWPORT m_viewport;
-
-	//IN MESH SET TEXTURE 2D TO WHICH IT WANTS
 
 	float m_clearColour[4] = { 0.0f, 0.0f, 1.0f, 0.0f };
 
