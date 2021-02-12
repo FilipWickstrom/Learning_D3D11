@@ -2,7 +2,7 @@
 
 //Reading an image file
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "Libraries/stb_image.h"
 
 MeshObject::MeshObject()
 	:m_vertexCount(0)

@@ -1,16 +1,10 @@
 #include "Camera.h"
+#include <iostream>	//*****
 
 Camera::Camera()
 {
-	//View matrix - default values
-	m_eye = { 0.0f, 0.0f, 0.0f };
-	m_target = { 0.0f, 0.0f, 1.0f };
-	m_up = { 0.0f, 1.0f, 0.0f };
-
-	m_posVector = XMLoadFloat3(&m_eye);
-	m_rotation = { 0.0f, 0.0f, 0.0f };
-	m_rotVector = XMLoadFloat3(&m_rotation);
-	UpdateViewMatrix();
+	//Setup the default position and rotation of the camera
+	Reset();
 
 	//Projection matrix - default values
 	m_fieldOfView = XM_PI * 0.5f; //90 degrees
@@ -19,12 +13,30 @@ Camera::Camera()
 	m_farPlane = 1000.0f;
 	UpdateProjMatrix();
 
-	m_cameraSpeed = 15.0f;
-
+	m_cameraSpeed = 0.01f;
 }
 
 Camera::~Camera()
 {
+}
+
+void Camera::Reset()
+{
+	//View matrix - default values
+	m_eyePos = { 0.0f, 0.0f, 0.0f };
+	m_target = { 0.0f, 0.0f, 1.0f };
+	m_up = { 0.0f, 1.0f, 0.0f };
+	m_rotation = { 0.0f, 0.0f, 0.0f };
+
+	m_posVector = XMLoadFloat3(&m_eyePos);
+
+	XMVECTOR zerovec = { 0.0f, 0.0f, 0.0f, 0.0f };
+	m_forwardDir = zerovec;
+	m_backwardDir = zerovec;
+	m_rightDir = zerovec;
+	m_leftDir = zerovec;
+
+	UpdateViewMatrix();
 }
 
 void Camera::Initialize(UINT winWidth, UINT winHeight, float fov, float nearPlane, float farPlane)
@@ -37,25 +49,65 @@ void Camera::Initialize(UINT winWidth, UINT winHeight, float fov, float nearPlan
 	UpdateProjMatrix();
 }
 
-XMVECTOR Camera::Float3ToVector(XMFLOAT3& val)
+void Camera::UpdateViewMatrix()
 {
-	return XMLoadFloat3(&val);
+	//How the camera is rotated
+	XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
+
+	//Calculate the forward vector. Which direction is it pointing at
+	XMVECTOR targetVector = XMVector3TransformCoord(m_DEFAULT_FORWARD, camRotationMatrix);
+
+	targetVector += m_posVector;
+
+	XMVECTOR upDirection = XMVector3TransformCoord(m_DEFAULT_UP, camRotationMatrix);
+
+	XMStoreFloat4x4(&m_viewMatrix, XMMatrixLookAtLH(m_posVector, targetVector, upDirection));
+
+	XMMATRIX dirRotationMatrix = XMMatrixRotationRollPitchYaw(0.0f, m_rotation.y, 0.0f);
+	m_forwardDir = XMVector3TransformCoord(m_DEFAULT_FORWARD, dirRotationMatrix);
+	m_backwardDir = XMVector3TransformCoord(m_DEFAULT_BACKWARD, dirRotationMatrix);
+	m_rightDir = XMVector3TransformCoord(m_DEFAULT_RIGHT, dirRotationMatrix);
+	m_leftDir = XMVector3TransformCoord(m_DEFAULT_LEFT, dirRotationMatrix);
 }
 
-XMFLOAT3 Camera::VectorToFloat3(XMVECTOR& vec)
+void Camera::UpdateProjMatrix()
 {
-	XMFLOAT3 newVal;
-	XMStoreFloat3(&newVal, vec);
-	return newVal;
+	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovLH(m_fieldOfView, m_aspectRatio, m_nearPlane, m_farPlane));
 }
 
-XMFLOAT4X4 Camera::MatrixToFloat4x4(XMMATRIX& matrix)
+void Camera::Move(const XMVECTOR& direction)
 {
-	XMFLOAT4X4 newFloat4x4;
-	XMStoreFloat4x4(&newFloat4x4, matrix);
-	return newFloat4x4;
+	m_posVector += direction;
+	XMStoreFloat3(&m_eyePos, m_posVector);
+	UpdateViewMatrix();
 }
 
+void Camera::Rotate(float pitch, float yaw, float roll)
+{
+	float maxPitch = XM_PI * 0.5;	//90 degrees
+
+	//FIX THIS A BIT MORE NICER
+	if (m_rotation.x + pitch > maxPitch)
+	{
+		std::cout << "Lower limit" << std::endl;
+		std::cout << "Current: " << m_rotation.x << std::endl;
+	}
+	else if (m_rotation.x + pitch < -maxPitch)
+	{
+		std::cout << "Upper limit" << std::endl;
+		std::cout << "Current: " << m_rotation.x << std::endl;
+	}
+	else
+	{
+		m_rotation.x += pitch;
+	}
+	m_rotation.y += yaw;
+	m_rotation.z += roll;
+			
+	UpdateViewMatrix();
+}
+
+//Get functions
 const XMFLOAT4X4& Camera::GetViewMatrix() const
 {
 	return m_viewMatrix;
@@ -66,46 +118,27 @@ const XMFLOAT4X4& Camera::GetProjMatrix() const
 	return m_projectionMatrix;
 }
 
-void Camera::UpdateViewMatrix()
+const XMVECTOR& Camera::GetForward()
 {
-	//How the camera is rotated
-	XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
-
-	//Calculate the forward vector. Which direction is it pointing at
-	XMVECTOR targetVector = XMVector3TransformCoord(m_defaultForward, camRotationMatrix);	//XMVector3Normalize
-
-	targetVector += m_posVector;
-
-	XMVECTOR upDirection = XMVector3TransformCoord(m_defaultUp, camRotationMatrix);
-
-	XMStoreFloat4x4(&m_viewMatrix, XMMatrixLookAtLH(m_posVector, targetVector, upDirection));
+	return m_forwardDir;
 }
 
-void Camera::UpdateProjMatrix()
+const XMVECTOR& Camera::GetBackward()
 {
-	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovLH(m_fieldOfView, m_aspectRatio, m_nearPlane, m_farPlane));
+	return m_backwardDir;
 }
 
-void Camera::Move(XMFLOAT3 direction)
+const XMVECTOR& Camera::GetRight()
 {
-	m_eye.x += direction.x;
-	m_eye.y += direction.y;
-	m_eye.z += direction.z;
-	m_posVector = XMLoadFloat3(&m_eye);
-	UpdateViewMatrix();
+	return m_rightDir;
 }
 
-void Camera::Rotate(XMFLOAT3 rotation)
+const XMVECTOR& Camera::GetLeft()
 {
-	//LATER FIX. Should not be able to rotate 360 up or down
-	m_rotation.x += rotation.x;
-	m_rotation.y += rotation.y;
-	m_rotation.z += rotation.z;
-
-	UpdateViewMatrix();
+	return m_leftDir;
 }
 
-float Camera::GetCamSpeed() const
+const float Camera::GetCamSpeed() const
 {
 	return m_cameraSpeed;
 }

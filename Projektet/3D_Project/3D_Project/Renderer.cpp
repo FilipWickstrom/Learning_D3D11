@@ -98,6 +98,8 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 	//Setup lights
 
 
+	m_fpscounter.StartClock();
+
 	return true;
 }
 
@@ -134,6 +136,7 @@ void Renderer::StartGameLoop(HWND& window)
 	while (msg.message != WM_QUIT)
 	{
 		m_deltatime = m_fpscounter.GetDeltatime();
+		m_fpscounter.RestartClock();
 
 		//Looks at the message and removes it from message queue
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
