@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "FPSCounter.h"
 
+#include "Movement.h"
 
 //Settings that can be changed. Put in separate file and read from later?
 //Vsync on/off
@@ -32,6 +33,8 @@ private:
 
 	
 	Camera m_camera;
+	Movement m_movement;
+
 	float m_rotationtest;	//****remove
 
 

@@ -61,7 +61,7 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 
 	//---------FIX SEPARATE FUNCTION FOR ALL LOADING OF OBJECTS----------------
 	MeshObject* mesh0 = new MeshObject();
-	if (!mesh0->Load(m_device, "smallcat.obj", "Grey.png", { -2,0,0 }, { 1,1,1 }, {0,-90,0}))
+	if (!mesh0->Load(m_device, "smallcat.obj", "oldpaper.png", { -2,0,0 }, { 1,1,1 }, {0,-90,0}))
 	{
 		std::cerr << "Failed to load mesh0..." << std::endl;
 		return false;
@@ -69,18 +69,26 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 	m_objects.push_back(mesh0);
 
 	MeshObject* mesh1 = new MeshObject();
-	if (!mesh1->Load(m_device, "cube.obj", "TechFlip.png", { 2,0,0 }, { 1,1,1 }, {0, 45, 0}))
+	if (!mesh1->Load(m_device, "cube.obj", "techflip.png", { 2,0,0 }, { 1,1,1 }, {0, 45, 0}))
 	{
 		std::cerr << "Failed to load mesh1..." << std::endl;
 		return false;
 	}
 	m_objects.push_back(mesh1);
+
+	MeshObject* mesh2 = new MeshObject();
+	if (!mesh2->Load(m_device, "plane.obj", "stoneGrass.png", { 0,-1.5,0 }, { 10,1,10 }, { 0, 0, 0 }))
+	{
+		std::cerr << "Failed to load mesh2..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(mesh2);
 	//-------------------------------------------------------------------------
 
 	m_camera.Initialize(m_winWidth, m_winHeight, XM_PI * 0.5f, 0.1f, 1000.0f);
 
 	//Setup the world view projection matrixes
-	if (!m_constBuffers.InitializeWVP(m_device, m_camera.getViewMatrix(), m_camera.getProjMatrix()))
+	if (!m_constBuffers.InitializeWVP(m_device, m_camera.GetViewMatrix(), m_camera.GetProjMatrix()))
 	{
 		std::cerr << "Failed to initialize the world view projection matrix..." << std::endl;
 		return false;
@@ -133,78 +141,19 @@ void Renderer::StartGameLoop(HWND& window)
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-
-		//FUNCTION FOR INPUT WITH KEYBOARD AND MOUSE - void Movement()
-
-		//SEND THE DELTATIME TO THE MOVEMENT
-		//KEYBOARD MOVEMENT - FIX SEPERATE FUNCTION FOR THIS????**** 
+		
+		//Pressed a key
 		if (msg.message == WM_KEYDOWN)
 		{
-			bool moveKeyPressed = false;
-
-			//Move forward
-			if (msg.wParam == 'W')
-			{
-				std::cout << "Pressed W" << std::endl;
-				m_camera.Move({0.0f, 0.0f, 1.0f });
-				moveKeyPressed = true;
-			}
-			//Move backwards
-			else if (msg.wParam == 'S')
-			{
-				std::cout << "Pressed S" << std::endl;
-				m_camera.Move({ 0.0f, 0.0f, -1.0f });
-				moveKeyPressed = true;
-			}
-			//Move up
-			else if (msg.wParam == 'Q')
-			{
-				std::cout << "Pressed Q" << std::endl;
-				m_camera.Move({ 0.0f, 1.0f, 0.0f });
-				moveKeyPressed = true;
-			}
-			//Move down
-			else if (msg.wParam == 'E')
-			{
-				std::cout << "Pressed E" << std::endl;
-				m_camera.Move({ 0.0f, -1.0f, 0.0f });
-				moveKeyPressed = true;
-			}
-			//Move left
-			if (msg.wParam == 'A')
-			{
-				std::cout << "Pressed A" << std::endl;
-				m_camera.Move({ -1.0f, 0.0f, 0.0f });
-				moveKeyPressed = true;
-			}
-			//Move right
-			else if (msg.wParam == 'D')
-			{
-				std::cout << "Pressed D" << std::endl;
-				m_camera.Move({ 1.0f, 0.0f, 0.0f });
-				moveKeyPressed = true;
-			}
+			//Check input from keyboard
+			bool moved = m_movement.KeyboardInput(m_deltatime, msg, m_camera);
 			
-
-			else if (msg.wParam == 'L')
-			{
-				m_camera.RotateY(1);
-				moveKeyPressed = true;
-			}
-			else if (msg.wParam == 'J')
-			{
-				m_camera.RotateY(-1);
-				moveKeyPressed = true;
-			}
-
 			//Only update the view matrix when we have moved the camera
-			if (moveKeyPressed)
+			if (moved)
 			{
-				m_constBuffers.UpdateView(m_deviceContext, m_camera.getViewMatrix());
+				m_constBuffers.UpdateView(m_deviceContext, m_camera.GetViewMatrix());
 			}
 		}
-
-		
 
 		//Draw the scene
 		Render();

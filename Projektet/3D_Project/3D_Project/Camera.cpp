@@ -16,10 +16,10 @@ Camera::Camera()
 	m_fieldOfView = XM_PI * 0.5f; //90 degrees
 	m_aspectRatio = float(16 / 9);
 	m_nearPlane = 0.1f;
-	m_farPlane = 100.0f;
+	m_farPlane = 1000.0f;
 	UpdateProjMatrix();
 
-	m_cameraSpeed = 1.0f;
+	m_cameraSpeed = 15.0f;
 
 }
 
@@ -56,39 +56,34 @@ XMFLOAT4X4 Camera::MatrixToFloat4x4(XMMATRIX& matrix)
 	return newFloat4x4;
 }
 
-XMMATRIX Camera::Float4x4ToMatrix(XMFLOAT4X4& floatMatrix)
+const XMFLOAT4X4& Camera::GetViewMatrix() const
 {
-	return XMLoadFloat4x4(&floatMatrix);
+	return m_viewMatrix;
 }
 
-XMFLOAT4X4 Camera::getViewMatrix()
+const XMFLOAT4X4& Camera::GetProjMatrix() const
 {
-	return MatrixToFloat4x4(m_viewMatrix);
-}
-
-XMFLOAT4X4 Camera::getProjMatrix()
-{
-	return MatrixToFloat4x4(m_projectionMatrix);
+	return m_projectionMatrix;
 }
 
 void Camera::UpdateViewMatrix()
 {
-	//
+	//How the camera is rotated
 	XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z);
 
-	XMVECTOR TargetVector = XMVector3TransformCoord(m_defaultForward, camRotationMatrix);
-	TargetVector = XMVector3Normalize(TargetVector);
+	//Calculate the forward vector. Which direction is it pointing at
+	XMVECTOR targetVector = XMVector3TransformCoord(m_defaultForward, camRotationMatrix);	//XMVector3Normalize
 
-	TargetVector += m_posVector;
+	targetVector += m_posVector;
 
 	XMVECTOR upDirection = XMVector3TransformCoord(m_defaultUp, camRotationMatrix);
 
-	m_viewMatrix = XMMatrixLookAtLH(m_posVector, TargetVector, upDirection);
+	XMStoreFloat4x4(&m_viewMatrix, XMMatrixLookAtLH(m_posVector, targetVector, upDirection));
 }
 
 void Camera::UpdateProjMatrix()
 {
-	m_projectionMatrix = XMMatrixPerspectiveFovLH(m_fieldOfView, m_aspectRatio, m_nearPlane, m_farPlane);
+	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovLH(m_fieldOfView, m_aspectRatio, m_nearPlane, m_farPlane));
 }
 
 void Camera::Move(XMFLOAT3 direction)
@@ -100,12 +95,18 @@ void Camera::Move(XMFLOAT3 direction)
 	UpdateViewMatrix();
 }
 
-void Camera::RotateY(float angle)
+void Camera::Rotate(XMFLOAT3 rotation)
 {
-	/*XMMATRIX rotationMatrix = XMMatrixRotationY(angle);
-	m_up = XMVector3TransformNormal(m_up, rotationMatrix);
-	m_target = XMVector3TransformNormal(m_target, rotationMatrix);
+	//LATER FIX. Should not be able to rotate 360 up or down
+	m_rotation.x += rotation.x;
+	m_rotation.y += rotation.y;
+	m_rotation.z += rotation.z;
 
-	UpdateViewMatrix();*/
+	UpdateViewMatrix();
+}
+
+float Camera::GetCamSpeed() const
+{
+	return m_cameraSpeed;
 }
 
