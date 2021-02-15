@@ -38,9 +38,6 @@ private:
 	XMVECTOR m_rightDir;
 	XMVECTOR m_leftDir;
 
-	//Camera settings
-	float m_cameraSpeed;
-
 public:
 	Camera();
 	~Camera();
@@ -64,8 +61,4 @@ public:
 	const XMVECTOR& GetBackward();
 	const XMVECTOR& GetRight();
 	const XMVECTOR& GetLeft();
-
-	//Camera speed
-	const float GetCamSpeed() const;
-
 };

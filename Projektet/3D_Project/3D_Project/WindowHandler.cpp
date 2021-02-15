@@ -6,9 +6,35 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     //Checks messages. Can check more if needed
     switch (message)
     {
-    case WM_DESTROY:    //Check if window is destroyed
+    //Is window destroyed?
+    case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
+    
+    case WM_ACTIVATEAPP:
+        DirectX::Keyboard::ProcessMessage(message, wParam, lParam);
+        DirectX::Mouse::ProcessMessage(message, wParam, lParam);
+        break;
+
+    //Mouse handling
+    case WM_INPUT:
+    case WM_MOUSEMOVE:
+    case WM_MOUSEHOVER:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+        DirectX::Mouse::ProcessMessage(message, wParam, lParam);
+        break;
+
+    //Keyboardhandling
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYUP:
+        DirectX::Keyboard::ProcessMessage(message, wParam, lParam);
+        break;
+
     default:
         break;
     }

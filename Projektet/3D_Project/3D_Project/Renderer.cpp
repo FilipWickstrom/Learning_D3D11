@@ -8,7 +8,6 @@ Renderer::Renderer(UINT winWidth, UINT winHeight)
 	m_deviceContext = nullptr;
 	m_swapChain = nullptr;
 	
-	m_rotationtest = 0.0f;	//*****for testing
 	m_deltatime = 0.0f;
 }
 
@@ -85,7 +84,9 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 	m_objects.push_back(mesh2);
 	//-------------------------------------------------------------------------
 
+	//Setting up camera and the movement
 	m_camera.Initialize(m_winWidth, m_winHeight, XM_PI * 0.5f, 0.1f, 1000.0f);
+	m_movement.Initialize(window, 0.005f, 0.004f);
 
 	//Setup the world view projection matrixes
 	if (!m_constBuffers.InitializeWVP(m_device, m_camera.GetViewMatrix(), m_camera.GetProjMatrix()))
@@ -144,19 +145,12 @@ void Renderer::StartGameLoop(HWND& window)
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		
-		//Pressed a key
-		if (msg.message == WM_KEYDOWN)
-		{
-			//Check input from keyboard
-			bool moved = m_movement.KeyboardInput(m_deltatime, msg, m_camera);
 			
-			//Only update the view matrix when we have moved the camera
-			if (moved)
-			{
-				m_constBuffers.UpdateView(m_deviceContext, m_camera.GetViewMatrix());
-			}
-		}
+		//Check mouse and keyboard
+		m_movement.CheckInput(m_deltatime, m_camera);
+
+		//Update the view matrix
+		m_constBuffers.UpdateView(m_deviceContext, m_camera.GetViewMatrix());
 
 		//Draw the scene
 		Render();

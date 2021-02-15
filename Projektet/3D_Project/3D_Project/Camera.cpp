@@ -1,5 +1,4 @@
 #include "Camera.h"
-#include <iostream>	//*****
 
 Camera::Camera()
 {
@@ -12,8 +11,6 @@ Camera::Camera()
 	m_nearPlane = 0.1f;
 	m_farPlane = 1000.0f;
 	UpdateProjMatrix();
-
-	m_cameraSpeed = 0.01f;
 }
 
 Camera::~Camera()
@@ -42,7 +39,7 @@ void Camera::Reset()
 void Camera::Initialize(UINT winWidth, UINT winHeight, float fov, float nearPlane, float farPlane)
 {
 	//Projection matrix
-	m_fieldOfView = fov;			//90 degrees
+	m_fieldOfView = fov;
 	m_aspectRatio = float(winWidth / winHeight);
 	m_nearPlane = nearPlane;
 	m_farPlane = farPlane;
@@ -57,12 +54,16 @@ void Camera::UpdateViewMatrix()
 	//Calculate the forward vector. Which direction is it pointing at
 	XMVECTOR targetVector = XMVector3TransformCoord(m_DEFAULT_FORWARD, camRotationMatrix);
 
+	//Adds the offset of the cameras position
 	targetVector += m_posVector;
 
+	//Calculates the up vector
 	XMVECTOR upDirection = XMVector3TransformCoord(m_DEFAULT_UP, camRotationMatrix);
 
+	//Finally update the 
 	XMStoreFloat4x4(&m_viewMatrix, XMMatrixLookAtLH(m_posVector, targetVector, upDirection));
 
+	//Rotation only dependent on yaw. So that right is always right side
 	XMMATRIX dirRotationMatrix = XMMatrixRotationRollPitchYaw(0.0f, m_rotation.y, 0.0f);
 	m_forwardDir = XMVector3TransformCoord(m_DEFAULT_FORWARD, dirRotationMatrix);
 	m_backwardDir = XMVector3TransformCoord(m_DEFAULT_BACKWARD, dirRotationMatrix);
@@ -79,32 +80,19 @@ void Camera::Move(const XMVECTOR& direction)
 {
 	m_posVector += direction;
 	XMStoreFloat3(&m_eyePos, m_posVector);
-	UpdateViewMatrix();
 }
 
 void Camera::Rotate(float pitch, float yaw, float roll)
 {
 	float maxPitch = XM_PI * 0.5;	//90 degrees
 
-	//FIX THIS A BIT MORE NICER
-	if (m_rotation.x + pitch > maxPitch)
-	{
-		std::cout << "Lower limit" << std::endl;
-		std::cout << "Current: " << m_rotation.x << std::endl;
-	}
-	else if (m_rotation.x + pitch < -maxPitch)
-	{
-		std::cout << "Upper limit" << std::endl;
-		std::cout << "Current: " << m_rotation.x << std::endl;
-	}
-	else
+	//Should not be able to rotate around up or down
+	if (m_rotation.x + pitch < maxPitch && m_rotation.x + pitch > -maxPitch)
 	{
 		m_rotation.x += pitch;
 	}
 	m_rotation.y += yaw;
 	m_rotation.z += roll;
-			
-	UpdateViewMatrix();
 }
 
 //Get functions
@@ -136,10 +124,5 @@ const XMVECTOR& Camera::GetRight()
 const XMVECTOR& Camera::GetLeft()
 {
 	return m_leftDir;
-}
-
-const float Camera::GetCamSpeed() const
-{
-	return m_cameraSpeed;
 }
 

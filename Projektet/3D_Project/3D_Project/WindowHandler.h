@@ -1,6 +1,10 @@
 #pragma once
+#pragma comment(lib, "DirectXTK.lib")
+
 #include <Windows.h>
 #include <iostream>
+#include <directxTK/Keyboard.h>
+#include <directxTK/Mouse.h>
 
 bool SetupWindow(HINSTANCE instance,	//OS uses this to identify the exe
 				 UINT winWidth,			//Size

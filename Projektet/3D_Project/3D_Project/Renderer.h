@@ -16,30 +16,31 @@
 class Renderer
 {
 private:
+	//Window settings
 	UINT m_winWidth;
 	UINT m_winHeight;
 	
-	//Hold the most useful stuff
+	//Points to all the buffers
 	ID3D11Device* m_device;
 	ID3D11DeviceContext* m_deviceContext;
 	IDXGISwapChain* m_swapChain;
 
+	//Deferred rendering
 	FirstPass m_firstPass;
 	SecondPass m_secondPass;
 
+	//Hold all objects in the map
 	std::vector<MeshObject*> m_objects;
 
+	//For the camera
 	ConstantBuffers m_constBuffers;
-
-	
 	Camera m_camera;
 	Movement m_movement;
-
-	float m_rotationtest;	//****remove
 
 
 	FPSCounter m_fpscounter;
 	float m_deltatime;
+
 private:
 	//keyboardmovement();
 	void Render();
