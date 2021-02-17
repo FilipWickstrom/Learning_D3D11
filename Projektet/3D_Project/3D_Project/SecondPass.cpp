@@ -108,7 +108,7 @@ bool SecondPass::Initialize(ID3D11Device* device, UINT winWidth, UINT winHeight,
 	return true;
 }
 
-void SecondPass::Bind(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* srv1, ID3D11ShaderResourceView* srv2)
+void SecondPass::Bind(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* srv1, ID3D11ShaderResourceView* srv2, ID3D11ShaderResourceView* srv3)
 {
 	//Specific input layout for screen quad
 	deviceContext->IASetInputLayout(m_inputLayout);
@@ -133,6 +133,7 @@ void SecondPass::Bind(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceVi
 	//Set so that the gbuffers can be used in the pixelshader
 	deviceContext->PSSetShaderResources(0, 1, &srv1);
 	deviceContext->PSSetShaderResources(1, 1, &srv2);
+	deviceContext->PSSetShaderResources(2, 1, &srv3);
 
 	//Finally render to the screenquad
 	m_screenQuad.Render(deviceContext);

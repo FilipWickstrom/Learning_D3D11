@@ -84,7 +84,7 @@ bool MeshObject::LoadOBJ(std::string filepath, ID3D11Device* device)
 					vn = stoi(str);								// Saves the last
 
 					// Put into 
-					SimpleVertex thevertex(positions[v-1], normals[vn-1], textureCoords[vt-1]);
+					SimpleVertex thevertex(positions[v-size_t(1)], normals[vn-size_t(1)], textureCoords[vt-size_t(1)]);
 					vertices.push_back(thevertex);
 				}
 			}
@@ -93,7 +93,7 @@ bool MeshObject::LoadOBJ(std::string filepath, ID3D11Device* device)
 		}
 		file.close();
 
-		m_vertexCount = vertices.size();
+		m_vertexCount = (UINT)vertices.size();
 
 		//Vertex buffer - setting up description
 		D3D11_BUFFER_DESC bufferDesc = {};
@@ -162,11 +162,6 @@ bool MeshObject::LoadTextures(std::string filepath, ID3D11Device* device)
 	return !FAILED(hr);
 }
 
-void MeshObject::SetupModelMatrix(std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
-{
-	UpdateModelMatrix(pos, scl, rot);
-}
-
 bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string texture, std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
 {
 	bool success = true;
@@ -190,7 +185,7 @@ bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string texture
 	}
 
 	//Load in the modell matrix
-	SetupModelMatrix(pos, scl, rot);
+	UpdateModelMatrix(pos, scl, rot);
 
 	return success;
 }

@@ -3,11 +3,10 @@
 #include "FirstPass.h"
 #include "SecondPass.h"
 #include "ConstantBuffers.h"
-#include "MeshObject.h"
+#include "Scene.h"
 #include "Camera.h"
-#include "FPSCounter.h"
-
 #include "Movement.h"
+#include "FPSCounter.h"
 
 //Settings that can be changed. Put in separate file and read from later?
 //Vsync on/off
@@ -29,8 +28,8 @@ private:
 	FirstPass m_firstPass;
 	SecondPass m_secondPass;
 
-	//Hold all objects in the map
-	std::vector<MeshObject*> m_objects;
+	//Hold all the objects
+	Scene m_scene;
 
 	//For the camera
 	ConstantBuffers m_constBuffers;
@@ -42,7 +41,6 @@ private:
 	float m_deltatime;
 
 private:
-	//keyboardmovement();
 	void Render();
 
 public:

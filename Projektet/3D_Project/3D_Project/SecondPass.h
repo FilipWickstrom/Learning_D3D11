@@ -9,7 +9,6 @@ private:
 	ID3D11PixelShader* m_pixelShader;
 	ID3D11SamplerState* m_anisoSampler;
 	ID3D11InputLayout* m_inputLayout;
-	//constant buffer for transformatrix
 
 	ID3D11RenderTargetView* m_backbuffer;
 	ScreenQuad m_screenQuad;
@@ -18,7 +17,7 @@ private:
 	ID3D11DepthStencilView* m_depthView;
 	D3D11_VIEWPORT m_viewport;
 
-	float m_clearColour[4] = { 0.0f, 0.0f, 1.0f, 0.0f };
+	float m_clearColour[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 private:
 	bool InitInputLayout(ID3D11Device* device, std::string vsByteCode);
@@ -33,6 +32,6 @@ public:
 	//Full initialization of everything needed for the first pass to work
 	bool Initialize(ID3D11Device* device, UINT winWidth, UINT winHeight, IDXGISwapChain* swapChain);
 
-	void Bind(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* srv1, ID3D11ShaderResourceView* srv2);
+	void Bind(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* srv1, ID3D11ShaderResourceView* srv2, ID3D11ShaderResourceView* srv3);
 
 };

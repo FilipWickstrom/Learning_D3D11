@@ -19,7 +19,7 @@ private:
 	ID3D11Texture2D* m_texture;
 	ID3D11ShaderResourceView* m_textureSRV;
 
-	//Where model is in the world
+	//Where th model is in the world
 	XMFLOAT4X4 m_modelMatrix;
 
 	struct SimpleVertex
@@ -43,7 +43,6 @@ private:
 private:
 	bool LoadOBJ(std::string filepath, ID3D11Device* device);
 	bool LoadTextures(std::string filepath, ID3D11Device* device);
-	void SetupModelMatrix(std::array<float, 3>pos,std::array<float, 3>scl,std::array<float, 3>rot);
 
 public:
 	MeshObject();

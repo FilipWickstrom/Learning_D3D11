@@ -1,7 +1,7 @@
 #pragma once
 #include "InitFunctions.h"
 
-const int NROFBUFFERS = 2;
+const int NROFBUFFERS = 3;
 
 
 class FirstPass
@@ -23,7 +23,7 @@ private:
 	ID3D11DepthStencilView* m_depthView;
 	D3D11_VIEWPORT m_viewport;
 
-	float m_clearColour[4] = { 0.0f, 1.0f, 0.0f, 0.0f };
+	float m_clearColour[4] = { 0.0f, 0.0f, 1.0f, 0.0f };
 
 private:
 	bool InitInputLayout(ID3D11Device* device, std::string vsByteCode);

@@ -48,7 +48,6 @@ public:
 	void UpdateViewMatrix();
 	void UpdateProjMatrix();
 
-
 	//Movement
 	void Move(const XMVECTOR& direction);
 	void Rotate(float pitch, float yaw, float roll);
@@ -61,4 +60,7 @@ public:
 	const XMVECTOR& GetBackward();
 	const XMVECTOR& GetRight();
 	const XMVECTOR& GetLeft();
+	
+	const XMFLOAT3& GetPosition();
+
 };

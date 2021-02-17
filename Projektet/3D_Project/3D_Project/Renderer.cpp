@@ -20,13 +20,6 @@ Renderer::~Renderer()
 		m_deviceContext->Release();
 	if (m_swapChain)
 		m_swapChain->Release();
-
-	//Cleaning up objects. Do not won't memory leaks
-	for (MeshObject* obj : m_objects)
-	{
-		delete obj;
-		obj = nullptr;
-	}
 	
 }
 
@@ -58,31 +51,12 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-	//---------FIX SEPARATE FUNCTION FOR ALL LOADING OF OBJECTS----------------
-	MeshObject* mesh0 = new MeshObject();
-	if (!mesh0->Load(m_device, "smallcat.obj", "oldpaper.png", { -2,0,0 }, { 1,1,1 }, {0,-90,0}))
+	//Setting up the scene with all the objects in it
+	if (!m_scene.Load(m_device))
 	{
-		std::cerr << "Failed to load mesh0..." << std::endl;
+		std::cerr << "Failed to load the scene..." << std::endl;
 		return false;
 	}
-	m_objects.push_back(mesh0);
-
-	MeshObject* mesh1 = new MeshObject();
-	if (!mesh1->Load(m_device, "cube.obj", "techflip.png", { 2,0,0 }, { 1,1,1 }, {0, 45, 0}))
-	{
-		std::cerr << "Failed to load mesh1..." << std::endl;
-		return false;
-	}
-	m_objects.push_back(mesh1);
-
-	MeshObject* mesh2 = new MeshObject();
-	if (!mesh2->Load(m_device, "plane.obj", "stoneGrass.png", { 0,-1.5,0 }, { 10,1,10 }, { 0, 0, 0 }))
-	{
-		std::cerr << "Failed to load mesh2..." << std::endl;
-		return false;
-	}
-	m_objects.push_back(mesh2);
-	//-------------------------------------------------------------------------
 
 	//Setting up camera and the movement
 	m_camera.Initialize(m_winWidth, m_winHeight, XM_PI * 0.5f, 0.1f, 1000.0f);
@@ -95,9 +69,12 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-	
 	//Setup lights
-
+	if (!m_constBuffers.InitializeLights(m_device))
+	{
+		std::cerr << "Failed to initialize the constant buffer for the lights..." << std::endl;
+		return false;
+	}
 
 	m_fpscounter.StartClock();
 
@@ -113,19 +90,17 @@ void Renderer::Render()
 	//WVP
 	m_constBuffers.SetWVPToVS(m_deviceContext);
 
-	//Render all objects - sents to 
-	for (MeshObject* obj : m_objects)
-	{
-		//Each object has it own world matrix that is needed to be set
-		m_constBuffers.UpdateWorld(m_deviceContext, obj->GetModelMatrix());
+	//Render all the objects in the scene
+	m_scene.Render(m_deviceContext, m_constBuffers);
 
-		//Render the object
-		obj->Render(m_deviceContext);
-	}
+	//Lights
+	m_constBuffers.UpdateLights(m_deviceContext, m_camera);
+	m_constBuffers.SetLightToPS(m_deviceContext);
+
 	
 	//Second pass - Only for lightning - output to the final render target
 	//Uses the information saves in g-buffer and compute the lightning
-	m_secondPass.Bind(m_deviceContext, m_firstPass.GetShaderResourceView(0), m_firstPass.GetShaderResourceView(1));
+	m_secondPass.Bind(m_deviceContext, m_firstPass.GetShaderResourceView(0), m_firstPass.GetShaderResourceView(1), m_firstPass.GetShaderResourceView(2));
 
 	//Present the final result
 	m_swapChain->Present(1, 0);

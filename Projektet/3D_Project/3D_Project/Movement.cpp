@@ -78,12 +78,12 @@ void Movement::MouseInput(float dt, Camera& camera)
 {
 	auto mouse = m_mouse->GetState();
 
+	//Set to the window mode when rightclick is held down
 	if (mouse.rightButton)
 		m_mouse->SetMode(Mouse::MODE_RELATIVE);
 	else
 		m_mouse->SetMode(Mouse::MODE_ABSOLUTE);
 	
-
 	if (mouse.positionMode == Mouse::MODE_RELATIVE)
 	{
 		//Rotate only around pitch and yaw. Inverted from x and y position

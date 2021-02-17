@@ -106,6 +106,11 @@ const XMFLOAT4X4& Camera::GetProjMatrix() const
 	return m_projectionMatrix;
 }
 
+const XMFLOAT3& Camera::GetPosition()
+{
+	return m_eyePos;
+}
+
 const XMVECTOR& Camera::GetForward()
 {
 	return m_forwardDir;

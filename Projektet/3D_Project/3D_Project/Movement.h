@@ -14,7 +14,6 @@ class Movement
 private:
 	std::unique_ptr<Keyboard> m_keyboard;
 	std::unique_ptr<Mouse> m_mouse;
-
 	float m_moveSpeed;
 	float m_mouseSens;
 
