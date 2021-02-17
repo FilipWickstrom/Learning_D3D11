@@ -106,7 +106,7 @@ const XMFLOAT4X4& Camera::GetProjMatrix() const
 	return m_projectionMatrix;
 }
 
-const XMFLOAT3& Camera::GetPosition()
+const XMFLOAT3& Camera::GetPosition() const
 {
 	return m_eyePos;
 }

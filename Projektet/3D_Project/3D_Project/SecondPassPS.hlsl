@@ -1,3 +1,6 @@
+
+#define NROFLIGHTS 2
+
 //GBuffers
 Texture2D positionTexture   : register(t0);
 Texture2D colourTexture     : register(t1);     //aka albedo?
@@ -5,14 +8,24 @@ Texture2D normalTexture     : register(t2);
 
 SamplerState theSampler : register(s0);
 
+struct Light
+{
+    float4 position;
+    float4 colour;
+    float range;
+    float3 padding;
+};
+
 cbuffer Lights : register(b0)
 {
-    float3 lightPos;
-    float padding;
-    float4 lightColour;
-    float3 camPos;
-    float lightrange;
+    Light pointlights[NROFLIGHTS];
 };
+
+cbuffer Camera : register(b1)
+{
+    float3 camPos;
+    float padding;
+}
 
 
 struct PixelInput
@@ -21,54 +34,72 @@ struct PixelInput
     float2 TexCoord : TEXCOORD;
 };
 
-//DO Diffuse
-/*float DoDiffuse(float4 lightColour, float4 lightPos, float4 normal)
+float GetAttenuation(float distance, float range)
 {
-    normal = normalize(normal);
-    float diffuseFactor = max(dot(normal, lightPos
+    //Can be minimum 0
+    return max(1.0f - (distance / range), 0.0f);
+    
+    //REMOVE LATER. MORE BEING LIT 
+    //return 1.0f - smoothstep(range * 0.75, range, distance);
+}
 
-}*/
+float GetDiffuse(float4 lightVector, float4 normal)
+{
+    //The amount of diffuse
+    return max(dot(lightVector, normal), 0.0f);
+}
 
-//Do Specular
+float GetSpecular(float4 lightVector, float4 normal, float3 viewVector, float shininess) //materials shiniess
+{
+    //The vector that gets reflected 
+    float3 reflectedVector = normalize(reflect(-lightVector.xyz, normal.xyz));
+    
+    //The percentage between the two vectors
+    float reflectDotView = max(dot(reflectedVector, viewVector), 0.0f);
+    
+    //Times it with the shiniess to make it even brighter
+    return pow(reflectDotView, shininess);
+}
 
 
 float4 main( PixelInput input ) : SV_TARGET
 {
     //DEBUG MODE
-    bool lightsOn = false;
+    bool lightsOn = true;
     
     //Get the gbuffers
     float4 G_Position = positionTexture.Sample(theSampler, input.TexCoord);
     float4 G_Texture = colourTexture.Sample(theSampler, input.TexCoord);
     float4 G_Normal = normalTexture.Sample(theSampler, input.TexCoord);
     
-    
     if (lightsOn)
     {
-        //Default - SHOULD LATER BE DEFINED BY THE INPUTFILE
-        float4 ambientIntensity = float4(0.1f, 0.1f, 0.1f, 1.0f); //10% ambient light
-        float4 diffuseIntensity = float4(0.0f, 0.0f, 0.0f, 1.0f);
-        float4 specularIntensity = float4(0.0f, 0.0f, 0.0f, 1.0f);
+        //GET MATERIAL INFORMATION - DIFFUSECOLOUR, SPECULARCOLOUR, SPECULARPOWER
+        float4 ambientIntensity = float4(0.1f, 0.1f, 0.1f, 0.0f); //10% ambient light
+        float4 diffuseIntensity = float4(0.0f, 0.0f, 0.0f, 0.0f);
+        float4 specularIntensity = float4(0.0f, 0.0f, 0.0f, 0.0f);
         uint shininess = 64;
-    
-        float3 pixelToLight = lightPos - G_Position.xyz;
-        float distance = length(pixelToLight);
-        if (distance < lightrange)
+        
+        //Goes through all the lights
+        for (int i = 0; i < NROFLIGHTS; i++)
         {
-            float attenuationFactor = max(0.0f, 1.0f - (distance / lightrange));
+            //Vector from the point to the light
+            float4 lightVector = pointlights[i].position - G_Position;
+            float distance = length(lightVector);
+           
+           
+            lightVector = normalize(lightVector);
+            
+            float attenuationFactor = GetAttenuation(distance, pointlights[i].range);
     
-            //Diffuse - Can be minimum 0.0f. Dot part = cos(angle)
-            float diffuseFactor = max(dot(G_Normal.xyz, normalize(pixelToLight)), 0.0f);
-            diffuseIntensity = lightColour * attenuationFactor * diffuseFactor;
-    
-            //Specular - Can be minimum 0.0f
-            float3 reflectedLight = normalize(reflect(-pixelToLight, G_Normal.xyz));
-            float3 pixelToCamera = normalize(camPos - G_Position.xyz);
-            float specularFactor = pow(max(dot(reflectedLight, pixelToCamera), 0.0f), shininess);
-            specularIntensity = lightColour * attenuationFactor * specularFactor;
+            diffuseIntensity += GetDiffuse(lightVector, G_Normal) * attenuationFactor * pointlights[i].colour;
+            
+            float3 viewVector = normalize(camPos - G_Position.xyz);
+            
+            specularIntensity += GetSpecular(lightVector, G_Normal, viewVector, shininess) * attenuationFactor * pointlights[i].colour;       
         }
-     
-        return G_Texture * (ambientIntensity + diffuseIntensity) + specularIntensity;
+         
+        return G_Texture * (ambientIntensity + diffuseIntensity + specularIntensity);
     }
     
     //Just render the colours of the models

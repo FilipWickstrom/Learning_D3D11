@@ -41,7 +41,7 @@ bool Scene::Load(ID3D11Device* device)
 	m_objects.push_back(mesh2);
 
 	MeshObject* mesh3 = new MeshObject();
-	if (!mesh3->Load(device, "noah.obj", "base.png", { 4, 0.5, -5 }, { 1, 1, 1 }, {0, 0, 0}))	//{0,180,0}
+	if (!mesh3->Load(device, "noah.obj", "base.png", { 4, 0.5, -5 }, { 1, 1, 1 }, {0, 180, 0}))
 	{
 		std::cerr << "Failed to load mesh3..." << std::endl;
 	}
@@ -63,7 +63,7 @@ void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf
 	if (rotation > 360.0f)
 		rotation = 0.0f;
 
-	bool first = true;	//*****
+	bool first = false;	//*****
 
 	for (MeshObject* obj : m_objects)
 	{

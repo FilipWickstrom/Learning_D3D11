@@ -62,17 +62,10 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 	m_camera.Initialize(m_winWidth, m_winHeight, XM_PI * 0.5f, 0.1f, 1000.0f);
 	m_movement.Initialize(window, 0.005f, 0.004f);
 
-	//Setup the world view projection matrixes
-	if (!m_constBuffers.InitializeWVP(m_device, m_camera.GetViewMatrix(), m_camera.GetProjMatrix()))
+	//Setting up WVP, light buffer and camera
+	if (!m_constBuffers.Initialize(m_device, m_camera))
 	{
-		std::cerr << "Failed to initialize the world view projection matrix..." << std::endl;
-		return false;
-	}
-
-	//Setup lights
-	if (!m_constBuffers.InitializeLights(m_device))
-	{
-		std::cerr << "Failed to initialize the constant buffer for the lights..." << std::endl;
+		std::cerr << "Failed to initialize the constbuffers..." << std::endl;
 		return false;
 	}
 
@@ -95,8 +88,9 @@ void Renderer::Render()
 
 	//Lights
 	m_constBuffers.UpdateLights(m_deviceContext, m_camera);
-	m_constBuffers.SetLightToPS(m_deviceContext);
-
+	m_constBuffers.UpdateCam(m_deviceContext, m_camera);
+	m_constBuffers.SetLightsToPS(m_deviceContext);
+	m_constBuffers.SetCamToPs(m_deviceContext);
 	
 	//Second pass - Only for lightning - output to the final render target
 	//Uses the information saves in g-buffer and compute the lightning

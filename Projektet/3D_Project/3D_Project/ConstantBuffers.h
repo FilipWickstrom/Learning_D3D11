@@ -5,6 +5,8 @@
 #include "Camera.h"
 using namespace DirectX;
 
+const int NROFLIGHTS = 2;
+
 class ConstantBuffers
 {
 private:
@@ -17,29 +19,40 @@ private:
 	WVPMatrix m_WVPMatrix;
 	ID3D11Buffer* m_WVPBuffer;
 
+	struct Light
+	{
+		XMFLOAT4 position;
+		XMFLOAT4 colour;
+		float range;
+		float padding[3];
+	};
+
 	struct LightStruct
 	{
-		XMFLOAT3 lightPos;
-		float padding;
-		XMFLOAT4 lightColour;
-		XMFLOAT3 camPos;
-		float lightRange;
+		Light pointlights[NROFLIGHTS];
 	};
 	LightStruct m_lights;
 	ID3D11Buffer* m_lightsBuffer;
 
-private:
-	bool CreateWVPBuffer(ID3D11Device* device);
-	void UpdateWVP(ID3D11DeviceContext* deviceContext);
+	struct CamStruct
+	{
+		XMFLOAT3 camPos;
+		float padding;
+	};
+	CamStruct m_camStruct;
+	ID3D11Buffer* m_camBuffer;
 
-	bool CreateLightsBuffer(ID3D11Device* device);
+private:
+	void UpdateWVP(ID3D11DeviceContext* deviceContext);
+	//Creates all of the buffers
+	bool CreateBuffers(ID3D11Device* device);
 
 public:
 	ConstantBuffers();
 	~ConstantBuffers();
 
-	bool InitializeWVP(ID3D11Device* device, XMFLOAT4X4 view, XMFLOAT4X4 proj);
-	
+	bool Initialize(ID3D11Device* device, const Camera& camera);
+
 	//Set to the vertex shader
 	void SetWVPToVS(ID3D11DeviceContext* deviceContext);
 	
@@ -49,11 +62,12 @@ public:
 	void UpdateProjection(ID3D11DeviceContext* deviceContext, XMFLOAT4X4 proj);
 	
 	//Light
-	bool InitializeLights(ID3D11Device* device);
-
-	void SetLightToPS(ID3D11DeviceContext* deviceContext);
-
+	void SetLightsToPS(ID3D11DeviceContext* deviceContext);
 	void UpdateLights(ID3D11DeviceContext* deviceContext, Camera& camera);
+
+	//Camera
+	void SetCamToPs(ID3D11DeviceContext* deviceContext);
+	void UpdateCam(ID3D11DeviceContext* deviceContext, Camera& camera);
 
 };
 

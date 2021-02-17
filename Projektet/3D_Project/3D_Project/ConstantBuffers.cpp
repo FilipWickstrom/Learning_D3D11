@@ -6,6 +6,8 @@ ConstantBuffers::ConstantBuffers()
 	m_WVPBuffer = nullptr;
 	m_lights = {};
 	m_lightsBuffer = nullptr;
+	m_camStruct = {};
+	m_camBuffer = nullptr;
 }
 
 ConstantBuffers::~ConstantBuffers()
@@ -14,10 +16,13 @@ ConstantBuffers::~ConstantBuffers()
 		m_WVPBuffer->Release();
 	if (m_lightsBuffer)
 		m_lightsBuffer->Release();
+	if (m_camBuffer)
+		m_camBuffer->Release();
 }
 
-bool ConstantBuffers::CreateWVPBuffer(ID3D11Device* device)
+bool ConstantBuffers::CreateBuffers(ID3D11Device* device)
 {
+	//WVP
 	D3D11_BUFFER_DESC desc = {};
 	desc.ByteWidth = sizeof(WVPMatrix);
 	desc.Usage = D3D11_USAGE_DYNAMIC;
@@ -32,7 +37,61 @@ bool ConstantBuffers::CreateWVPBuffer(ID3D11Device* device)
 	data.SysMemSlicePitch = 0;
 
 	HRESULT hr = device->CreateBuffer(&desc, &data, &m_WVPBuffer);
-	return !FAILED(hr);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create WVP buffer..." << std::endl;
+		return false;
+	}
+
+	//Lights
+	desc.ByteWidth = sizeof(LightStruct);
+	data.pSysMem = &m_lights;
+	hr = device->CreateBuffer(&desc, &data, &m_lightsBuffer);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create lights buffer..." << std::endl;
+		return false;
+	}
+
+	//Cam
+	desc.ByteWidth = sizeof(CamStruct);
+	data.pSysMem = &m_camStruct;
+	hr = device->CreateBuffer(&desc, &data, &m_camBuffer);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create cam buffer..." << std::endl;
+		return false;
+	}
+
+	return true;
+}
+
+bool ConstantBuffers::Initialize(ID3D11Device* device, const Camera& camera)
+{
+	if (!CreateBuffers(device))
+	{
+		std::cerr << "Failed to create buffers..." << std::endl;
+		return false;
+	}
+
+	//World set to just an identity matrix from start
+	XMStoreFloat4x4(&m_WVPMatrix.world, XMMatrixIdentity());
+	m_WVPMatrix.view = camera.GetViewMatrix();
+	m_WVPMatrix.projection = camera.GetProjMatrix();
+
+	//Lights
+	m_lights.pointlights[0].position = XMFLOAT4(0.0f,10.0f,0.0f, 0.0f);
+	m_lights.pointlights[0].colour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
+	m_lights.pointlights[0].range = 10.0f;
+
+	m_lights.pointlights[1].position = XMFLOAT4(8.0f, 5.0f, 8.0f, 0.0f);
+	m_lights.pointlights[1].colour = XMFLOAT4(2.0f, 1.0f, 1.0f, 1.0f);
+	m_lights.pointlights[1].range = 10.0f;
+
+	//Cam
+	m_camStruct.camPos = camera.GetPosition();//XMFLOAT4(camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z, 1.f);
+
+	return true;
 }
 
 void ConstantBuffers::UpdateWVP(ID3D11DeviceContext* deviceContext)
@@ -41,21 +100,6 @@ void ConstantBuffers::UpdateWVP(ID3D11DeviceContext* deviceContext)
 	deviceContext->Map(m_WVPBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &m_WVPMatrix, sizeof(WVPMatrix));
 	deviceContext->Unmap(m_WVPBuffer, 0);
-}
-
-bool ConstantBuffers::InitializeWVP(ID3D11Device* device, XMFLOAT4X4 view, XMFLOAT4X4 proj)
-{
-	if (!CreateWVPBuffer(device))
-	{
-		std::cerr << "Failed to create WVP buffer..." << std::endl;
-		return false;
-	}
-	//World set to just an identity matrix from start
-	XMStoreFloat4x4(&m_WVPMatrix.world, XMMatrixIdentity());
-	m_WVPMatrix.view = view;
-	m_WVPMatrix.projection = proj;
-
-	return true;
 }
 
 void ConstantBuffers::SetWVPToVS(ID3D11DeviceContext* deviceContext)
@@ -81,58 +125,34 @@ void ConstantBuffers::UpdateProjection(ID3D11DeviceContext* deviceContext, XMFLO
 	UpdateWVP(deviceContext);
 }
 
-
-//Lights
-bool ConstantBuffers::CreateLightsBuffer(ID3D11Device* device)
-{
-	D3D11_BUFFER_DESC desc = {};
-	desc.ByteWidth = sizeof(LightStruct);
-	desc.Usage = D3D11_USAGE_DYNAMIC;
-	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	desc.MiscFlags = 0;
-	desc.StructureByteStride = 0;
-
-	D3D11_SUBRESOURCE_DATA data = {};
-	data.pSysMem = &m_lights;
-	data.SysMemPitch = 0;
-	data.SysMemSlicePitch = 0;
-
-	HRESULT hr = device->CreateBuffer(&desc, &data, &m_lightsBuffer);
-	return !FAILED(hr);
-}
-
-bool ConstantBuffers::InitializeLights(ID3D11Device* device)
-{
-	if (!CreateLightsBuffer(device))
-	{
-		std::cerr << "Failed to create lights buffer..." << std::endl;
-		return false;
-	}
-
-	//******TEMP********
-	m_lights.lightPos = { 0.0f,2.0f,0.0f };
-	m_lights.lightColour = { 1.0f,1.0f,1.0f,1.0f };
-	m_lights.camPos = { 0.0f, 0.0f, 0.0f };
-	m_lights.lightRange = 10.0f;
-
-	return true;
-}
-
-void ConstantBuffers::SetLightToPS(ID3D11DeviceContext* deviceContext)
+void ConstantBuffers::SetLightsToPS(ID3D11DeviceContext* deviceContext)
 {
 	deviceContext->PSSetConstantBuffers(0, 1, &m_lightsBuffer);
 }
 
 void ConstantBuffers::UpdateLights(ID3D11DeviceContext* deviceContext, Camera& camera)
 {
-	//TEMP
-	m_lights.camPos = camera.GetPosition();
-	m_lights.lightPos = camera.GetPosition();
+	m_lights.pointlights[0].position = XMFLOAT4(camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z, 0.0f);
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	deviceContext->Map(m_lightsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &m_lights, sizeof(LightStruct));
 	deviceContext->Unmap(m_lightsBuffer, 0);
+}
+
+void ConstantBuffers::SetCamToPs(ID3D11DeviceContext* deviceContext)
+{
+	deviceContext->PSSetConstantBuffers(1, 1, &m_camBuffer);
+}
+
+void ConstantBuffers::UpdateCam(ID3D11DeviceContext* deviceContext, Camera& camera)
+{
+	//Update to the current location of the camera
+	m_camStruct.camPos = camera.GetPosition();//XMFLOAT4(camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z, 0.0f);
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	deviceContext->Map(m_camBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &m_lights, sizeof(CamStruct));
+	deviceContext->Unmap(m_camBuffer, 0);
 }
 

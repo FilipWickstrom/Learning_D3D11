@@ -61,6 +61,6 @@ public:
 	const XMVECTOR& GetRight();
 	const XMVECTOR& GetLeft();
 	
-	const XMFLOAT3& GetPosition();
+	const XMFLOAT3& GetPosition() const;
 
 };
