@@ -1,6 +1,6 @@
 # Blender v2.91.2 OBJ File: ''
 # www.blender.org
-mtllib spherenew.mtl
+mtllib sphere.mtl
 o Sphere_Sphere
 v 0.175896 -0.561343 -1.138423
 v 0.460501 -0.768121 -0.921007

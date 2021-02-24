@@ -4,6 +4,15 @@ Texture2D texture0 : register(t0);
 //Sampler
 SamplerState sampler0 : register(s0);
 
+//Cbuffer
+cbuffer Material : register(b0)
+{
+    float4 ambient;
+    float4 diffuse;
+    float4 specular;
+};
+
+
 //Input from the vertex shader in first pass
 struct PixelInput
 {
@@ -19,7 +28,9 @@ struct PixelOutput
     float4 PositionWS   : SV_TARGET0;
     float4 Colour       : SV_Target1;
     float4 NormalWS     : SV_Target2;
-    //float4 Material : SV_Target2; (float4(Metalness, Glossiness, Shiniess, 1.0f)) or something like it.
+    float4 Ambient      : SV_Target3;
+    float4 Diffuse      : SV_Target4;
+    float4 Specular     : SV_Target5;
 };
 
 PixelOutput main(PixelInput input) : SV_TARGET
@@ -34,6 +45,10 @@ PixelOutput main(PixelInput input) : SV_TARGET
     
     //Sends forward the normal to the g-buffer
     output.NormalWS = float4(input.NormalWS, 1.0f);
+    
+    output.Ambient = ambient;
+    output.Diffuse = diffuse;
+    output.Specular = specular;
     
     return output;
 }

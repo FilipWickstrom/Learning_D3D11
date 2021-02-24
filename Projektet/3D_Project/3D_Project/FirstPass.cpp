@@ -202,7 +202,14 @@ void FirstPass::Bind(ID3D11DeviceContext* deviceContext)
 	deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
 }
 
-ID3D11ShaderResourceView* FirstPass::GetShaderResourceView(int index)
+const std::vector<ID3D11ShaderResourceView*> FirstPass::GetShaderResourceViews() const
 {
-	return m_shaderResourceViews[index];
+	std::vector<ID3D11ShaderResourceView*> allSRV;
+
+	for (int i = 0; i < NROFBUFFERS; i++)
+	{
+		allSRV.push_back(m_shaderResourceViews[i]);
+	}
+
+	return allSRV;
 }

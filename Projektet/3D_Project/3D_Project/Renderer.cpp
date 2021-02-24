@@ -83,18 +83,21 @@ void Renderer::Render()
 	//WVP
 	m_constBuffers.SetWVPToVS(m_deviceContext);
 
+	//Material
+	m_constBuffers.SetMaterialPS(m_deviceContext);
+
 	//Render all the objects in the scene
 	m_scene.Render(m_deviceContext, m_constBuffers);
 
 	//Lights
-	m_constBuffers.UpdateLights(m_deviceContext, m_camera);
 	m_constBuffers.UpdateCam(m_deviceContext, m_camera);
+	m_constBuffers.UpdateLights(m_deviceContext, m_camera);
+	m_constBuffers.SetCamToPS(m_deviceContext);
 	m_constBuffers.SetLightsToPS(m_deviceContext);
-	m_constBuffers.SetCamToPs(m_deviceContext);
 	
 	//Second pass - Only for lightning - output to the final render target
 	//Uses the information saves in g-buffer and compute the lightning
-	m_secondPass.Bind(m_deviceContext, m_firstPass.GetShaderResourceView(0), m_firstPass.GetShaderResourceView(1), m_firstPass.GetShaderResourceView(2));
+	m_secondPass.Bind(m_deviceContext, m_firstPass.GetShaderResourceViews());
 
 	//Present the final result
 	m_swapChain->Present(1, 0);

@@ -8,6 +8,8 @@ ConstantBuffers::ConstantBuffers()
 	m_lightsBuffer = nullptr;
 	m_camStruct = {};
 	m_camBuffer = nullptr;
+	m_material = {};
+	m_materialBuffer = nullptr;
 }
 
 ConstantBuffers::~ConstantBuffers()
@@ -18,6 +20,8 @@ ConstantBuffers::~ConstantBuffers()
 		m_lightsBuffer->Release();
 	if (m_camBuffer)
 		m_camBuffer->Release();
+	if (m_materialBuffer)
+		m_materialBuffer->Release();
 }
 
 bool ConstantBuffers::CreateBuffers(ID3D11Device* device)
@@ -53,13 +57,23 @@ bool ConstantBuffers::CreateBuffers(ID3D11Device* device)
 		return false;
 	}
 
-	//Cam
+	//Camera
 	desc.ByteWidth = sizeof(CamStruct);
 	data.pSysMem = &m_camStruct;
 	hr = device->CreateBuffer(&desc, &data, &m_camBuffer);
 	if (FAILED(hr))
 	{
 		std::cerr << "Failed to create cam buffer..." << std::endl;
+		return false;
+	}
+
+	//Material
+	desc.ByteWidth = sizeof(Material);
+	data.pSysMem = &m_material;
+	hr = device->CreateBuffer(&desc, &data, &m_materialBuffer);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create material buffer..." << std::endl;
 		return false;
 	}
 
@@ -79,17 +93,29 @@ bool ConstantBuffers::Initialize(ID3D11Device* device, const Camera& camera)
 	m_WVPMatrix.view = camera.GetViewMatrix();
 	m_WVPMatrix.projection = camera.GetProjMatrix();
 
-	//Lights
-	m_lights.pointlights[0].position = XMFLOAT4(0.0f,10.0f,0.0f, 0.0f);
-	m_lights.pointlights[0].colour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
-	m_lights.pointlights[0].range = 10.0f;
+	//Lights - FIX FUNCTION FOR THIS LATER?
+	m_lights.pointlights[0].position = { 0.0f,1.0f,0.0f, 1.0f };
+	m_lights.pointlights[0].colour = { 1.0f,1.0f,1.0f,1.0f };
+	m_lights.pointlights[0].range = 5.0f;
 
-	m_lights.pointlights[1].position = XMFLOAT4(8.0f, 5.0f, 8.0f, 0.0f);
-	m_lights.pointlights[1].colour = XMFLOAT4(2.0f, 1.0f, 1.0f, 1.0f);
-	m_lights.pointlights[1].range = 10.0f;
+	m_lights.pointlights[1].position = { 10.0f, 1.0f, 10.0f, 1.0f };
+	m_lights.pointlights[1].colour = { 2.0f, 1.0f, 1.0f, 1.0f };
+	m_lights.pointlights[1].range = 15.0f;
+
+	m_lights.pointlights[2].position = { 10.0f, 1.0f, -10.0f, 1.0f };
+	m_lights.pointlights[2].colour = { 1.0f, 2.0f, 1.0f, 1.0f };
+	m_lights.pointlights[2].range = 15.0f;
+
+	m_lights.pointlights[3].position = { -10.0f, 1.0f, -10.0f, 1.0f };
+	m_lights.pointlights[3].colour = { 1.0f, 1.0f, 2.0f, 1.0f };
+	m_lights.pointlights[3].range = 15.0f;
+
+	m_lights.pointlights[4].position = { -10.0f, 1.0f, 10.0f, 1.0f };
+	m_lights.pointlights[4].colour = { 1.0f, 2.0f, 2.0f, 1.0f };
+	m_lights.pointlights[4].range = 15.0f;
 
 	//Cam
-	m_camStruct.camPos = camera.GetPosition();//XMFLOAT4(camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z, 1.f);
+	m_camStruct.camPos = camera.GetPosition();
 
 	return true;
 }
@@ -132,6 +158,7 @@ void ConstantBuffers::SetLightsToPS(ID3D11DeviceContext* deviceContext)
 
 void ConstantBuffers::UpdateLights(ID3D11DeviceContext* deviceContext, Camera& camera)
 {
+	//Pointlight on the camera
 	m_lights.pointlights[0].position = XMFLOAT4(camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z, 0.0f);
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -140,7 +167,7 @@ void ConstantBuffers::UpdateLights(ID3D11DeviceContext* deviceContext, Camera& c
 	deviceContext->Unmap(m_lightsBuffer, 0);
 }
 
-void ConstantBuffers::SetCamToPs(ID3D11DeviceContext* deviceContext)
+void ConstantBuffers::SetCamToPS(ID3D11DeviceContext* deviceContext)
 {
 	deviceContext->PSSetConstantBuffers(1, 1, &m_camBuffer);
 }
@@ -148,11 +175,28 @@ void ConstantBuffers::SetCamToPs(ID3D11DeviceContext* deviceContext)
 void ConstantBuffers::UpdateCam(ID3D11DeviceContext* deviceContext, Camera& camera)
 {
 	//Update to the current location of the camera
-	m_camStruct.camPos = camera.GetPosition();//XMFLOAT4(camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z, 0.0f);
+	m_camStruct.camPos = camera.GetPosition();
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	deviceContext->Map(m_camBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &m_lights, sizeof(CamStruct));
 	deviceContext->Unmap(m_camBuffer, 0);
+}
+
+void ConstantBuffers::UpdateMaterial(ID3D11DeviceContext* deviceContext, XMFLOAT4 ambient, XMFLOAT4 diffuse, XMFLOAT4 specular)
+{
+	m_material.ambient = ambient;
+	m_material.diffuse = diffuse;
+	m_material.specular = specular;
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	deviceContext->Map(m_materialBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &m_material, sizeof(Material));
+	deviceContext->Unmap(m_materialBuffer, 0);
+}
+
+void ConstantBuffers::SetMaterialPS(ID3D11DeviceContext* deviceContext)
+{
+	deviceContext->PSSetConstantBuffers(0, 1, &m_materialBuffer);
 }
 

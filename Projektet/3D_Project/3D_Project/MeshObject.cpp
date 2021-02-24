@@ -12,6 +12,11 @@ MeshObject::MeshObject()
 	m_textureSRV = nullptr;
 
 	XMStoreFloat4x4(&m_modelMatrix, XMMatrixIdentity());
+
+	m_objfile = "";
+	m_mtlfile = "";
+	m_texturefile = "";
+	m_material = {};
 }
 
 MeshObject::~MeshObject()
@@ -25,11 +30,11 @@ MeshObject::~MeshObject()
 }
 
 //Some more work needs to be done...
-bool MeshObject::LoadOBJ(std::string filepath, ID3D11Device* device)
+bool MeshObject::LoadOBJ(ID3D11Device* device)
 {
 	//Start reading from file
 	std::ifstream file;
-	file.open(filepath, std::ios::in);
+	file.open(m_objfile);
 	if (file.is_open())
 	{
 		std::stringstream ss;
@@ -40,7 +45,6 @@ bool MeshObject::LoadOBJ(std::string filepath, ID3D11Device* device)
 		std::vector <std::array<float, 3>> positions;
 		std::vector <std::array<float, 2>> textureCoords;
 		std::vector <std::array<float, 3>> normals;
-
 		std::vector <SimpleVertex> vertices;
 
 		while (getline(file, line))
@@ -88,8 +92,12 @@ bool MeshObject::LoadOBJ(std::string filepath, ID3D11Device* device)
 					vertices.push_back(thevertex);
 				}
 			}
-			//If matllib???	*** FIX LATER
-			//if usemtl
+
+			//Save down the mtllib
+			else if (prefix == "mtllib")
+			{
+				ss >> m_mtlfile;
+			}
 		}
 		file.close();
 
@@ -123,11 +131,11 @@ bool MeshObject::LoadOBJ(std::string filepath, ID3D11Device* device)
 	return true;
 }
 
-bool MeshObject::LoadTextures(std::string filepath, ID3D11Device* device)
+bool MeshObject::LoadTextures(ID3D11Device* device)
 {
 	int textureWidth, textureHeight, channels;
 	//Unsigned char because 1 byte (8 bits) which is good for format later on
-	unsigned char* image = stbi_load(filepath.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
+	unsigned char* image = stbi_load(m_texturefile.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
 
 	//Description
 	D3D11_TEXTURE2D_DESC desc;
@@ -162,30 +170,126 @@ bool MeshObject::LoadTextures(std::string filepath, ID3D11Device* device)
 	return !FAILED(hr);
 }
 
-bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string texture, std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
+bool MeshObject::LoadMaterial(ID3D11Device* device)
 {
-	bool success = true;
-
-	//Load the obj-file
-	if (LoadOBJ("ObjFiles/" + obj, device))
+	std::ifstream file;
+	file.open(m_mtlfile, std::ios::in);
+	if (file.is_open())
 	{
-		//LATER FIX: Read from mtl file which texture to use	***
+		std::stringstream ss;
+		std::string line = "";
+		std::string prefix = "";
 
-		//Load in texture
-		if (!LoadTextures("Textures/"+ texture, device))
+		while (getline(file, line))
 		{
-			std::cerr << "Failed to load texture..." << std::endl;
-			success = false;
+			ss.clear();
+			ss.str(line);
+			ss >> prefix;
+
+			//Ambient
+			if (prefix == "Ka")
+			{
+				ss >> m_material.ambient.x >> m_material.ambient.y >> m_material.ambient.z;
+			}
+			//Diffuse
+			else if (prefix == "Kd")
+			{
+				ss >> m_material.diffuse.x >> m_material.diffuse.y >> m_material.diffuse.z;
+			}
+			//Specular
+			else if (prefix == "Ks")
+			{
+				ss >> m_material.specular.x >> m_material.specular.y >> m_material.specular.z;
+			}
+			//Shiniess
+			else if (prefix == "Ns")
+			{
+				ss >> m_material.specular.w;
+			}
+			//Texturefile
+			else if (prefix == "map_Kd")
+			{
+				ss >> m_texturefile;
+			}
+			//Others getting ignored
 		}
+		file.close();
 	}
 	else
 	{
-		std::cerr << "Failed to load file... Can only take '.obj'-files..." << std::endl;
-		success = false;
+		std::cout << "Failed to open mtl file..." << std::endl;
+		return false;
 	}
 
-	//Load in the modell matrix
-	UpdateModelMatrix(pos, scl, rot);
+
+	return true;
+}
+
+bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string texture, 
+					  std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
+{
+	bool success = true;
+
+	//Don't want an empty file
+	if (obj != "")
+	{
+		m_objfile = "ObjFiles/" + obj;
+		
+		//Load the obj-file
+		if (LoadOBJ(device))
+		{
+			//Don't want an empty mtlfile...				//USE DEFAULT MTL file?
+			if (m_mtlfile != "")
+			{
+				m_mtlfile = "ObjFiles/" + m_mtlfile;
+
+				//Load mtl
+				if (LoadMaterial(device))
+				{
+					//if we got texture
+					if (m_texturefile != "")
+					{
+						m_texturefile = "Textures/" + m_texturefile;
+
+						//Load in texture
+						if (!LoadTextures(device))
+						{
+							std::cerr << "Failed to load texture..." << std::endl;
+							success = false;
+						}
+					}
+					else
+					{
+						std::cerr << "Texturefile empty..." << std::endl;
+					}
+				}
+				else
+				{
+					std::cerr << "LoadMaterial() failed..." << std::endl;
+					success = false;
+				}
+			}
+			else
+			{
+				std::cerr << "Mtlfile empty" << std::endl;		//MAYBE KEEP IT? MATERIAL NOT SUPER IMPORTANT
+				success = false;
+			}
+		}
+		else
+		{
+			std::cerr << "Failed to load file... Can only take '.obj'-files..." << std::endl;
+			success = false;
+		}
+
+		//Load in the modell matrix
+		UpdateModelMatrix(pos, scl, rot);
+
+	}
+	else
+	{
+		std::cerr << "Failed to find objectfile..." << std::endl;
+		success = false;
+	}
 
 	return success;
 }
@@ -198,9 +302,14 @@ void MeshObject::UpdateModelMatrix(std::array<float, 3> pos, std::array<float, 3
 									XMMatrixTranslation(pos[0], pos[1], pos[2]));
 }
 
-XMFLOAT4X4 MeshObject::GetModelMatrix() const
+const XMFLOAT4X4 MeshObject::GetModelMatrix() const
 {
 	return m_modelMatrix;
+}
+
+const MeshObject::Material MeshObject::GetMaterial() const
+{
+	return m_material;
 }
 
 void MeshObject::Render(ID3D11DeviceContext* deviceContext)

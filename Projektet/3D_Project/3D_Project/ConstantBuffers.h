@@ -5,11 +5,12 @@
 #include "Camera.h"
 using namespace DirectX;
 
-const int NROFLIGHTS = 2;
+const int NROFLIGHTS = 5;
 
 class ConstantBuffers
 {
 private:
+	//	World view projection
 	struct WVPMatrix
 	{
 		XMFLOAT4X4 world;
@@ -19,11 +20,17 @@ private:
 	WVPMatrix m_WVPMatrix;
 	ID3D11Buffer* m_WVPBuffer;
 
+
+	//	Lights
 	struct Light
 	{
 		XMFLOAT4 position;
 		XMFLOAT4 colour;
 		float range;
+		//float intensity;		//EXTRA****
+		//float4 ambient
+		//float4 diffuse
+		//float4 specular
 		float padding[3];
 	};
 
@@ -34,6 +41,7 @@ private:
 	LightStruct m_lights;
 	ID3D11Buffer* m_lightsBuffer;
 
+	//	Camera position
 	struct CamStruct
 	{
 		XMFLOAT3 camPos;
@@ -41,6 +49,16 @@ private:
 	};
 	CamStruct m_camStruct;
 	ID3D11Buffer* m_camBuffer;
+
+	//	Material for current object
+	struct Material
+	{
+		XMFLOAT4 ambient;
+		XMFLOAT4 diffuse;
+		XMFLOAT4 specular;
+	};
+	Material m_material;
+	ID3D11Buffer* m_materialBuffer;
 
 private:
 	void UpdateWVP(ID3D11DeviceContext* deviceContext);
@@ -66,8 +84,12 @@ public:
 	void UpdateLights(ID3D11DeviceContext* deviceContext, Camera& camera);
 
 	//Camera
-	void SetCamToPs(ID3D11DeviceContext* deviceContext);
+	void SetCamToPS(ID3D11DeviceContext* deviceContext);
 	void UpdateCam(ID3D11DeviceContext* deviceContext, Camera& camera);
+
+	//Material
+	void UpdateMaterial(ID3D11DeviceContext* deviceContext, XMFLOAT4 ambient, XMFLOAT4 diffuse, XMFLOAT4 specular);
+	void SetMaterialPS(ID3D11DeviceContext* deviceContext);
 
 };
 

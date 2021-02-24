@@ -1,6 +1,7 @@
 #pragma once
 #include "InitFunctions.h"
 #include "ScreenQuad.h"
+#include <vector>
 
 class SecondPass
 {
@@ -12,9 +13,6 @@ private:
 
 	ID3D11RenderTargetView* m_backbuffer;
 	ScreenQuad m_screenQuad;
-
-	ID3D11Texture2D* m_depthTexture;
-	ID3D11DepthStencilView* m_depthView;
 	D3D11_VIEWPORT m_viewport;
 
 	float m_clearColour[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -32,6 +30,7 @@ public:
 	//Full initialization of everything needed for the first pass to work
 	bool Initialize(ID3D11Device* device, UINT winWidth, UINT winHeight, IDXGISwapChain* swapChain);
 
-	void Bind(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* srv1, ID3D11ShaderResourceView* srv2, ID3D11ShaderResourceView* srv3);
+	//Binding everything needed including all the gbuffers
+	void Bind(ID3D11DeviceContext* deviceContext, std::vector<ID3D11ShaderResourceView*>gbuffers);
 
 };

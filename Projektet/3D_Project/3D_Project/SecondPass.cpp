@@ -6,11 +6,7 @@ SecondPass::SecondPass()
 	m_pixelShader = nullptr;
 	m_anisoSampler = nullptr;
 	m_inputLayout = nullptr;
-
 	m_backbuffer = nullptr;
-
-	m_depthTexture = nullptr;
-	m_depthView = nullptr;
 	m_viewport = {};
 }
 
@@ -24,15 +20,8 @@ SecondPass::~SecondPass()
 		m_anisoSampler->Release();
 	if (m_inputLayout)
 		m_inputLayout->Release();
-
 	if (m_backbuffer)
 		m_backbuffer->Release();
-
-	if (m_depthTexture)
-		m_depthTexture->Release();
-	if (m_depthView)
-		m_depthView->Release();
-
 }
 
 bool SecondPass::InitInputLayout(ID3D11Device* device, std::string vsByteCode)
@@ -89,13 +78,6 @@ bool SecondPass::Initialize(ID3D11Device* device, UINT winWidth, UINT winHeight,
 		return false;
 	}
 
-	//Initialize depth buffer
-	if (!InitializeDepthBuffer(device, m_depthTexture, m_depthView, winWidth, winHeight))
-	{
-		std::cerr << "Failed to initialize the depth buffer..." << std::endl;
-		return false;
-	}
-
 	InitializeViewport(m_viewport, winWidth, winHeight);
 
 	//Initialize the screenquad to render final to
@@ -108,7 +90,7 @@ bool SecondPass::Initialize(ID3D11Device* device, UINT winWidth, UINT winHeight,
 	return true;
 }
 
-void SecondPass::Bind(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* srv1, ID3D11ShaderResourceView* srv2, ID3D11ShaderResourceView* srv3)
+void SecondPass::Bind(ID3D11DeviceContext* deviceContext, std::vector<ID3D11ShaderResourceView*>gbuffers)
 {
 	//Specific input layout for screen quad
 	deviceContext->IASetInputLayout(m_inputLayout);
@@ -117,11 +99,10 @@ void SecondPass::Bind(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceVi
 	deviceContext->RSSetViewports(1, &m_viewport);
 
 	//Set the rendertarget for the outputmerger to the backbuffer
-	deviceContext->OMSetRenderTargets(1, &m_backbuffer, m_depthView);
+	deviceContext->OMSetRenderTargets(1, &m_backbuffer, nullptr);
 	
 	//Clearing the views
 	deviceContext->ClearRenderTargetView(m_backbuffer, m_clearColour);
-	deviceContext->ClearDepthStencilView(m_depthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	//Set the sampler to use in the pixelshader
 	deviceContext->PSSetSamplers(0, 1, &m_anisoSampler);
@@ -131,9 +112,10 @@ void SecondPass::Bind(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceVi
 	deviceContext->PSSetShader(m_pixelShader, nullptr, 0);
 
 	//Set so that the gbuffers can be used in the pixelshader
-	deviceContext->PSSetShaderResources(0, 1, &srv1);
-	deviceContext->PSSetShaderResources(1, 1, &srv2);
-	deviceContext->PSSetShaderResources(2, 1, &srv3);
+	for (int i = 0; i < gbuffers.size(); i++)
+	{
+		deviceContext->PSSetShaderResources(i, 1, &gbuffers[i]);
+	}
 
 	//Finally render to the screenquad
 	m_screenQuad.Render(deviceContext);

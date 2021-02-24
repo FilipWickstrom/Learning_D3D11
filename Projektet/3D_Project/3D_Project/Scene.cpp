@@ -25,7 +25,7 @@ bool Scene::Load(ID3D11Device* device)
 	m_objects.push_back(mesh0);
 
 	MeshObject* mesh1 = new MeshObject();
-	if (!mesh1->Load(device, "cube.obj", "techflip.png", { 2,0,0 }, { 1,1,1 }, { 0, 45, 0 }))
+	if (!mesh1->Load(device, "cube.obj", "techflip.png", { 2,1,0 }, { 1,1,1 }, { 0, 0, 0 }))
 	{
 		std::cerr << "Failed to load mesh1..." << std::endl;
 		return false;
@@ -41,7 +41,7 @@ bool Scene::Load(ID3D11Device* device)
 	m_objects.push_back(mesh2);
 
 	MeshObject* mesh3 = new MeshObject();
-	if (!mesh3->Load(device, "noah.obj", "base.png", { 4, 0.5, -5 }, { 1, 1, 1 }, {0, 180, 0}))
+	if (!mesh3->Load(device, "betternoah.obj", "base.png", { 4, 0.5, -5 }, { 1, 1, 1 }, {0, 180, 0}))
 	{
 		std::cerr << "Failed to load mesh3..." << std::endl;
 	}
@@ -50,7 +50,7 @@ bool Scene::Load(ID3D11Device* device)
 	MeshObject* mesh4 = new MeshObject();
 	if (!mesh4->Load(device, "sphere.obj", "base.png", { -4, 0, -5 }, { 1, 1, 1 }, { 0, 0, 0 }))
 	{
-		std::cerr << "Failed to load mesh3..." << std::endl;
+		std::cerr << "Failed to load mesh4..." << std::endl;
 	}
 	m_objects.push_back(mesh4);
 
@@ -84,6 +84,7 @@ void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf
 		else
 		{
 			constBuf.UpdateWorld(deviceContext, obj->GetModelMatrix());
+			constBuf.UpdateMaterial(deviceContext, obj->GetMaterial().ambient, obj->GetMaterial().diffuse, obj->GetMaterial().specular);
 		}
 
 		//Render the object
