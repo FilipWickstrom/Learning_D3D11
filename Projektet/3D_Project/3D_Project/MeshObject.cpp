@@ -13,9 +13,7 @@ MeshObject::MeshObject()
 
 	XMStoreFloat4x4(&m_modelMatrix, XMMatrixIdentity());
 
-	m_objfile = "";
 	m_mtlfile = "";
-	m_texturefile = "";
 	m_material = {};
 }
 
@@ -30,11 +28,11 @@ MeshObject::~MeshObject()
 }
 
 //Some more work needs to be done...
-bool MeshObject::LoadOBJ(ID3D11Device* device)
+bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 {
 	//Start reading from file
 	std::ifstream file;
-	file.open(m_objfile);
+	file.open(objfile);
 	if (file.is_open())
 	{
 		std::stringstream ss;
@@ -131,11 +129,11 @@ bool MeshObject::LoadOBJ(ID3D11Device* device)
 	return true;
 }
 
-bool MeshObject::LoadTextures(ID3D11Device* device)
+bool MeshObject::LoadTextures(ID3D11Device* device, std::string texture)
 {
 	int textureWidth, textureHeight, channels;
 	//Unsigned char because 1 byte (8 bits) which is good for format later on
-	unsigned char* image = stbi_load(m_texturefile.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
+	unsigned char* image = stbi_load(texture.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
 
 	//Description
 	D3D11_TEXTURE2D_DESC desc;
@@ -206,11 +204,6 @@ bool MeshObject::LoadMaterial(ID3D11Device* device)
 			{
 				ss >> m_material.specular.w;
 			}
-			//Texturefile
-			else if (prefix == "map_Kd")
-			{
-				ss >> m_texturefile;
-			}
 			//Others getting ignored
 		}
 		file.close();
@@ -230,66 +223,39 @@ bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string texture
 {
 	bool success = true;
 
-	//Don't want an empty file
-	if (obj != "")
+	//Load the obj-file
+	if (LoadOBJ(device, "ObjFiles/" + obj))
 	{
-		m_objfile = "ObjFiles/" + obj;
-		
-		//Load the obj-file
-		if (LoadOBJ(device))
+		//Use default material if not found
+		if (m_mtlfile == "")
+			m_mtlfile = "ObjFiles/default.mtl";
+		else
+			m_mtlfile = "ObjFiles/" + m_mtlfile;
+
+		//Load mtl
+		if (LoadMaterial(device))
 		{
-			//Don't want an empty mtlfile...				//USE DEFAULT MTL file?
-			if (m_mtlfile != "")
+			//Load in texture
+			if (!LoadTextures(device, "Textures/" + texture))
 			{
-				m_mtlfile = "ObjFiles/" + m_mtlfile;
-
-				//Load mtl
-				if (LoadMaterial(device))
-				{
-					//if we got texture
-					if (m_texturefile != "")
-					{
-						m_texturefile = "Textures/" + m_texturefile;
-
-						//Load in texture
-						if (!LoadTextures(device))
-						{
-							std::cerr << "Failed to load texture..." << std::endl;
-							success = false;
-						}
-					}
-					else
-					{
-						std::cerr << "Texturefile empty..." << std::endl;
-					}
-				}
-				else
-				{
-					std::cerr << "LoadMaterial() failed..." << std::endl;
-					success = false;
-				}
-			}
-			else
-			{
-				std::cerr << "Mtlfile empty" << std::endl;		//MAYBE KEEP IT? MATERIAL NOT SUPER IMPORTANT
+				std::cerr << "Failed to load texture..." << std::endl;
 				success = false;
 			}
 		}
 		else
 		{
-			std::cerr << "Failed to load file... Can only take '.obj'-files..." << std::endl;
+			std::cerr << "LoadMaterial() failed..." << std::endl;
 			success = false;
 		}
-
-		//Load in the modell matrix
-		UpdateModelMatrix(pos, scl, rot);
-
 	}
 	else
 	{
-		std::cerr << "Failed to find objectfile..." << std::endl;
+		std::cerr << "Failed to load file... Can only take '.obj'-files..." << std::endl;
 		success = false;
 	}
+
+	//Load in the modell matrix
+	UpdateModelMatrix(pos, scl, rot);
 
 	return success;
 }

@@ -21,9 +21,6 @@ private:
 
 	//Where th model is in the world
 	XMFLOAT4X4 m_modelMatrix;
-
-	std::string m_objfile;
-	std::string m_texturefile;
 	std::string m_mtlfile;
 
 	struct SimpleVertex
@@ -53,15 +50,15 @@ private:
 	Material m_material;
 
 private:
-	bool LoadOBJ(ID3D11Device* device);
-	bool LoadTextures(ID3D11Device* device);
+	bool LoadOBJ(ID3D11Device* device, std::string objfile);
+	bool LoadTextures(ID3D11Device* device, std::string texture);
 	bool LoadMaterial(ID3D11Device* device);
 
 public:
 	MeshObject();
 	~MeshObject();
 
-	//Loading in the model with file, texture and where and how it going to be placed				//REMOVE TEXTURE FROM THIS?***
+	//Loading in the model with file, texture and where and how it going to be placed
 	bool Load(ID3D11Device* device, std::string obj, std::string texture, 
 			  std::array<float, 3>pos = { 0.0f,0.0f,0.0f },
 			  std::array<float, 3>scl = { 1.0f,1.0f,1.0f },

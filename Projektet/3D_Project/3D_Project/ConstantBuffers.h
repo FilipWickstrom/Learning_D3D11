@@ -27,10 +27,6 @@ private:
 		XMFLOAT4 position;
 		XMFLOAT4 colour;
 		float range;
-		//float intensity;		//EXTRA****
-		//float4 ambient
-		//float4 diffuse
-		//float4 specular
 		float padding[3];
 	};
 

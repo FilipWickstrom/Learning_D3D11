@@ -59,37 +59,15 @@ bool Scene::Load(ID3D11Device* device)
 
 void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf)
 {
-	static float rotation = 0.0f;
-	if (rotation > 360.0f)
-		rotation = 0.0f;
-
-	bool first = false;	//*****
-
 	for (MeshObject* obj : m_objects)
 	{
-		//DELETE LATER****
-		if (first)
-		{
-			XMFLOAT4X4 modelFloat = obj->GetModelMatrix();
-			XMMATRIX modelMatrix = XMLoadFloat4x4(&modelFloat);
-			XMMATRIX rotMatrix = XMMatrixRotationRollPitchYaw(0.0f, rotation, 0.0f);
-			XMMATRIX multiplied = XMMatrixMultiply(rotMatrix, modelMatrix);
-			XMFLOAT4X4 final;
-			XMStoreFloat4x4(&final, multiplied);
-
-			constBuf.UpdateWorld(deviceContext, final);
-			first = false;
-		}
 		//Each object has it own world matrix that is needed to be set
-		else
-		{
-			constBuf.UpdateWorld(deviceContext, obj->GetModelMatrix());
-			constBuf.UpdateMaterial(deviceContext, obj->GetMaterial().ambient, obj->GetMaterial().diffuse, obj->GetMaterial().specular);
-		}
+		constBuf.UpdateWorld(deviceContext, obj->GetModelMatrix());
+		
+		//Each object has its own material
+		constBuf.UpdateMaterial(deviceContext, obj->GetMaterial().ambient, obj->GetMaterial().diffuse, obj->GetMaterial().specular);
 
 		//Render the object
 		obj->Render(deviceContext);
 	}
-
-	rotation += 0.01f;	//*****
 }
