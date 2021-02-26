@@ -4,7 +4,7 @@ Texture2D texture0 : register(t0);
 //Sampler
 SamplerState sampler0 : register(s0);
 
-//Cbuffer
+//Cbuffer - updated for every object
 cbuffer Material : register(b0)
 {
     float4 ambient;

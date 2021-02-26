@@ -7,8 +7,8 @@ Renderer::Renderer(UINT winWidth, UINT winHeight)
 	m_device = nullptr;
 	m_deviceContext = nullptr;
 	m_swapChain = nullptr;
-	
 	m_deltatime = 0.0f;
+	m_VSync = true;
 }
 
 Renderer::~Renderer()
@@ -59,13 +59,20 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 	}
 
 	//Setting up camera and the movement
-	m_camera.Initialize(m_winWidth, m_winHeight, XM_PI * 0.5f, 0.1f, 1000.0f);
+	m_camera.Initialize(m_winWidth, m_winHeight, XM_PI * 0.45f, 0.1f, 1000.0f);
 	m_movement.Initialize(window, 0.005f, 0.004f);
 
 	//Setting up WVP, light buffer and camera
 	if (!m_constBuffers.Initialize(m_device, m_camera))
 	{
 		std::cerr << "Failed to initialize the constbuffers..." << std::endl;
+		return false;
+	}
+
+	//Tesslation
+	if (!m_tessellation.Initialize(m_device))
+	{
+		std::cerr << "Failed to initialize the tessellation..." << std::endl;
 		return false;
 	}
 
@@ -87,8 +94,11 @@ void Renderer::Render()
 	m_constBuffers.SetMaterialPS(m_deviceContext);
 
 	//Render all the objects in the scene
-	m_scene.Render(m_deviceContext, m_constBuffers);
+	m_scene.Render(m_deviceContext, m_constBuffers, m_tessellation);
 
+	//Turning off the tessellation before screen quad
+	m_tessellation.SetShaders(m_deviceContext, false, false);
+	
 	//Lights
 	m_constBuffers.UpdateCam(m_deviceContext, m_camera);
 	m_constBuffers.UpdateLights(m_deviceContext, m_camera);
@@ -100,7 +110,15 @@ void Renderer::Render()
 	m_secondPass.Bind(m_deviceContext, m_firstPass.GetShaderResourceViews());
 
 	//Present the final result
-	m_swapChain->Present(1, 0);
+	Present();
+}
+
+void Renderer::Present()
+{
+	if (m_VSync)
+		m_swapChain->Present(1, 0);
+	else
+		m_swapChain->Present(0, 0);
 }
 
 void Renderer::StartGameLoop(HWND& window)

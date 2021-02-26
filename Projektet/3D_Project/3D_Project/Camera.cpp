@@ -7,7 +7,7 @@ Camera::Camera()
 
 	//Projection matrix - default values
 	m_fieldOfView = XM_PI * 0.5f; //90 degrees
-	m_aspectRatio = float(16 / 9);
+	m_aspectRatio = 16.0f / 9.0f;
 	m_nearPlane = 0.1f;
 	m_farPlane = 1000.0f;
 	UpdateProjMatrix();
@@ -40,7 +40,7 @@ void Camera::Initialize(UINT winWidth, UINT winHeight, float fov, float nearPlan
 {
 	//Projection matrix
 	m_fieldOfView = fov;
-	m_aspectRatio = float(winWidth / winHeight);
+	m_aspectRatio = (float)winWidth / (float)winHeight;
 	m_nearPlane = nearPlane;
 	m_farPlane = farPlane;
 	UpdateProjMatrix();

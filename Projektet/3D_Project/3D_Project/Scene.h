@@ -2,6 +2,7 @@
 #include <vector>
 #include "MeshObject.h"
 #include "ConstantBuffers.h"
+#include "Tessellation.h"
 
 class Scene
 {
@@ -16,5 +17,5 @@ public:
 	bool Load(ID3D11Device* device);
 	
 	//Render all the mesh objects
-	void Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf);
+	void Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf, Tessellation& tessellation);
 };

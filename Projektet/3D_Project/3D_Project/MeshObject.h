@@ -6,6 +6,8 @@
 #include <fstream>			// Reading from file
 #include <sstream>			// For reading parts of strings
 #include <DirectXMath.h>	// 4x4 matrix
+#include "Tessellation.h"
+
 using namespace DirectX;
 
 class MeshObject
@@ -49,6 +51,9 @@ private:
 	};
 	Material m_material;
 
+	bool m_tessallated;
+	bool m_wireFramed;
+
 private:
 	bool LoadOBJ(ID3D11Device* device, std::string objfile);
 	bool LoadTextures(ID3D11Device* device, std::string texture);
@@ -64,6 +69,10 @@ public:
 			  std::array<float, 3>scl = { 1.0f,1.0f,1.0f },
 			  std::array<float, 3>rot = { 0.0f,0.0f,0.0f });
 
+	//Tessellated or not
+	void SetTessellated(bool trueOrFalse);
+	void SetWireframe(bool trueOrFalse);
+
 	//Update the model matrix and uses some defaults if no input
 	void UpdateModelMatrix(std::array<float, 3>pos = { 0.0f,0.0f,0.0f },
 						   std::array<float, 3>scl = { 1.0f,1.0f,1.0f },
@@ -74,5 +83,5 @@ public:
 	const Material GetMaterial() const;
 
 	//Drawing what it got in the buffer
-	void Render(ID3D11DeviceContext* deviceContext);
+	void Render(ID3D11DeviceContext* deviceContext, Tessellation& tessellation);
 };

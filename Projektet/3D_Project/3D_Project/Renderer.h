@@ -7,10 +7,7 @@
 #include "Camera.h"
 #include "Movement.h"
 #include "FPSCounter.h"
-
-//Settings that can be changed. Put in separate file and read from later?
-//Vsync on/off
-//SSAO on/off later?
+#include "Tessellation.h"
 
 class Renderer
 {
@@ -18,6 +15,9 @@ private:
 	//Window settings
 	UINT m_winWidth;
 	UINT m_winHeight;
+
+	//Settings			//Should later be changeble with ImGui
+	bool m_VSync;
 	
 	//Points to all the buffers
 	ID3D11Device* m_device;
@@ -36,12 +36,15 @@ private:
 	Camera m_camera;
 	Movement m_movement;
 
+	Tessellation m_tessellation;
 
+	//Framerate and frametime
 	FPSCounter m_fpscounter;
 	float m_deltatime;
 
 private:
 	void Render();
+	void Present();
 
 public:
 	Renderer(UINT winWidth, UINT winHeight);

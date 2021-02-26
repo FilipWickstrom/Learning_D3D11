@@ -1,9 +1,8 @@
 #pragma once
-#include "InitFunctions.h"
 #include <vector>
+#include "InitFunctions.h"
 
 const int NROFBUFFERS = 6;
-
 
 class FirstPass
 {

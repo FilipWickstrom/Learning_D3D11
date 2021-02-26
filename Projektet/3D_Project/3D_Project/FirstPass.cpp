@@ -125,6 +125,7 @@ bool FirstPass::Initialize(ID3D11Device* device, UINT winWidth, UINT winHeight)
 {
 	std::string vsByteCode = "";
 
+	//Vertex and pixel shader
 	if (!InitializeShaders(device, m_vertexShader, "FirstPassVS.cso", m_pixelShader, "FirstPassPS.cso", vsByteCode))
 	{
 		std::cout << "Failed to initialize vertex- or/and pixelshader..." << std::endl;

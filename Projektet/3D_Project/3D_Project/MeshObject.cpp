@@ -15,6 +15,9 @@ MeshObject::MeshObject()
 
 	m_mtlfile = "";
 	m_material = {};
+
+	m_tessallated = false;
+	m_wireFramed = false;
 }
 
 MeshObject::~MeshObject()
@@ -260,6 +263,17 @@ bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string texture
 	return success;
 }
 
+void MeshObject::SetTessellated(bool trueOrFalse)
+{
+	m_tessallated = trueOrFalse;
+}
+
+void MeshObject::SetWireframe(bool trueOrFalse)
+{
+	m_wireFramed = trueOrFalse;
+}
+
+
 void MeshObject::UpdateModelMatrix(std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
 {
 	float degToRad = XM_PI / 180;
@@ -278,12 +292,15 @@ const MeshObject::Material MeshObject::GetMaterial() const
 	return m_material;
 }
 
-void MeshObject::Render(ID3D11DeviceContext* deviceContext)
+void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation& tessellation)
 {
 	UINT stride = sizeof(SimpleVertex);
 	UINT offset = 0;
 	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//Use tessellation for objects that use it
+	tessellation.SetShaders(deviceContext, m_tessallated, m_wireFramed);
+	
 	deviceContext->PSSetShaderResources(0, 1, &m_textureSRV);
 	deviceContext->Draw(m_vertexCount, 0);
 }
