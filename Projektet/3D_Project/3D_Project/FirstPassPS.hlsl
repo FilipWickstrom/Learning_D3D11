@@ -12,7 +12,6 @@ cbuffer Material : register(b0)
     float4 specular;
 };
 
-
 //Input from the vertex shader in first pass
 struct PixelInput
 {

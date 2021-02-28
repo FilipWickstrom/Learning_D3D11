@@ -54,7 +54,7 @@ bool Scene::Load(ID3D11Device* device)
 
 	// Sphere
 	MeshObject* mesh4 = new MeshObject();
-	if (!mesh4->Load(device, "sphere.obj", "base.png", { -4, 0, -5 }, { 1, 1, 1 }, { 0, 0, 0 }))
+	if (!mesh4->Load(device, "newSphere.obj", "base.png", { -4, 0, -5 }, { 1, 1, 1 }, { 0, 0, 0 }))
 	{
 		std::cerr << "Failed to load the sphere..." << std::endl;
 		return false;
@@ -63,13 +63,18 @@ bool Scene::Load(ID3D11Device* device)
 
 	// Tessellated object
 	MeshObject* mesh5 = new MeshObject();
-	if (!mesh5->Load(device, "plane.obj", "pebbles.png", { 0,2,10 }, { 3,3,3 }, {-90,0,0 }))
+	if (!mesh5->Load(device, "grid10x10.obj", "wetRocks.png", { 0,2,10 }, { 3,3,3 }, {-90,0,0 }))
 	{
 		std::cerr << "Failed to load the tessellated object..." << std::endl;
 		return false;
 	}
 	mesh5->SetTessellated(true);
-	mesh5->SetWireframe(true);
+	mesh5->SetWireframe(false);
+	if (!mesh5->LoadDisplacementMap(device, "wetRocksHeightMap.png"))
+	{
+		std::cerr << "Failed to load diplacement texture for mesh5..." << std::endl;
+		return false;
+	}
 	m_objects.push_back(mesh5);
 
 	return true;

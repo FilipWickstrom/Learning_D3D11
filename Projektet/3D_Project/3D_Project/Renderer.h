@@ -36,8 +36,6 @@ private:
 	Camera m_camera;
 	Movement m_movement;
 
-	Tessellation m_tessellation;
-
 	//Framerate and frametime
 	FPSCounter m_fpscounter;
 	float m_deltatime;

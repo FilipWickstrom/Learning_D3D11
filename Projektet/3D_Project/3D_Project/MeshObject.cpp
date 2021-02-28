@@ -18,16 +18,22 @@ MeshObject::MeshObject()
 
 	m_tessallated = false;
 	m_wireFramed = false;
+	m_displacementMap = nullptr;
+	m_displacementMapSRV = nullptr;
 }
 
 MeshObject::~MeshObject()
 {
-	if (m_vertexBuffer != nullptr)
+	if (m_vertexBuffer)
 		m_vertexBuffer->Release();
-	if (m_texture != nullptr)
+	if (m_texture)
 		m_texture->Release();
-	if (m_textureSRV != nullptr)
+	if (m_textureSRV)
 		m_textureSRV->Release();
+	if (m_displacementMap)
+		m_displacementMap->Release();
+	if (m_displacementMapSRV)
+		m_displacementMapSRV->Release();
 }
 
 //Some more work needs to be done...
@@ -132,22 +138,26 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 	return true;
 }
 
-bool MeshObject::LoadTextures(ID3D11Device* device, std::string texture)
+bool MeshObject::LoadTexture(ID3D11Device* device, std::string texture)
 {
 	int textureWidth, textureHeight, channels;
 	//Unsigned char because 1 byte (8 bits) which is good for format later on
 	unsigned char* image = stbi_load(texture.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
+	if (image == nullptr)
+	{
+		std::cerr << "Stbi_load() failed to find image..." << std::endl;
+		return false;
+	}
 
-	//Description
 	D3D11_TEXTURE2D_DESC desc;
 	desc.Width = textureWidth;
 	desc.Height = textureHeight;
 	desc.MipLevels = 1;
 	desc.ArraySize = 1;
-	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;   //UNORM: 0 - 1
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;		//UNORM: 0 - 1
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
-	desc.Usage = D3D11_USAGE_IMMUTABLE;     //Only reads from GPU
+	desc.Usage = D3D11_USAGE_IMMUTABLE;				//Only reads from GPU
 	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;    //Bind texture to shader
 	desc.CPUAccessFlags = 0;
 	desc.MiscFlags = 0;
@@ -157,17 +167,17 @@ bool MeshObject::LoadTextures(ID3D11Device* device, std::string texture)
 	data.SysMemPitch = textureWidth * channels;     //Distance from one line to another
 	data.SysMemSlicePitch = 0;
 
-	if (FAILED(device->CreateTexture2D(&desc, &data, &m_texture)))
-	{
-		std::cerr << "Failed to create texture..." << std::endl;
-		stbi_image_free(image);
-		return false;
-	}
-
+	HRESULT hr = device->CreateTexture2D(&desc, &data, &m_texture);
 	//Freeing memory
 	stbi_image_free(image);
 
-	HRESULT hr = device->CreateShaderResourceView(m_texture, nullptr, &m_textureSRV);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create texture..." << std::endl;
+		return false;
+	}
+
+	hr = device->CreateShaderResourceView(m_texture, nullptr, &m_textureSRV);
 	return !FAILED(hr);
 }
 
@@ -239,7 +249,7 @@ bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string texture
 		if (LoadMaterial(device))
 		{
 			//Load in texture
-			if (!LoadTextures(device, "Textures/" + texture))
+			if (!LoadTexture(device, "Textures/" + texture))
 			{
 				std::cerr << "Failed to load texture..." << std::endl;
 				success = false;
@@ -273,6 +283,53 @@ void MeshObject::SetWireframe(bool trueOrFalse)
 	m_wireFramed = trueOrFalse;
 }
 
+bool MeshObject::LoadDisplacementMap(ID3D11Device* device, std::string displacementMap)
+{
+	displacementMap = "Textures/" + displacementMap;
+
+	int textureWidth, textureHeight, channels;
+	unsigned char* image = stbi_load(displacementMap.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
+	
+	if (image == nullptr)
+	{
+		std::cerr << "Stbi_load() failed to find image..." << std::endl;
+		return false;
+	}
+
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Width = textureWidth;
+	desc.Height = textureHeight;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;		//UNORM: 0 - 1
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.Usage = D3D11_USAGE_DEFAULT;				//Only reads from GPU
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE| D3D11_BIND_UNORDERED_ACCESS;    //Bind texture to shader
+	desc.CPUAccessFlags = 0;
+	desc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = &image[0];						//Pointer to data
+	data.SysMemPitch = textureWidth * channels;     //Distance from one line to another
+	data.SysMemSlicePitch = 0;
+
+	HRESULT hr = device->CreateTexture2D(&desc, &data, &m_displacementMap);
+	stbi_image_free(image);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create displacement texture..." << std::endl;
+		return false;
+	}
+
+	hr = device->CreateShaderResourceView(m_displacementMap, nullptr, &m_displacementMapSRV);
+	return !FAILED(hr);
+}
+
+const ID3D11ShaderResourceView& MeshObject::GetDisplacementMap() const
+{
+	return *m_displacementMapSRV;
+}
 
 void MeshObject::UpdateModelMatrix(std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
 {
@@ -299,7 +356,7 @@ void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation& tessel
 	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 
 	//Use tessellation for objects that use it
-	tessellation.SetShaders(deviceContext, m_tessallated, m_wireFramed);
+	tessellation.SetShaders(deviceContext, m_tessallated, m_wireFramed, m_displacementMapSRV);
 	
 	deviceContext->PSSetShaderResources(0, 1, &m_textureSRV);
 	deviceContext->Draw(m_vertexCount, 0);

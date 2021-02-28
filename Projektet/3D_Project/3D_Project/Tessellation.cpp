@@ -100,7 +100,7 @@ bool Tessellation::Initialize(ID3D11Device* device)
 	return true;
 }
 
-void Tessellation::SetShaders(ID3D11DeviceContext* deviceContext, bool useTessellation, bool useWireframe)
+void Tessellation::SetShaders(ID3D11DeviceContext* deviceContext, bool useTessellation, bool useWireframe, ID3D11ShaderResourceView* displaceMapSRV)
 {
 	//Settings of tessellation
 	if (useTessellation)
@@ -108,12 +108,14 @@ void Tessellation::SetShaders(ID3D11DeviceContext* deviceContext, bool useTessel
 		deviceContext->HSSetShader(m_hullShader, nullptr, 0);
 		deviceContext->DSSetShader(m_domainShader, nullptr, 0);
 		deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+		deviceContext->DSSetShaderResources(0, 1, &displaceMapSRV);
 	}
 	else
 	{
 		deviceContext->HSSetShader(nullptr, nullptr, 0);
 		deviceContext->DSSetShader(nullptr, nullptr, 0);
 		deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		//deviceContext->DSSetShaderResources(0, 1, nullptr);
 	}
 
 	//Wireframe

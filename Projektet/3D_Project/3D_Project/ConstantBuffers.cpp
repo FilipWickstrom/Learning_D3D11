@@ -131,6 +131,9 @@ void ConstantBuffers::UpdateWVP(ID3D11DeviceContext* deviceContext)
 void ConstantBuffers::SetWVPToVS(ID3D11DeviceContext* deviceContext)
 {
 	deviceContext->VSSetConstantBuffers(0, 1, &m_WVPBuffer);
+
+	//
+	deviceContext->DSSetConstantBuffers(0, 1, &m_WVPBuffer);	//****
 }
 
 void ConstantBuffers::UpdateWorld(ID3D11DeviceContext* deviceContext, XMFLOAT4X4 world)

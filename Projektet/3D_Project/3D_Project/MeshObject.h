@@ -51,12 +51,15 @@ private:
 	};
 	Material m_material;
 
+	//Tessellation
 	bool m_tessallated;
 	bool m_wireFramed;
+	ID3D11Texture2D* m_displacementMap;
+	ID3D11ShaderResourceView* m_displacementMapSRV;
 
 private:
 	bool LoadOBJ(ID3D11Device* device, std::string objfile);
-	bool LoadTextures(ID3D11Device* device, std::string texture);
+	bool LoadTexture(ID3D11Device* device, std::string texture);
 	bool LoadMaterial(ID3D11Device* device);
 
 public:
@@ -72,6 +75,9 @@ public:
 	//Tessellated or not
 	void SetTessellated(bool trueOrFalse);
 	void SetWireframe(bool trueOrFalse);
+	bool LoadDisplacementMap(ID3D11Device* device, std::string displacementMap);
+
+	const ID3D11ShaderResourceView& GetDisplacementMap() const;	///***
 
 	//Update the model matrix and uses some defaults if no input
 	void UpdateModelMatrix(std::array<float, 3>pos = { 0.0f,0.0f,0.0f },

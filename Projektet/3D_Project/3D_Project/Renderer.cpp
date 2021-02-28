@@ -69,13 +69,6 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-	//Tesslation
-	if (!m_tessellation.Initialize(m_device))
-	{
-		std::cerr << "Failed to initialize the tessellation..." << std::endl;
-		return false;
-	}
-
 	m_fpscounter.StartClock();
 
 	return true;
@@ -83,7 +76,8 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 
 void Renderer::Render()
 {
-	//First pass - Only for geometry - outputs data to the g-buffers. 
+	/* ------ First pass - only geometry - saves to gbuffers ------ */
+
 	//Binds the right targets and clears them before new information
 	m_firstPass.Bind(m_deviceContext);
 
@@ -94,12 +88,17 @@ void Renderer::Render()
 	m_constBuffers.SetMaterialPS(m_deviceContext);
 
 	//Render all the objects in the scene
-	m_scene.Render(m_deviceContext, m_constBuffers, m_tessellation);
+	m_scene.Render(m_deviceContext, m_constBuffers, m_firstPass.GetTessellation());
 
-	//Turning off the tessellation before screen quad
-	m_tessellation.SetShaders(m_deviceContext, false, false);
-	
-	//Lights
+	//Turning off the tessellation before screenquad
+	m_firstPass.TurnOffTessellation(m_deviceContext);
+
+	/*------------ First pass done ------------------*/
+
+
+	/* ------ Second pass - lighting only - reads from gbuffers ----- */
+
+	//Preparation for lights
 	m_constBuffers.UpdateCam(m_deviceContext, m_camera);
 	m_constBuffers.UpdateLights(m_deviceContext, m_camera);
 	m_constBuffers.SetCamToPS(m_deviceContext);
@@ -108,6 +107,8 @@ void Renderer::Render()
 	//Second pass - Only for lightning - output to the final render target
 	//Uses the information saves in g-buffer and compute the lightning
 	m_secondPass.Bind(m_deviceContext, m_firstPass.GetShaderResourceViews());
+
+	/*------------ Second pass done ------------------*/
 
 	//Present the final result
 	Present();

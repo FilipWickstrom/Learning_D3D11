@@ -22,9 +22,9 @@ HS_CONSTANT_DATA_OUTPUT ConstantPatchFunction(InputPatch<Vertex, 3> inputPatch, 
 	
     for (int i = 0; i < 3; i++)
     {
-        output.edgeTessFactor[i] = 10.0f;	//Hardcoded for now. Could be changed depending on distance
+        output.edgeTessFactor[i] = 16.0f;	//Hardcoded for now. Could be changed depending on distance
     }
-    output.insideTessFactor = 10.0f;
+    output.insideTessFactor = 16.0f;
 	
     return output;
 }
