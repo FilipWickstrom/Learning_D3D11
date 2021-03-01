@@ -232,5 +232,5 @@ Tessellation& FirstPass::GetTessellation()
 
 void FirstPass::TurnOffTessellation(ID3D11DeviceContext* deviceContext)
 {
-	m_tessellation.SetShaders(deviceContext, false, false, nullptr);
+	m_tessellation.TurnOff(deviceContext);
 }

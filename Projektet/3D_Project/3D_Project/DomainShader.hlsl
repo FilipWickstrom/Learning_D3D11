@@ -1,3 +1,5 @@
+#define DISPLACELEVEL 0.5f;
+
 Texture2D displacementmap : register(t0);
 SamplerState anisoSampler : register(s0);
 
@@ -42,10 +44,9 @@ DomainShaderOutput main(HS_CONSTANT_DATA_OUTPUT input, float3 uvw : SV_DomainLoc
     output.TexCoord = patch[0].TexCoord * uvw.x + patch[1].TexCoord * uvw.y + patch[2].TexCoord * uvw.z;
     output.PositionWS = patch[0].PositionWS * uvw.x + patch[1].PositionWS * uvw.y + patch[2].PositionWS * uvw.z;
     
-    //Modify depending on the diplacementmap
-    const float scale = 0.5f;   //or normalize first? then higher up?
-    float4 disMapVal = displacementmap.SampleLevel(anisoSampler, output.TexCoord, 0.0) * scale;
-    output.PositionWS += (float4(output.NormalWS, 0.0f) * disMapVal);
+    //The amount of displacement from the map
+    float4 displacement = displacementmap.SampleLevel(anisoSampler, output.TexCoord, 0.0) * DISPLACELEVEL;
+    output.PositionWS += (float4(output.NormalWS, 0.0f) * displacement);
     
     //Convert the position back to screenspace
     float4x4 clipspace = mul(View, Projection);

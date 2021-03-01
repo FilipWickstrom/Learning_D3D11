@@ -1,5 +1,5 @@
-#define NROFLIGHTS 5
-#define LIGHTSON false
+#define NROFLIGHTS 3
+#define LIGHTSON true
 
 //GBuffers
 Texture2D positionTexture   : register(t0);
@@ -11,6 +11,13 @@ Texture2D specular          : register(t5);
 
 //Anisotropic sampler
 SamplerState theSampler : register(s0);
+
+/*cbuffer Settings
+{
+    bool LightsOn;
+    bool NormalMappingOn?
+    bool ShadowMappingOn?
+};*/
 
 struct Light
 {

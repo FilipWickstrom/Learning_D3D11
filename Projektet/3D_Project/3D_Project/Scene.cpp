@@ -16,66 +16,88 @@ Scene::~Scene()
 
 bool Scene::Load(ID3D11Device* device)
 {
-	// Cat to the left
-	MeshObject* mesh0 = new MeshObject();
-	if (!mesh0->Load(device, "smallcat.obj", "oldpaper.png", { -2,0,0 }, { 1,1,1 }, { 0,-90,0 }))
-	{
-		std::cerr << "Failed to load the cat..." << std::endl;
-		return false;
-	}
-	m_objects.push_back(mesh0);
-
-	// Cube to the right
-	MeshObject* mesh1 = new MeshObject();
-	if (!mesh1->Load(device, "cube.obj", "techflip.png", { 2,1,0 }, { 1,1,1 }, { 0, 0, 0 }))
-	{
-		std::cerr << "Failed to load the cube..." << std::endl;
-		return false;
-	}
-	m_objects.push_back(mesh1);
-
 	// Floor
-	MeshObject* mesh2 = new MeshObject();
-	if (!mesh2->Load(device, "plane.obj", "stoneGrass.png", { 0,-1.5,0 }, { 10,1,10 }, { 0, 0, 0 }))
+	MeshObject* floor = new MeshObject();
+	if (!floor->Load(device, "plane.obj", "stoneGrass.png", { 0,-1.5,0 }, { 10,1,10 }, { 0, 0, 0 }))
 	{
 		std::cerr << "Failed to load the floor..." << std::endl;
 		return false;
 	}
-	m_objects.push_back(mesh2);
+	m_objects.push_back(floor);
+
+	// Cat
+	MeshObject* cat = new MeshObject();
+	if (!cat->Load(device, "smallcat.obj", "oldpaper.png", { -7,0,-7 }, { 1,1,1 }, { 0, 135,0 }))
+	{
+		std::cerr << "Failed to load the cat..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(cat);
+
+	// Cube
+	MeshObject* cube = new MeshObject();
+	if (!cube->Load(device, "cube.obj", "base.png", { -8,1,0 }, { 1,1,1 }, { 0, 0, 0 }))
+	{
+		std::cerr << "Failed to load the cube..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(cube);
 
 	// Noah - behind you! Ahhh!
-	MeshObject* mesh3 = new MeshObject();
-	if (!mesh3->Load(device, "betternoah.obj", "base.png", { 4, 0.5, -5 }, { 1, 1, 1 }, {0, 180, 0}))
+	MeshObject* noah = new MeshObject();
+	if (!noah->Load(device, "betternoah.obj", "base.png", { 7, 0.5, -7 }, { 1, 1, 1 }, {0, 135, 0}))
 	{
 		std::cerr << "Failed to load Noah..." << std::endl;
 		return false;
 	}
-	m_objects.push_back(mesh3);
+	m_objects.push_back(noah);
 
 	// Sphere
-	MeshObject* mesh4 = new MeshObject();
-	if (!mesh4->Load(device, "newSphere.obj", "base.png", { -4, 0, -5 }, { 1, 1, 1 }, { 0, 0, 0 }))
+	MeshObject* sphere = new MeshObject();
+	if (!sphere->Load(device, "newSphere.obj", "base.png", { 0, 0, -7 }, { 1, 1, 1 }, { 0, 0, 0 }))
 	{
 		std::cerr << "Failed to load the sphere..." << std::endl;
 		return false;
 	}
-	m_objects.push_back(mesh4);
+	m_objects.push_back(sphere);
 
-	// Tessellated object
-	MeshObject* mesh5 = new MeshObject();
-	if (!mesh5->Load(device, "grid10x10.obj", "wetRocks.png", { 0,2,10 }, { 3,3,3 }, {-90,0,0 }))
+	// Tessellated object on grid with 10x10 squares
+	MeshObject* tessGrid = new MeshObject();
+	if (!tessGrid->Load(device, "grid10x10.obj", "wetRocks.png", { 4,2,10 }, { 3,1,3 }, {-90,0,0 }))
 	{
 		std::cerr << "Failed to load the tessellated object..." << std::endl;
 		return false;
 	}
-	mesh5->SetTessellated(true);
-	mesh5->SetWireframe(false);
-	if (!mesh5->LoadDisplacementMap(device, "wetRocksHeightMap.png"))
+	tessGrid->SetTessellated(true);
+	if (!tessGrid->LoadDisplacementMap(device, "wetRocksHeightMap.png"))
 	{
 		std::cerr << "Failed to load diplacement texture for mesh5..." << std::endl;
 		return false;
 	}
-	m_objects.push_back(mesh5);
+	m_objects.push_back(tessGrid);
+
+	// Tessellated object on plane
+	MeshObject* tessPlane = new MeshObject();
+	if (!tessPlane->Load(device, "plane.obj", "wetRocks.png", { -4,2,10 }, { 3,1,3 }, { -90,0,0 }))
+	{
+		std::cerr << "Failed to load the tessellated object..." << std::endl;
+		return false;
+	}
+	tessPlane->SetTessellated(true);
+	if (!tessPlane->LoadDisplacementMap(device, "wetRocksHeightMap.png"))
+	{
+		std::cerr << "Failed to load diplacement texture for mesh5..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(tessPlane);
+
+	MeshObject* normalPlane = new MeshObject();
+	if (!normalPlane->Load(device, "plane.obj", "brick.png", { 10, 2, 2 }, { 3, 1, 3 }, { 90, -90, 0 }))
+	{
+		std::cerr << "Failed to load the sphere..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(normalPlane);
 
 	return true;
 }

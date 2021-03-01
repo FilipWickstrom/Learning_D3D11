@@ -1,3 +1,4 @@
+#define TESSELLATIONLEVEL 16.0f;
 
 // Output patch constant data
 struct HS_CONSTANT_DATA_OUTPUT
@@ -22,9 +23,9 @@ HS_CONSTANT_DATA_OUTPUT ConstantPatchFunction(InputPatch<Vertex, 3> inputPatch, 
 	
     for (int i = 0; i < 3; i++)
     {
-        output.edgeTessFactor[i] = 16.0f;	//Hardcoded for now. Could be changed depending on distance
+        output.edgeTessFactor[i] = TESSELLATIONLEVEL;
     }
-    output.insideTessFactor = 16.0f;
+    output.insideTessFactor = TESSELLATIONLEVEL;
 	
     return output;
 }

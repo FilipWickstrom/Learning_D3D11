@@ -81,8 +81,8 @@ void Renderer::Render()
 	//Binds the right targets and clears them before new information
 	m_firstPass.Bind(m_deviceContext);
 
-	//WVP
-	m_constBuffers.SetWVPToVS(m_deviceContext);
+	//WVP - for vertex shader and domain shader
+	m_constBuffers.SetWVP(m_deviceContext);
 
 	//Material
 	m_constBuffers.SetMaterialPS(m_deviceContext);

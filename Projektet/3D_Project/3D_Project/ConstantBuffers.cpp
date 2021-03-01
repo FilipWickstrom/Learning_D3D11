@@ -93,26 +93,20 @@ bool ConstantBuffers::Initialize(ID3D11Device* device, const Camera& camera)
 	m_WVPMatrix.view = camera.GetViewMatrix();
 	m_WVPMatrix.projection = camera.GetProjMatrix();
 
-	//Lights - FIX FUNCTION FOR THIS LATER?
+	//Camera light
 	m_lights.pointlights[0].position = { 0.0f,1.0f,0.0f, 1.0f };
 	m_lights.pointlights[0].colour = { 1.0f,1.0f,1.0f,1.0f };
 	m_lights.pointlights[0].range = 5.0f;
 
-	m_lights.pointlights[1].position = { 10.0f, 1.0f, 10.0f, 1.0f };
-	m_lights.pointlights[1].colour = { 2.0f, 1.0f, 1.0f, 1.0f };
-	m_lights.pointlights[1].range = 15.0f;
+	//Front light - yellow
+	m_lights.pointlights[1].position = { 0.0f, 5.0f, 8.0f, 1.0f };
+	m_lights.pointlights[1].colour = { 1.8f, 1.8f, 1.0f, 1.0f };
+	m_lights.pointlights[1].range = 12.0f;
 
-	m_lights.pointlights[2].position = { 10.0f, 1.0f, -10.0f, 1.0f };
-	m_lights.pointlights[2].colour = { 1.0f, 2.0f, 1.0f, 1.0f };
-	m_lights.pointlights[2].range = 15.0f;
-
-	m_lights.pointlights[3].position = { -10.0f, 1.0f, -10.0f, 1.0f };
-	m_lights.pointlights[3].colour = { 1.0f, 1.0f, 2.0f, 1.0f };
-	m_lights.pointlights[3].range = 15.0f;
-
-	m_lights.pointlights[4].position = { -10.0f, 1.0f, 10.0f, 1.0f };
-	m_lights.pointlights[4].colour = { 1.0f, 2.0f, 2.0f, 1.0f };
-	m_lights.pointlights[4].range = 15.0f;
+	//Back light - blue
+	m_lights.pointlights[2].position = { 0.0f, 5.0f, -8.0f, 1.0f };
+	m_lights.pointlights[2].colour = { 1.0f, 1.0f, 1.6f, 1.0f };
+	m_lights.pointlights[2].range = 12.0f;
 
 	//Cam
 	m_camStruct.camPos = camera.GetPosition();
@@ -128,12 +122,10 @@ void ConstantBuffers::UpdateWVP(ID3D11DeviceContext* deviceContext)
 	deviceContext->Unmap(m_WVPBuffer, 0);
 }
 
-void ConstantBuffers::SetWVPToVS(ID3D11DeviceContext* deviceContext)
+void ConstantBuffers::SetWVP(ID3D11DeviceContext* deviceContext)
 {
 	deviceContext->VSSetConstantBuffers(0, 1, &m_WVPBuffer);
-
-	//
-	deviceContext->DSSetConstantBuffers(0, 1, &m_WVPBuffer);	//****
+	deviceContext->DSSetConstantBuffers(0, 1, &m_WVPBuffer);
 }
 
 void ConstantBuffers::UpdateWorld(ID3D11DeviceContext* deviceContext, XMFLOAT4X4 world)

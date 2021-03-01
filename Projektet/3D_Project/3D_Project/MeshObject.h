@@ -53,7 +53,6 @@ private:
 
 	//Tessellation
 	bool m_tessallated;
-	bool m_wireFramed;
 	ID3D11Texture2D* m_displacementMap;
 	ID3D11ShaderResourceView* m_displacementMapSRV;
 
@@ -74,10 +73,7 @@ public:
 
 	//Tessellated or not
 	void SetTessellated(bool trueOrFalse);
-	void SetWireframe(bool trueOrFalse);
 	bool LoadDisplacementMap(ID3D11Device* device, std::string displacementMap);
-
-	const ID3D11ShaderResourceView& GetDisplacementMap() const;	///***
 
 	//Update the model matrix and uses some defaults if no input
 	void UpdateModelMatrix(std::array<float, 3>pos = { 0.0f,0.0f,0.0f },

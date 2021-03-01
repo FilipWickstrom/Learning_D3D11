@@ -5,7 +5,7 @@
 #include "Camera.h"
 using namespace DirectX;
 
-const int NROFLIGHTS = 5;
+const int NROFLIGHTS = 3;
 
 class ConstantBuffers
 {
@@ -67,8 +67,8 @@ public:
 
 	bool Initialize(ID3D11Device* device, const Camera& camera);
 
-	//Set to the vertex shader
-	void SetWVPToVS(ID3D11DeviceContext* deviceContext);
+	//Set the wvp to vertex shader and domain shader
+	void SetWVP(ID3D11DeviceContext* deviceContext);
 	
 	//Update the struct
 	void UpdateWorld(ID3D11DeviceContext* deviceContext, XMFLOAT4X4 world);

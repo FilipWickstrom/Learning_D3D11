@@ -9,7 +9,10 @@ class Tessellation
 private:
 	ID3D11HullShader* m_hullShader;
 	ID3D11DomainShader* m_domainShader;
-	ID3D11RasterizerState* m_rasterizerState;	//For wireframe
+
+	//Wireframe
+	ID3D11RasterizerState* m_rasterizerState;
+	bool m_wireframeOn;
 
 private:
 	bool LoadShaders(ID3D11Device* device);
@@ -21,7 +24,11 @@ public:
 
 	bool Initialize(ID3D11Device* device);
 	void SetShaders(ID3D11DeviceContext* deviceContext, 
-					bool useTessellation, 
-					bool useWireframe, 
+					bool useTessellation,  
 					ID3D11ShaderResourceView* displaceMapSRV);
+	
+	void SetWireframe(bool trueorfalse);
+
+	//For screen quad
+	void TurnOff(ID3D11DeviceContext* deviceContext);
 };

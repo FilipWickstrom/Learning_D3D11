@@ -56,11 +56,11 @@ void Movement::KeyboardInput(float dt, Camera& camera)
 			movement += camera.GetLeft();
 	}
 	//Move up or down
-	if (kb.Q)
+	if (kb.Space)
 	{
 		movement += upOrDown;
 	}
-	if (kb.E)
+	if (kb.LeftControl)
 	{
 		movement += (-upOrDown);
 	}

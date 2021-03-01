@@ -5,6 +5,8 @@ Tessellation::Tessellation()
 	m_hullShader = nullptr;
 	m_domainShader = nullptr;
 	m_rasterizerState = nullptr;
+
+	m_wireframeOn = false;	//make changeable with imgui later***
 }
 
 Tessellation::~Tessellation()
@@ -66,7 +68,7 @@ bool Tessellation::LoadShaders(ID3D11Device* device)
 bool Tessellation::CreateRasterizerState(ID3D11Device* device)
 {
 	D3D11_RASTERIZER_DESC desc;
-	desc.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;	//Make changeable later. Bool wireframe true/false
+	desc.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
 	desc.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK;
 	desc.FrontCounterClockwise = false;						//Going to be clockwise order
 	desc.DepthBias = 0;
@@ -100,9 +102,9 @@ bool Tessellation::Initialize(ID3D11Device* device)
 	return true;
 }
 
-void Tessellation::SetShaders(ID3D11DeviceContext* deviceContext, bool useTessellation, bool useWireframe, ID3D11ShaderResourceView* displaceMapSRV)
+void Tessellation::SetShaders(ID3D11DeviceContext* deviceContext, bool useTessellation, ID3D11ShaderResourceView* displaceMapSRV)
 {
-	//Settings of tessellation
+	//Setting up tessellation if needed for object
 	if (useTessellation)
 	{
 		deviceContext->HSSetShader(m_hullShader, nullptr, 0);
@@ -115,12 +117,25 @@ void Tessellation::SetShaders(ID3D11DeviceContext* deviceContext, bool useTessel
 		deviceContext->HSSetShader(nullptr, nullptr, 0);
 		deviceContext->DSSetShader(nullptr, nullptr, 0);
 		deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		//deviceContext->DSSetShaderResources(0, 1, nullptr);
 	}
 
-	//Wireframe
-	if (useWireframe)
+	//Wireframe shows if on
+	if (m_wireframeOn)
 		deviceContext->RSSetState(m_rasterizerState);
 	else
 		deviceContext->RSSetState(nullptr);
 }
+
+void Tessellation::SetWireframe(bool trueorfalse)
+{
+	m_wireframeOn = trueorfalse;
+}
+
+void Tessellation::TurnOff(ID3D11DeviceContext* deviceContext)
+{
+	deviceContext->RSSetState(nullptr);
+	deviceContext->HSSetShader(nullptr, nullptr, 0);
+	deviceContext->DSSetShader(nullptr, nullptr, 0);
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+

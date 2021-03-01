@@ -36,7 +36,6 @@ PixelOutput main(PixelInput input) : SV_TARGET
 {
     PixelOutput output;
     
-    //
     output.PositionWS = input.PositionWS;
     
     //Sampling the colour from the texture

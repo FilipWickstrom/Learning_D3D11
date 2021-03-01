@@ -17,7 +17,6 @@ MeshObject::MeshObject()
 	m_material = {};
 
 	m_tessallated = false;
-	m_wireFramed = false;
 	m_displacementMap = nullptr;
 	m_displacementMapSRV = nullptr;
 }
@@ -278,11 +277,6 @@ void MeshObject::SetTessellated(bool trueOrFalse)
 	m_tessallated = trueOrFalse;
 }
 
-void MeshObject::SetWireframe(bool trueOrFalse)
-{
-	m_wireFramed = trueOrFalse;
-}
-
 bool MeshObject::LoadDisplacementMap(ID3D11Device* device, std::string displacementMap)
 {
 	displacementMap = "Textures/" + displacementMap;
@@ -326,11 +320,6 @@ bool MeshObject::LoadDisplacementMap(ID3D11Device* device, std::string displacem
 	return !FAILED(hr);
 }
 
-const ID3D11ShaderResourceView& MeshObject::GetDisplacementMap() const
-{
-	return *m_displacementMapSRV;
-}
-
 void MeshObject::UpdateModelMatrix(std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
 {
 	float degToRad = XM_PI / 180;
@@ -356,7 +345,7 @@ void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation& tessel
 	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 
 	//Use tessellation for objects that use it
-	tessellation.SetShaders(deviceContext, m_tessallated, m_wireFramed, m_displacementMapSRV);
+	tessellation.SetShaders(deviceContext, m_tessallated, m_displacementMapSRV);
 	
 	deviceContext->PSSetShaderResources(0, 1, &m_textureSRV);
 	deviceContext->Draw(m_vertexCount, 0);
