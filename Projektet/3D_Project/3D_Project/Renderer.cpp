@@ -60,7 +60,7 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 
 	//Setting up camera and the movement
 	m_camera.Initialize(m_winWidth, m_winHeight, XM_PI * 0.45f, 0.1f, 1000.0f);
-	m_movement.Initialize(window, 0.005f, 0.004f);
+	m_inputKeyboardMouse.Initialize(window, 0.005f, 0.004f);
 
 	//Setting up WVP, light buffer and camera
 	if (!m_constBuffers.Initialize(m_device, m_camera))
@@ -138,9 +138,9 @@ void Renderer::StartGameLoop(HWND& window)
 		}
 			
 		//Check mouse and keyboard
-		m_movement.CheckInput(m_deltatime, m_camera);
+		m_inputKeyboardMouse.CheckInput(m_deltatime, m_camera, m_firstPass.GetTessellation(), m_deviceContext);
 
-		//Update the view matrix
+		//Update the view matrix from camera
 		m_constBuffers.UpdateView(m_deviceContext, m_camera.GetViewMatrix());
 
 		//Draw the scene

@@ -1,4 +1,10 @@
-#define TESSELLATIONLEVEL 16.0f;
+
+cbuffer TessellSettings : register(b0)
+{
+    float level;
+    float depth;
+    float2 padding;
+};
 
 // Output patch constant data
 struct HS_CONSTANT_DATA_OUTPUT
@@ -23,9 +29,9 @@ HS_CONSTANT_DATA_OUTPUT ConstantPatchFunction(InputPatch<Vertex, 3> inputPatch, 
 	
     for (int i = 0; i < 3; i++)
     {
-        output.edgeTessFactor[i] = TESSELLATIONLEVEL;
+        output.edgeTessFactor[i] = level;
     }
-    output.insideTessFactor = TESSELLATIONLEVEL;
+    output.insideTessFactor = level;
 	
     return output;
 }

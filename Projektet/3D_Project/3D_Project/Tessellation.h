@@ -14,10 +14,20 @@ private:
 	ID3D11RasterizerState* m_rasterizerState;
 	bool m_wireframeOn;
 
+	//Constant buffer with settings
+	struct tessellSettings
+	{
+		float level;
+		float depth;
+		float padding[2];
+	} m_tessellSettings;
+	ID3D11Buffer* m_tessellationBuffer;
+
 private:
 	bool LoadShaders(ID3D11Device* device);
 	bool CreateRasterizerState(ID3D11Device* device);
-	
+	bool CreateTessellSettings(ID3D11Device* device);
+
 public:
 	Tessellation();
 	~Tessellation();
@@ -31,4 +41,8 @@ public:
 
 	//For screen quad
 	void TurnOff(ID3D11DeviceContext* deviceContext);
+
+	//For updating tessellation in cbuffer
+	void UpdateLOD(ID3D11DeviceContext* deviceContext, float level);
+	void UpdateDepth(ID3D11DeviceContext* deviceContext, float depth);
 };

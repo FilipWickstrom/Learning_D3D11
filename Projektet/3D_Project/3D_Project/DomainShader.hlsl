@@ -1,5 +1,3 @@
-#define DISPLACELEVEL 0.5f;
-
 Texture2D displacementmap : register(t0);
 SamplerState anisoSampler : register(s0);
 
@@ -8,6 +6,13 @@ cbuffer WVPMatrix : register(b0)
     row_major float4x4 World;
     row_major float4x4 View;
     row_major float4x4 Projection;
+};
+
+cbuffer TessellSettings : register(b1)
+{
+    float level;
+    float depth;
+    float2 padding;
 };
 
 struct DomainShaderOutput
@@ -45,7 +50,7 @@ DomainShaderOutput main(HS_CONSTANT_DATA_OUTPUT input, float3 uvw : SV_DomainLoc
     output.PositionWS = patch[0].PositionWS * uvw.x + patch[1].PositionWS * uvw.y + patch[2].PositionWS * uvw.z;
     
     //The amount of displacement from the map
-    float4 displacement = displacementmap.SampleLevel(anisoSampler, output.TexCoord, 0.0) * DISPLACELEVEL;
+    float4 displacement = displacementmap.SampleLevel(anisoSampler, output.TexCoord, 0.0) * depth;
     output.PositionWS += (float4(output.NormalWS, 0.0f) * displacement);
     
     //Convert the position back to screenspace

@@ -1,23 +1,23 @@
-#include "Movement.h"
+#include "InputKeyboardMouse.h"
 
-Movement::Movement()
+InputKeyboardMouse::InputKeyboardMouse()
 {
 	m_keyboard = std::make_unique<Keyboard>();
 	m_mouse = std::make_unique<Mouse>();
 }
 
-Movement::~Movement()
+InputKeyboardMouse::~InputKeyboardMouse()
 {
 }
 
-void Movement::Initialize(HWND& window, float moveSpeed, float mouseSens)
+void InputKeyboardMouse::Initialize(HWND& window, float moveSpeed, float mouseSens)
 {
 	m_moveSpeed = moveSpeed;
 	m_mouseSens = mouseSens;
 	m_mouse->SetWindow(window);
 }
 
-void Movement::KeyboardInput(float dt, Camera& camera)
+void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Tessellation& tessellator, ID3D11DeviceContext* deviceContext)
 {
 	XMVECTOR movement = { 0.0f, 0.0f, 0.0f, 0.0f };
 	XMVECTOR upOrDown = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -71,10 +71,41 @@ void Movement::KeyboardInput(float dt, Camera& camera)
 		camera.Reset();
 	}
 
+	/*-------- Tessellation settings --------*/
+	//Wireframe
+	if (kb.V)
+		tessellator.SetWireframe(true);
+	else if (kb.B)
+		tessellator.SetWireframe(false);
+	
+	//Level of detail of tessellation (1, 4, 8, 16, 32)
+	if (kb.D1)
+		tessellator.UpdateLOD(deviceContext, 1.0f);
+	else if (kb.D2)
+		tessellator.UpdateLOD(deviceContext, 4.0f);
+	else if (kb.D3)
+		tessellator.UpdateLOD(deviceContext, 8.0f);
+	else if (kb.D4)
+		tessellator.UpdateLOD(deviceContext, 16.0f);
+	else if (kb.D5)
+		tessellator.UpdateLOD(deviceContext, 32.0f);
+
+	//How much of the displacementmap to use
+	if (kb.D6)
+		tessellator.UpdateDepth(deviceContext, 0.2f);
+	else if (kb.D7)
+		tessellator.UpdateDepth(deviceContext, 0.4f);
+	else if (kb.D8)
+		tessellator.UpdateDepth(deviceContext, 0.6f);
+	else if (kb.D9)
+		tessellator.UpdateDepth(deviceContext, 0.8f);
+	else if (kb.D0)
+		tessellator.UpdateDepth(deviceContext, 1.0f);
+
 	camera.Move(movement * m_moveSpeed * dt);
 }
 
-void Movement::MouseInput(float dt, Camera& camera)
+void InputKeyboardMouse::MouseInput(float dt, Camera& camera)
 {
 	auto mouse = m_mouse->GetState();
 
@@ -92,9 +123,9 @@ void Movement::MouseInput(float dt, Camera& camera)
 }
 
 
-void Movement::CheckInput(float dt, Camera& camera)
+void InputKeyboardMouse::CheckInput(float dt, Camera& camera, Tessellation& tessellator, ID3D11DeviceContext* deviceContext)
 {
 	MouseInput(dt, camera);
-	KeyboardInput(dt, camera);
+	KeyboardInput(dt, camera, tessellator, deviceContext);
 	camera.UpdateViewMatrix();
 }

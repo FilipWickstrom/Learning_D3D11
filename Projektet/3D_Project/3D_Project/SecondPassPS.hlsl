@@ -1,5 +1,5 @@
 #define NROFLIGHTS 3
-#define LIGHTSON true
+#define LIGHTSON false
 
 //GBuffers
 Texture2D positionTexture   : register(t0);

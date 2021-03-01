@@ -5,7 +5,7 @@
 #include "ConstantBuffers.h"
 #include "Scene.h"
 #include "Camera.h"
-#include "Movement.h"
+#include "InputKeyboardMouse.h"
 #include "FPSCounter.h"
 #include "Tessellation.h"
 
@@ -34,7 +34,7 @@ private:
 	//For the camera
 	ConstantBuffers m_constBuffers;
 	Camera m_camera;
-	Movement m_movement;
+	InputKeyboardMouse m_inputKeyboardMouse;
 
 	//Framerate and frametime
 	FPSCounter m_fpscounter;
