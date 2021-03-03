@@ -43,14 +43,15 @@ FirstPass::~FirstPass()
 bool FirstPass::InitInputLayout(ID3D11Device* device, std::string vsByteCode)
 {
 	//The structure for the input in the vertex shader
-	D3D11_INPUT_ELEMENT_DESC inputDesc[3] =
+	D3D11_INPUT_ELEMENT_DESC inputDesc[4] =
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0}
 	};
 
-	HRESULT hr = device->CreateInputLayout(inputDesc, 3, vsByteCode.c_str(), vsByteCode.length(), &m_inputLayout);
+	HRESULT hr = device->CreateInputLayout(inputDesc, 4, vsByteCode.c_str(), vsByteCode.length(), &m_inputLayout);
 	return !FAILED(hr);
 }
 
@@ -202,7 +203,7 @@ void FirstPass::Bind(ID3D11DeviceContext* deviceContext)
 	}
 	deviceContext->ClearDepthStencilView(m_depthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	//Setting what sampler to use in the pixelshader
+	//Using anisotropic sampler in the pixelshader
 	deviceContext->PSSetSamplers(0, 1, &m_anisoSampler);
 
 	//What shaders to use

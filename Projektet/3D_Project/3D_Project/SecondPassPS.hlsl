@@ -1,5 +1,5 @@
 #define NROFLIGHTS 3
-#define LIGHTSON false
+#define LIGHTSON true
 
 //GBuffers
 Texture2D positionTexture   : register(t0);
@@ -59,7 +59,7 @@ float GetDiffuse(float3 lightVector, float3 normal)
     return max(dot(lightVector, normal), 0.0f);
 }
 
-float GetSpecular(float3 lightVector, float3 normal, float3 viewVector, float shininess) //materials shiniess later!***
+float GetSpecular(float3 lightVector, float3 normal, float3 viewVector, float shininess)
 {
     //The vector that gets reflected 
     float3 reflectedVector = normalize(reflect(-lightVector, normal));
@@ -113,11 +113,15 @@ float4 main( PixelInput input ) : SV_TARGET
             
         }
         
-        return G_Texture * (ambientIntensity + diffuseIntensity + specularIntensity);
+        return G_Texture * (ambientIntensity + diffuseIntensity) + specularIntensity;
     }   
     else
     {
         //Just render the colours of the models
         return G_Texture;
     }
+    
+    //Else if (normal mode) 
+    //float4 G_Normal = normalTexture.Sample(theSampler, input.TexCoord);
+    //return G_Normal;
 }

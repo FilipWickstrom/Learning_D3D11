@@ -1,12 +1,9 @@
-# Blender MTL File: 'noahtest.blend'
-# Material Count: 1
-
 newmtl material0
 Ns 500.000000
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000
-Ke 0.538226 0.538226 0.538226
 Ni 1.450000
 d 1.000000
 illum 1
+map_Kd default.png

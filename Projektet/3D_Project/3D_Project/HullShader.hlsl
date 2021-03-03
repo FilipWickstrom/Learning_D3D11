@@ -16,10 +16,12 @@ struct HS_CONSTANT_DATA_OUTPUT
 // Input
 struct Vertex
 {
-    float4 Position		: SV_POSITION;
-    float3 NormalWS		: NORMALWS;
-    float2 TexCoord		: TEXCOORD;
-    float4 PositionWS	: POSITIONWS;
+    float4 PositionCS   : SV_POSITION;
+    float4 PositionWS   : POSITIONWS;
+    float2 TexCoord     : TEXCOORD;
+    float3 NormalWS     : NORMALWS;
+    float3 TangentWS    : TANGENTWS;
+    float3 BiTangentWS  : BITANGENTWS;
 };
 
 // Patch Constant Function

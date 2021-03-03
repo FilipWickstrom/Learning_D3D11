@@ -17,9 +17,10 @@ private:
 	UINT m_vertexCount;
 	ID3D11Buffer* m_vertexBuffer;
 	
-	//Texture information
-	ID3D11Texture2D* m_texture;
-	ID3D11ShaderResourceView* m_textureSRV;
+	//Diffuse texture information
+	std::string m_diffuseFile;
+	ID3D11Texture2D* m_diffuseTexture;
+	ID3D11ShaderResourceView* m_diffuseTextureSRV;
 
 	//Where th model is in the world
 	XMFLOAT4X4 m_modelMatrix;
@@ -27,20 +28,10 @@ private:
 
 	struct SimpleVertex
 	{
-		float pos[3];
-		float norm[3];
-		float tex[2];
-
-		SimpleVertex(const std::array<float, 3>& position, const std::array<float, 3>& normal, const std::array<float, 2>& texCoord)
-		{
-			for (int i = 0; i < 3; i++)
-			{
-				pos[i] = position[i];
-				norm[i] = normal[i];
-			}
-			tex[0] = texCoord[0];
-			tex[1] = texCoord[1];
-		}
+		XMFLOAT3 position;
+		XMFLOAT3 normal;
+		XMFLOAT2 texCoord;
+		XMFLOAT3 tangent;	//make float4???
 	};
 
 	struct Material
@@ -56,17 +47,34 @@ private:
 	ID3D11Texture2D* m_displacementMap;
 	ID3D11ShaderResourceView* m_displacementMapSRV;
 
+	//***NORMAL MAP***
+	std::string m_normalFile;
+	ID3D11Texture2D* m_normalMap;
+	ID3D11ShaderResourceView* m_normalMapSRV;
+
+	//bool hasNormal - if true we can change this on and off
+	struct Settings 
+	{
+		UINT useNormalMap;
+		UINT padding[3];
+	} m_settings;
+	ID3D11Buffer* m_settingsBuffer;
+
+	//LATER FIX, MOVE ALL KINDS OF TEXTURES AND RESOURCES TO THE SAME PLACE HERE?
+
 private:
 	bool LoadOBJ(ID3D11Device* device, std::string objfile);
 	bool LoadTexture(ID3D11Device* device, std::string texture);
 	bool LoadMaterial(ID3D11Device* device);
+	bool LoadNormal(ID3D11Device* device);
+	bool CreateSettingsBuff(ID3D11Device* device);
 
 public:
 	MeshObject();
 	~MeshObject();
 
 	//Loading in the model with file, texture and where and how it going to be placed
-	bool Load(ID3D11Device* device, std::string obj, std::string texture, 
+	bool Load(ID3D11Device* device, std::string obj, std::string material, 
 			  std::array<float, 3>pos = { 0.0f,0.0f,0.0f },
 			  std::array<float, 3>scl = { 1.0f,1.0f,1.0f },
 			  std::array<float, 3>rot = { 0.0f,0.0f,0.0f });

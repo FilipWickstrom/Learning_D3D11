@@ -95,18 +95,18 @@ bool ConstantBuffers::Initialize(ID3D11Device* device, const Camera& camera)
 
 	//Camera light
 	m_lights.pointlights[0].position = { 0.0f,1.0f,0.0f, 1.0f };
-	m_lights.pointlights[0].colour = { 1.0f,1.0f,1.0f,1.0f };
-	m_lights.pointlights[0].range = 5.0f;
+	m_lights.pointlights[0].colour = { 0.8f, 0.8f, 0.8f,1.0f };
+	m_lights.pointlights[0].range = 7.0f;
 
 	//Front light - yellow
 	m_lights.pointlights[1].position = { 0.0f, 5.0f, 8.0f, 1.0f };
-	m_lights.pointlights[1].colour = { 1.8f, 1.8f, 1.0f, 1.0f };
-	m_lights.pointlights[1].range = 12.0f;
+	m_lights.pointlights[1].colour = { 0.6f, 0.6f, 0.2f, 1.0f };
+	m_lights.pointlights[1].range = 10.0f;
 
 	//Back light - blue
 	m_lights.pointlights[2].position = { 0.0f, 5.0f, -8.0f, 1.0f };
-	m_lights.pointlights[2].colour = { 1.0f, 1.0f, 1.6f, 1.0f };
-	m_lights.pointlights[2].range = 12.0f;
+	m_lights.pointlights[2].colour = { 0.2f, 0.2f, 0.8f, 1.0f };
+	m_lights.pointlights[2].range = 10.0f;
 
 	//Cam
 	m_camStruct.camPos = camera.GetPosition();

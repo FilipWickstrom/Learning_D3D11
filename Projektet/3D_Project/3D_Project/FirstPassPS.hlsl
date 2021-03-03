@@ -1,8 +1,9 @@
-//Main texture
-Texture2D texture0 : register(t0);
+//Textures
+Texture2D diffuseTexture : register(t0);
+Texture2D normalTexture : register(t1);
 
 //Sampler
-SamplerState sampler0 : register(s0);
+SamplerState anisoSampler : register(s0);
 
 //Cbuffer - updated for every object
 cbuffer Material : register(b0)
@@ -12,13 +13,20 @@ cbuffer Material : register(b0)
     float4 specular;
 };
 
+cbuffer Settings : register(b1)
+{
+    uint useNormalMap;
+}
+
 //Input from the vertex shader in first pass
 struct PixelInput
 {
-    float4 Position     : SV_POSITION;
-	float3 NormalWS	    : NORMALWS;
-    float2 TexCoord     : TEXCOORD; 
+    float4 PositionCS   : SV_POSITION;
     float4 PositionWS   : POSITIONWS;
+    float2 TexCoord     : TEXCOORD;
+    float3 NormalWS     : NORMALWS;
+    float3 TangentWS    : TANGENTWS;
+    float3 BiTangentWS  : BITANGENTWS;
 };
 
 //Output to g-buffer to be used for second pass
@@ -39,10 +47,26 @@ PixelOutput main(PixelInput input) : SV_TARGET
     output.PositionWS = input.PositionWS;
     
     //Sampling the colour from the texture
-    output.Colour = texture0.Sample(sampler0, input.TexCoord);
+    output.Colour = diffuseTexture.Sample(anisoSampler, input.TexCoord);
     
-    //Sends forward the normal to the g-buffer
-    output.NormalWS = float4(input.NormalWS, 1.0f);
+    //Use the normalmap
+    if (useNormalMap == 1)
+    {
+        //Make TBN, the rotation matrix of this vertex - Normalize, could have been changed with interpolation
+        float3x3 TBNmatrix = float3x3(normalize(input.TangentWS), 
+                                      normalize(input.BiTangentWS), 
+                                      normalize(input.NormalWS));
+        
+        float3 normalMap = normalTexture.Sample(anisoSampler, input.TexCoord).xyz;
+        normalMap = normalize((normalMap * 2.0f) - 1.0f); //Change 'space' [0.0f, 1.0f] to [-1.0f, 1.0f]
+        
+        output.NormalWS = float4(mul(normalMap, TBNmatrix), 1.0f);
+    }
+    else
+    {
+        //Sends forward the normal to the g-buffer
+        output.NormalWS = float4(input.NormalWS, 1.0f);
+    }
     
     output.Ambient = ambient;
     output.Diffuse = diffuse;
