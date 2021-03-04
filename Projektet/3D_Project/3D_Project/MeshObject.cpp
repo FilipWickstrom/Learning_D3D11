@@ -29,6 +29,12 @@ MeshObject::MeshObject()
 
 	m_tessallated = false;
 	m_hasNormalMap = false;
+
+	m_canRotate = false;
+	m_rotationSpeed = 0.0f;
+	m_position = { 0,0,0 };
+	m_scale = { 1,1,1 };
+	m_rotation = { 0,0,0 };
 }
 
 MeshObject::~MeshObject()
@@ -485,6 +491,10 @@ bool MeshObject::LoadDisplacementMap(ID3D11Device* device, std::string displacem
 
 void MeshObject::UpdateModelMatrix(std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
 {
+	m_position	= XMFLOAT3(pos[0], pos[1], pos[2]);
+	m_scale		= XMFLOAT3(scl[0], scl[1], scl[2]);
+	m_rotation	= XMFLOAT3(rot[0], rot[1], rot[2]);
+
 	float degToRad = XM_PI / 180;
 	XMStoreFloat4x4(&m_modelMatrix, XMMatrixScaling(scl[0], scl[1], scl[2]) *
 									XMMatrixRotationRollPitchYaw(rot[0]*degToRad, rot[1]*degToRad, rot[2]*degToRad) *
@@ -517,6 +527,33 @@ void MeshObject::UseNormalMap(ID3D11DeviceContext* deviceContext, bool trueOrFal
 		memcpy(mappedResource.pData, &m_settings, sizeof(Settings));
 		deviceContext->Unmap(m_settingsBuffer, 0);
 	}
+}
+
+void MeshObject::SetRotate(bool on, float speed)
+{
+	m_canRotate = on;
+	m_rotationSpeed = speed;
+}
+
+void MeshObject::Rotate(float& dt)
+{
+	//If it can rotate it does it around two axis
+	if (m_canRotate)
+	{
+		//Reset after 360 degrees
+		if (m_rotation.x >= 360.0f)
+			m_rotation.x = 0.0f;
+		if (m_rotation.y >= 360.0f)
+			m_rotation.y = 0.0f;	
+
+		m_rotation.x += (m_rotationSpeed * dt);
+		m_rotation.y += (m_rotationSpeed * dt);
+		
+		UpdateModelMatrix({ m_position.x, m_position.y, m_position.z },
+						  { m_scale.x,	  m_scale.y,	m_scale.z	 },
+						  { m_rotation.x, m_rotation.y, m_rotation.z });
+	}
+	//Else just skips it
 }
 
 void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation& tessellation)

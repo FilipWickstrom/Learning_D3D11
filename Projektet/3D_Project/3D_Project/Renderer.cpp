@@ -8,7 +8,7 @@ Renderer::Renderer(UINT winWidth, UINT winHeight)
 	m_deviceContext = nullptr;
 	m_swapChain = nullptr;
 	m_deltatime = 0.0f;
-	m_VSync = true;
+	m_VSync = false;
 }
 
 Renderer::~Renderer()
@@ -88,7 +88,7 @@ void Renderer::Render()
 	m_constBuffers.SetMaterialPS(m_deviceContext);
 
 	//Render all the objects in the scene
-	m_scene.Render(m_deviceContext, m_constBuffers, m_firstPass.GetTessellation());
+	m_scene.Render(m_deviceContext, m_constBuffers, m_firstPass.GetTessellation(), m_deltatime);
 
 	//Turning off the tessellation before screenquad
 	m_firstPass.TurnOffTessellation(m_deviceContext);

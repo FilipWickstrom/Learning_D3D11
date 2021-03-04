@@ -60,6 +60,13 @@ private:
 	} m_settings;
 	ID3D11Buffer* m_settingsBuffer;
 
+	//The mesh can rotate in realtime
+	bool m_canRotate;
+	float m_rotationSpeed;
+	XMFLOAT3 m_position;
+	XMFLOAT3 m_scale;
+	XMFLOAT3 m_rotation;
+
 private:
 	bool LoadOBJ(ID3D11Device* device, std::string objfile);
 	bool LoadTexture(ID3D11Device* device, std::string texture);
@@ -91,6 +98,10 @@ public:
 
 	//Normal map on or off
 	void UseNormalMap(ID3D11DeviceContext* deviceContext, bool trueOrFalse);
+
+	//Set rotation and do rotation around two axis
+	void SetRotate(bool on, float speed);
+	void Rotate(float& dt);
 
 	//Drawing what it got in the buffer
 	void Render(ID3D11DeviceContext* deviceContext, Tessellation& tessellation);

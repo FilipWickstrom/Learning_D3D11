@@ -21,5 +21,8 @@ public:
 	bool Load(ID3D11Device* device);
 	
 	//Render all the mesh objects
-	void Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf, Tessellation& tessellation);
+	void Render(ID3D11DeviceContext* deviceContext,
+				ConstantBuffers& constBuf, 
+				Tessellation& tessellation,
+				float& dt);
 };

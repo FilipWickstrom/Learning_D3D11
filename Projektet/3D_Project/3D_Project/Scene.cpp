@@ -47,6 +47,7 @@ bool Scene::Load(ID3D11Device* device)
 		std::cerr << "Failed to load the cube..." << std::endl;
 		return false;
 	}
+	cube->SetRotate(true, 0.01f);
 	m_objects.push_back(cube);
 
 	// Noah - behind you! Ahhh!
@@ -116,10 +117,13 @@ bool Scene::Load(ID3D11Device* device)
 	return true;
 }
 
-void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf, Tessellation& tessellation)
+void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf, Tessellation& tessellation, float& dt)
 {
 	for (MeshObject* obj : m_objects)
 	{
+		//Rotate object that can do it
+		obj->Rotate(dt);
+
 		//Each object has it own world matrix that is needed to be set
 		constBuf.UpdateWorld(deviceContext, obj->GetModelMatrix());
 		
