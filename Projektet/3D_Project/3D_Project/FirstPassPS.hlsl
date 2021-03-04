@@ -58,7 +58,8 @@ PixelOutput main(PixelInput input) : SV_TARGET
                                       normalize(input.NormalWS));
         
         float3 normalMap = normalTexture.Sample(anisoSampler, input.TexCoord).xyz;
-        normalMap = normalize((normalMap * 2.0f) - 1.0f); //Change 'space' [0.0f, 1.0f] to [-1.0f, 1.0f]
+        //Change range for normalmap, [0.0f, 1.0f] to [-1.0f, 1.0f]
+        normalMap = (normalMap * 2.0f) - 1.0f;
         
         output.NormalWS = float4(mul(normalMap, TBNmatrix), 1.0f);
     }

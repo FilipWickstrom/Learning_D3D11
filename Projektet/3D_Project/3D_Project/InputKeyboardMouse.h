@@ -7,6 +7,8 @@
 #include <directxTK/Mouse.h>
 #include "Camera.h"
 #include "Tessellation.h"
+#include "Scene.h"
+#include "ConstantBuffers.h"
 
 using namespace DirectX;
 
@@ -22,6 +24,8 @@ private:
 	void KeyboardInput(float dt, 
 					   Camera& camera, 
 					   Tessellation& tessellator, 
+					   Scene& theScene,						//Using normal maps or not
+					   ConstantBuffers& constBuffs,			//For updating light position
 					   ID3D11DeviceContext* deviceContext);	//For updating the constant buffer
 
 	void MouseInput(float dt, Camera& camera);
@@ -34,5 +38,7 @@ public:
 	void CheckInput(float dt, 
 					Camera& camera, 
 					Tessellation& tessellator, 
+					Scene& theScene,
+					ConstantBuffers& constBuffs,
 					ID3D11DeviceContext* deviceContext);
 };

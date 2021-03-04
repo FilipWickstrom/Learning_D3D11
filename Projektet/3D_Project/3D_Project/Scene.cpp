@@ -2,6 +2,7 @@
 
 Scene::Scene()
 {
+	m_useNormalMaps = true;
 }
 
 Scene::~Scene()
@@ -12,6 +13,11 @@ Scene::~Scene()
 		delete obj;
 		obj = nullptr;	
 	}
+}
+
+void Scene::UseNormalMaps(bool trueOrFalse)
+{
+	m_useNormalMaps = trueOrFalse;
 }
 
 bool Scene::Load(ID3D11Device* device)
@@ -119,6 +125,9 @@ void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf
 		
 		//Each object has its own material
 		constBuf.UpdateMaterial(deviceContext, obj->GetMaterial().ambient, obj->GetMaterial().diffuse, obj->GetMaterial().specular);
+
+		//Can be toggled on and off for those objects that has normalmaps
+		obj->UseNormalMap(deviceContext, m_useNormalMaps);
 
 		//Render the object
 		obj->Render(deviceContext, tessellation);

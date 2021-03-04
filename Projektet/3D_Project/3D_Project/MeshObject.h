@@ -31,7 +31,7 @@ private:
 		XMFLOAT3 position;
 		XMFLOAT3 normal;
 		XMFLOAT2 texCoord;
-		XMFLOAT3 tangent;	//make float4???
+		XMFLOAT3 tangent;
 	};
 
 	struct Material
@@ -47,20 +47,18 @@ private:
 	ID3D11Texture2D* m_displacementMap;
 	ID3D11ShaderResourceView* m_displacementMapSRV;
 
-	//***NORMAL MAP***
+	//Normal mapping
 	std::string m_normalFile;
 	ID3D11Texture2D* m_normalMap;
 	ID3D11ShaderResourceView* m_normalMapSRV;
+	bool m_hasNormalMap;
 
-	//bool hasNormal - if true we can change this on and off
 	struct Settings 
 	{
 		UINT useNormalMap;
 		UINT padding[3];
 	} m_settings;
 	ID3D11Buffer* m_settingsBuffer;
-
-	//LATER FIX, MOVE ALL KINDS OF TEXTURES AND RESOURCES TO THE SAME PLACE HERE?
 
 private:
 	bool LoadOBJ(ID3D11Device* device, std::string objfile);
@@ -89,8 +87,10 @@ public:
 						   std::array<float, 3>rot = { 0.0f,0.0f,0.0f });
 
 	const XMFLOAT4X4 GetModelMatrix() const;
-
 	const Material GetMaterial() const;
+
+	//Normal map on or off
+	void UseNormalMap(ID3D11DeviceContext* deviceContext, bool trueOrFalse);
 
 	//Drawing what it got in the buffer
 	void Render(ID3D11DeviceContext* deviceContext, Tessellation& tessellation);

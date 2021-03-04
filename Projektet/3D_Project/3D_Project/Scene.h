@@ -8,10 +8,14 @@ class Scene
 {
 private:
 	std::vector<MeshObject*> m_objects;
+	bool m_useNormalMaps;
 
 public:
 	Scene();
 	~Scene();
+
+	//Toggle settings
+	void UseNormalMaps(bool trueOrFalse);
 
 	//Loads in all the objects 
 	bool Load(ID3D11Device* device);

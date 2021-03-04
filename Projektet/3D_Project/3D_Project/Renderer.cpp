@@ -138,7 +138,7 @@ void Renderer::StartGameLoop(HWND& window)
 		}
 			
 		//Check mouse and keyboard
-		m_inputKeyboardMouse.CheckInput(m_deltatime, m_camera, m_firstPass.GetTessellation(), m_deviceContext);
+		m_inputKeyboardMouse.CheckInput(m_deltatime, m_camera, m_firstPass.GetTessellation(), m_scene, m_constBuffers, m_deviceContext);
 
 		//Update the view matrix from camera
 		m_constBuffers.UpdateView(m_deviceContext, m_camera.GetViewMatrix());

@@ -1,5 +1,4 @@
 #define NROFLIGHTS 3
-#define LIGHTSON true
 
 //GBuffers
 Texture2D positionTexture   : register(t0);
@@ -11,13 +10,6 @@ Texture2D specular          : register(t5);
 
 //Anisotropic sampler
 SamplerState theSampler : register(s0);
-
-/*cbuffer Settings
-{
-    bool LightsOn;
-    bool NormalMappingOn?
-    bool ShadowMappingOn?
-};*/
 
 struct Light
 {
@@ -35,7 +27,7 @@ cbuffer Lights : register(b0)
 cbuffer Camera : register(b1)
 {
     float3 camPos;
-    float padding;
+    uint renderMode;
 }
 
 struct PixelInput
@@ -74,12 +66,11 @@ float GetSpecular(float3 lightVector, float3 normal, float3 viewVector, float sh
 
 float4 main( PixelInput input ) : SV_TARGET
 { 
-    //Gbuffer
-    float4 G_Texture = colourTexture.Sample(theSampler, input.TexCoord);    
-    
-    if (LIGHTSON)
+    //With phong shading
+    if (renderMode == 1)
     {
         //Get the gbuffers
+        float4 G_Texture = colourTexture.Sample(theSampler, input.TexCoord);
         float3 G_Position = positionTexture.Sample(theSampler, input.TexCoord).xyz;
         float3 G_Normal = normalTexture.Sample(theSampler, input.TexCoord).xyz;
         
@@ -114,14 +105,24 @@ float4 main( PixelInput input ) : SV_TARGET
         }
         
         return G_Texture * (ambientIntensity + diffuseIntensity) + specularIntensity;
-    }   
-    else
-    {
-        //Just render the colours of the models
-        return G_Texture;
     }
     
-    //Else if (normal mode) 
-    //float4 G_Normal = normalTexture.Sample(theSampler, input.TexCoord);
-    //return G_Normal;
+    //Show only normals
+    else if (renderMode == 2)
+    {
+        return normalTexture.Sample(theSampler, input.TexCoord);
+    }
+    
+    //Position in the world
+    else if (renderMode == 3)
+    {
+        return positionTexture.Sample(theSampler, input.TexCoord);
+    }
+    
+    // Rendermode 0, or something else
+    // Just render the colours of the models 
+    else 
+    {
+        return colourTexture.Sample(theSampler, input.TexCoord);
+    }
 }

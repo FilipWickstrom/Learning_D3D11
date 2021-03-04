@@ -15,7 +15,6 @@ MeshObject::MeshObject()
 
 	m_material = {};
 
-	m_tessallated = false;
 	m_displacementMap = nullptr;
 	m_displacementMapSRV = nullptr;
 	m_normalMap = nullptr;
@@ -27,6 +26,9 @@ MeshObject::MeshObject()
 	m_diffuseFile = "";
 	m_mtlfile = "";
 	m_normalFile = "";
+
+	m_tessallated = false;
+	m_hasNormalMap = false;
 }
 
 MeshObject::~MeshObject()
@@ -119,34 +121,54 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 		}
 		file.close();
 		
-		//Calculate the tangents - takes 3 vertices at a time
-		for ( int i = 0; i < vertices.size(); i += 3)
+		//Calculate the tangent for every face (3 vertices at a time)
+		for (int i = 0; i < vertices.size(); i += 3)
 		{
 			//2 edges from the three points
 			XMFLOAT3 edge1 = XMFLOAT3(vertices[i + 1].position.x - vertices[i].position.x,
 									  vertices[i + 1].position.y - vertices[i].position.y,
 									  vertices[i + 1].position.z - vertices[i].position.z);
+
 			XMFLOAT3 edge2 = XMFLOAT3(vertices[i + 2].position.x - vertices[i].position.x,
 									  vertices[i + 2].position.y - vertices[i].position.y,
 									  vertices[i + 2].position.z - vertices[i].position.z);
 			//	
-			XMFLOAT2 deltaU = XMFLOAT2(vertices[i + 1].texCoord.x - vertices[i].texCoord.x,
+			XMFLOAT2 uv1 = XMFLOAT2(vertices[i + 1].texCoord.x - vertices[i].texCoord.x,
 									   vertices[i + 1].texCoord.y - vertices[i].texCoord.y);
-			XMFLOAT2 deltaV = XMFLOAT2(vertices[i + 2].texCoord.x - vertices[i].texCoord.x,
+			
+			XMFLOAT2 uv2 = XMFLOAT2(vertices[i + 2].texCoord.x - vertices[i].texCoord.x,
 									   vertices[i + 2].texCoord.y - vertices[i].texCoord.y);
 			
-			//
-			float f = 1.0f / ((deltaU.x * deltaV.y) - (deltaV.x * deltaU.y));
+			//The determinant for 
+			float detUV = 1.0f / ((uv1.x * uv2.y) - (uv2.x * uv1.y));
 			
 			XMFLOAT3 tangent;
-			tangent.x = f * ((deltaV.y * edge1.x) - (deltaU.y * edge2.x));
-			tangent.y = f * ((deltaV.y * edge1.y) - (deltaU.y * edge2.y));
-			tangent.z = f * ((deltaV.y * edge1.z) - (deltaU.y * edge2.z));
+			tangent.x = detUV * ((uv2.y * edge1.x) - (uv1.y * edge2.x));
+			tangent.y = detUV * ((uv2.y * edge1.y) - (uv1.y * edge2.y));
+			tangent.z = detUV * ((uv2.y * edge1.z) - (uv1.y * edge2.z));
 
 			vertices[i].tangent = tangent;
 			vertices[i + 1].tangent = tangent;
 			vertices[i + 2].tangent = tangent;
 		}
+
+		/* - - - - - Math behind the scenes - - - - - -
+ 		
+			[edge1] = [uv1.x, uv1.y] * [ Tangent ]
+			[edge2]	  [uv2.x, uv2.y]   [Bitangent]
+
+			//Rewrite to get Tangent and Bitangent
+			[ Tangent ] = [uv1.x, uv1.y]^-1 * [edge1]
+			[Bitangent]	  [uv2.x, uv2.y]	  [edge2]	<==>
+
+			[ Tangent ] = 1 / (uv1.x*uv2.y - uv1.y*uv2.x) * [ uv2.y -uv1.y] * [edge1]
+			[Bitangent]										[-uv2.x  uv1.x]   [edge2]
+
+			det = 1 / (uv1.x*uv2.y - uv1.y*uv2.x)
+
+			[ Tangent ] = det * [uv2.y*edge1.x - uv1.y*edge2.x, uv2.y*edge1.y - uv1.y*edge2.y, uv2.y*edge1.z - uv1.y*edge2.z]
+		
+		- - - - - - - - - END - - - - - - - - -- - - */
 
 		m_vertexCount = (UINT)vertices.size();
 
@@ -397,6 +419,7 @@ bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string materia
 		}
 		else
 		{
+			m_hasNormalMap = true;
 			m_settings.useNormalMap = 1;
 			if (!CreateSettingsBuff(device))
 			{
@@ -478,6 +501,24 @@ const MeshObject::Material MeshObject::GetMaterial() const
 	return m_material;
 }
 
+void MeshObject::UseNormalMap(ID3D11DeviceContext* deviceContext, bool trueOrFalse)
+{
+	//Can only be use on objects that has normalmaps
+	if (m_hasNormalMap)
+	{
+		if(trueOrFalse)
+			m_settings.useNormalMap = 1;
+		else
+			m_settings.useNormalMap = 0;
+
+		//Update the settings for this
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
+		deviceContext->Map(m_settingsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &m_settings, sizeof(Settings));
+		deviceContext->Unmap(m_settingsBuffer, 0);
+	}
+}
+
 void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation& tessellation)
 {
 	UINT stride = sizeof(SimpleVertex);
@@ -486,11 +527,14 @@ void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation& tessel
 
 	//Use tessellation for objects that use it
 	tessellation.SetShaders(deviceContext, m_tessallated, m_displacementMapSRV);
-	
 	deviceContext->PSSetShaderResources(0, 1, &m_diffuseTextureSRV);
-	deviceContext->PSSetShaderResources(1, 1, &m_normalMapSRV);	//NEW
-	deviceContext->VSSetConstantBuffers(1, 1, &m_settingsBuffer);	//new
-	deviceContext->PSSetConstantBuffers(1, 1, &m_settingsBuffer);	//new
+
+	//Setting to nullptr if not exist
+	deviceContext->PSSetShaderResources(1, 1, &m_normalMapSRV);		
+	
+	//Can be different settings for objects
+	deviceContext->VSSetConstantBuffers(1, 1, &m_settingsBuffer);	
+	deviceContext->PSSetConstantBuffers(1, 1, &m_settingsBuffer);	
 
 	deviceContext->Draw(m_vertexCount, 0);
 }

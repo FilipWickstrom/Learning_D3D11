@@ -11,13 +11,13 @@ cbuffer Settings : register(b1)
     uint useNormalMap;
 }
 
-//Input from the input data from OBJ-files
+//Input data from OBJ-files
 struct VertexInput
 {
     float3 Position     : POSITION;
     float2 TexCoord     : TEXCOORD;
     float3 Normal       : NORMAL;
-    float3 Tangent      : TANGENT;      //CHANGE TO FLOAT4???
+    float3 Tangent      : TANGENT;
 };
 
 //Output that is going to be used in the first pass pixel shader
@@ -47,16 +47,13 @@ VertexOutput main(const VertexInput input)
     if (useNormalMap == 1)
     {
         // Normal is in worldspace and so should tangent and bitangent also be
-        output.TangentWS = normalize(mul(input.Tangent, (float3x3) World));
+        float3 tanWS = normalize(mul(input.Tangent, (float3x3) World));
         
-        //if (dot(output.NormalWS, output.TangentWS) == 0.0f)
-        //{
-        //    output.NormalWS = float3(0, 0, 0);
-        //}
-        
-        //ÄR INTE ORTOGONAL MED VARANDRA HÄR EFTER...
-        
-        output.BiTangentWS = normalize(cross(output.NormalWS, output.TangentWS)); // * tangent.w? up or down? -1 or 1   
+        // Gram-Schmidt - avoid the fact to end up with non-perpendicular vectors
+        output.TangentWS = normalize(tanWS - dot(tanWS, output.NormalWS) * output.NormalWS);
+         
+        // Bitangent is ortogonal to normal and tangent
+        output.BiTangentWS = normalize(cross(output.NormalWS, output.TangentWS));
     }
     else
     {

@@ -10,6 +10,9 @@ ConstantBuffers::ConstantBuffers()
 	m_camBuffer = nullptr;
 	m_material = {};
 	m_materialBuffer = nullptr;
+
+	m_followCamera = true;
+	m_renderMode = 1;
 }
 
 ConstantBuffers::~ConstantBuffers()
@@ -110,6 +113,7 @@ bool ConstantBuffers::Initialize(ID3D11Device* device, const Camera& camera)
 
 	//Cam
 	m_camStruct.camPos = camera.GetPosition();
+	m_camStruct.renderMode = 1;
 
 	return true;
 }
@@ -153,13 +157,16 @@ void ConstantBuffers::SetLightsToPS(ID3D11DeviceContext* deviceContext)
 
 void ConstantBuffers::UpdateLights(ID3D11DeviceContext* deviceContext, Camera& camera)
 {
-	//Pointlight on the camera
-	m_lights.pointlights[0].position = XMFLOAT4(camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z, 0.0f);
+	if (m_followCamera)
+	{
+		//Pointlight on the camera
+		m_lights.pointlights[0].position = XMFLOAT4(camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z, 0.0f);
 
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	deviceContext->Map(m_lightsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	memcpy(mappedResource.pData, &m_lights, sizeof(LightStruct));
-	deviceContext->Unmap(m_lightsBuffer, 0);
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
+		deviceContext->Map(m_lightsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &m_lights, sizeof(LightStruct));
+		deviceContext->Unmap(m_lightsBuffer, 0);
+	}
 }
 
 void ConstantBuffers::SetCamToPS(ID3D11DeviceContext* deviceContext)
@@ -171,10 +178,11 @@ void ConstantBuffers::UpdateCam(ID3D11DeviceContext* deviceContext, Camera& came
 {
 	//Update to the current location of the camera
 	m_camStruct.camPos = camera.GetPosition();
+	m_camStruct.renderMode = m_renderMode;
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	deviceContext->Map(m_camBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	memcpy(mappedResource.pData, &m_lights, sizeof(CamStruct));
+	memcpy(mappedResource.pData, &m_camStruct, sizeof(CamStruct));
 	deviceContext->Unmap(m_camBuffer, 0);
 }
 
@@ -193,5 +201,15 @@ void ConstantBuffers::UpdateMaterial(ID3D11DeviceContext* deviceContext, XMFLOAT
 void ConstantBuffers::SetMaterialPS(ID3D11DeviceContext* deviceContext)
 {
 	deviceContext->PSSetConstantBuffers(0, 1, &m_materialBuffer);
+}
+
+void ConstantBuffers::SetFollowCamera(bool trueOrFalse)
+{
+	m_followCamera = trueOrFalse;
+}
+
+void ConstantBuffers::SetRenderMode(UINT mode)
+{
+	m_renderMode = mode;
 }
 

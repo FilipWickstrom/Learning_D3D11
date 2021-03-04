@@ -20,7 +20,6 @@ private:
 	WVPMatrix m_WVPMatrix;
 	ID3D11Buffer* m_WVPBuffer;
 
-
 	//	Lights
 	struct Light
 	{
@@ -37,11 +36,11 @@ private:
 	LightStruct m_lights;
 	ID3D11Buffer* m_lightsBuffer;
 
-	//	Camera position
+	//	Camera position and lights on/off
 	struct CamStruct
 	{
 		XMFLOAT3 camPos;
-		float padding;
+		UINT renderMode;
 	};
 	CamStruct m_camStruct;
 	ID3D11Buffer* m_camBuffer;
@@ -55,6 +54,11 @@ private:
 	};
 	Material m_material;
 	ID3D11Buffer* m_materialBuffer;
+
+	/* Some changeable settings */
+	// Let the main light follow the camera
+	bool m_followCamera;
+	UINT m_renderMode;
 
 private:
 	void UpdateWVP(ID3D11DeviceContext* deviceContext);
@@ -86,6 +90,10 @@ public:
 	//Material
 	void UpdateMaterial(ID3D11DeviceContext* deviceContext, XMFLOAT4 ambient, XMFLOAT4 diffuse, XMFLOAT4 specular);
 	void SetMaterialPS(ID3D11DeviceContext* deviceContext);
+
+	//Light follow camera
+	void SetFollowCamera(bool trueOrFalse);
+	void SetRenderMode(UINT mode);
 
 };
 

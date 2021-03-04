@@ -17,7 +17,9 @@ void InputKeyboardMouse::Initialize(HWND& window, float moveSpeed, float mouseSe
 	m_mouse->SetWindow(window);
 }
 
-void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Tessellation& tessellator, ID3D11DeviceContext* deviceContext)
+void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Tessellation& tessellator, 
+									   Scene& theScene, ConstantBuffers& constBuffs, 
+									   ID3D11DeviceContext* deviceContext)
 {
 	XMVECTOR movement = { 0.0f, 0.0f, 0.0f, 0.0f };
 	XMVECTOR upOrDown = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -71,6 +73,8 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Tessellation& t
 		camera.Reset();
 	}
 
+	camera.Move(movement * m_moveSpeed * dt);
+
 	/*-------- Tessellation settings --------*/
 	//Wireframe
 	if (kb.V)
@@ -102,7 +106,28 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Tessellation& t
 	else if (kb.D0)
 		tessellator.UpdateDepth(deviceContext, 1.0f);
 
-	camera.Move(movement * m_moveSpeed * dt);
+	/*--------Toggle on or off normalmapping--------*/
+	if (kb.N)
+		theScene.UseNormalMaps(true);
+	else if (kb.M)
+		theScene.UseNormalMaps(false);
+
+	/* ------ Move main light ------*/
+	if (kb.Q)
+		constBuffs.SetFollowCamera(true);
+	else if (kb.E)
+		constBuffs.SetFollowCamera(false);
+	
+	/* --- Render mode: texture, lights on or normal mode --- */
+	if (kb.NumPad0)
+		constBuffs.SetRenderMode(0);
+	else if (kb.NumPad1)
+		constBuffs.SetRenderMode(1);
+	else if (kb.NumPad2)
+		constBuffs.SetRenderMode(2);
+	else if (kb.NumPad3)
+		constBuffs.SetRenderMode(3);
+
 }
 
 void InputKeyboardMouse::MouseInput(float dt, Camera& camera)
@@ -123,9 +148,11 @@ void InputKeyboardMouse::MouseInput(float dt, Camera& camera)
 }
 
 
-void InputKeyboardMouse::CheckInput(float dt, Camera& camera, Tessellation& tessellator, ID3D11DeviceContext* deviceContext)
+void InputKeyboardMouse::CheckInput(float dt, Camera& camera, Tessellation& tessellator, 
+									Scene& theScene, ConstantBuffers& constBuffs, 
+									ID3D11DeviceContext* deviceContext)
 {
 	MouseInput(dt, camera);
-	KeyboardInput(dt, camera, tessellator, deviceContext);
+	KeyboardInput(dt, camera, tessellator, theScene, constBuffs, deviceContext);
 	camera.UpdateViewMatrix();
 }
