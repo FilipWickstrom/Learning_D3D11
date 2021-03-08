@@ -8,7 +8,7 @@ Renderer::Renderer(UINT winWidth, UINT winHeight)
 	m_deviceContext = nullptr;
 	m_swapChain = nullptr;
 	m_deltatime = 0.0f;
-	m_VSync = false;
+	m_VSync = true;
 }
 
 Renderer::~Renderer()
@@ -69,6 +69,13 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
+	//NEW***
+	if (!m_shadowMap.Initialize(m_device))
+	{
+		std::cerr << "Shadowmap: Initialize() failed..." << std::endl;
+		return false;
+	}
+
 	m_fpscounter.StartClock();
 
 	return true;
@@ -103,6 +110,9 @@ void Renderer::Render()
 	m_constBuffers.UpdateLights(m_deviceContext, m_camera);
 	m_constBuffers.SetCamToPS(m_deviceContext);
 	m_constBuffers.SetLightsToPS(m_deviceContext);
+
+	//Shadowmap		NEW***
+	m_shadowMap.Render(m_deviceContext);
 	
 	//Second pass - Only for lightning - output to the final render target
 	//Uses the information saves in g-buffer and compute the lightning

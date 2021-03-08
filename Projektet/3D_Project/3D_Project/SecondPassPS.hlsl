@@ -30,6 +30,16 @@ cbuffer Camera : register(b1)
     uint renderMode;
 }
 
+cbuffer SpotLight : register(b2)
+{
+    float3 s_position;
+    float s_range;
+    float3 s_direction; 
+    float s_exponent;
+    float3 s_colour;
+    float padding;
+}
+
 struct PixelInput
 {
     float4 Position : SV_POSITION;
@@ -81,11 +91,29 @@ float4 main( PixelInput input ) : SV_TARGET
         float4 M_Specular = float4(G_Specular.xyz, 1.0f);
         float M_Shininess = G_Specular.w;
         
+        //For final colour
         float4 ambientIntensity = float4(0.2f, 0.2f, 0.2f, 0.0f) * M_Ambient; //%20 ambient light
         float4 diffuseIntensity = float4(0.0f, 0.0f, 0.0f, 0.0f);
         float4 specularIntensity = float4(0.0f, 0.0f, 0.0f, 0.0f);
         
-        //Goes through all the lights
+        /*------ Spotlight -------*/
+        float3 lightVector = s_position - G_Position;
+        float distance = length(lightVector);
+        lightVector = normalize(lightVector);
+        
+        //Angle between the two vectors. Can be between 1.0f to 0.0f
+        float angle = max(dot(-lightVector, normalize(s_direction)), 0.0f);
+        //Smooth out and make less sharp
+        float smooth = pow(angle, s_exponent);
+        //Attenuation depending on distance away and the smoothness
+        float totalAtt = GetAttenuation(distance, s_range) * smooth;
+       
+        diffuseIntensity += GetDiffuse(lightVector, G_Normal) * float4(s_colour, 1.0f) * M_Diffuse * totalAtt;
+        float3 viewVector = normalize(camPos - G_Position);
+        specularIntensity += GetSpecular(lightVector, G_Normal, viewVector, M_Shininess) * float4(s_colour, 1.0f) * M_Specular * totalAtt;
+        /*----- Spotlight end ----- */
+        
+        //Goes through all the pointlights
         for (int i = 0; i < NROFLIGHTS; i++)
         {
             //Vector from the point to the light
@@ -93,7 +121,7 @@ float4 main( PixelInput input ) : SV_TARGET
             float distance = length(lightVector);
             lightVector = normalize(lightVector);
             
-            //Fallof of the light
+            //Falloff for the light
             float attenuationFactor = GetAttenuation(distance, pointlights[i].range);
     
             diffuseIntensity += GetDiffuse(lightVector, G_Normal) * attenuationFactor * pointlights[i].colour * M_Diffuse;
@@ -101,7 +129,6 @@ float4 main( PixelInput input ) : SV_TARGET
             float3 viewVector = normalize(camPos - G_Position);
             
             specularIntensity += GetSpecular(lightVector, G_Normal, viewVector, M_Shininess) * attenuationFactor * pointlights[i].colour * M_Specular;
-            
         }
         
         return G_Texture * (ambientIntensity + diffuseIntensity) + specularIntensity;

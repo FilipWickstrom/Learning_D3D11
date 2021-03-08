@@ -9,6 +9,8 @@
 #include "FPSCounter.h"
 #include "Tessellation.h"
 
+#include "ShadowMap.h"
+
 class Renderer
 {
 private:
@@ -39,6 +41,9 @@ private:
 	//Framerate and frametime
 	FPSCounter m_fpscounter;
 	float m_deltatime;
+
+	//Shadowmap
+	ShadowMap m_shadowMap;
 
 private:
 	void Render();
