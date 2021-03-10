@@ -575,3 +575,12 @@ void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation& tessel
 
 	deviceContext->Draw(m_vertexCount, 0);
 }
+
+void MeshObject::RenderShadows(ID3D11DeviceContext* deviceContext)
+{
+	UINT stride = sizeof(SimpleVertex);
+	UINT offset = 0;
+	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+
+	deviceContext->Draw(m_vertexCount, 0);
+}

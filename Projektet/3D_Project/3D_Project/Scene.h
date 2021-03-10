@@ -3,6 +3,7 @@
 #include "MeshObject.h"
 #include "ConstantBuffers.h"
 #include "Tessellation.h"
+#include "ShadowMap.h"
 
 class Scene
 {
@@ -25,4 +26,6 @@ public:
 				ConstantBuffers& constBuf, 
 				Tessellation& tessellation,
 				float& dt);
+
+	void RenderShadows(ID3D11DeviceContext* deviceContext, ShadowMap& shadowMap);
 };

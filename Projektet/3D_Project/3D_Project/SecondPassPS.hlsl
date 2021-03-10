@@ -8,6 +8,9 @@ Texture2D ambient           : register(t3);
 Texture2D diffuse           : register(t4);
 Texture2D specular          : register(t5);
 
+//Shadowmap
+Texture2D shadowMap         : register(t6);
+
 //Anisotropic sampler
 SamplerState theSampler : register(s0);
 

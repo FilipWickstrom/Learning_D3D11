@@ -100,6 +100,14 @@ void Renderer::Render()
 	//Turning off the tessellation before screenquad
 	m_firstPass.TurnOffTessellation(m_deviceContext);
 
+
+	
+	//Setups all the settings for the shadowmap
+	m_shadowMap.SetShadowVS(m_deviceContext);
+	
+	//Render the scene but only where the objects are
+	m_scene.RenderShadows(m_deviceContext, m_shadowMap);
+
 	/*------------ First pass done ------------------*/
 
 
@@ -111,8 +119,8 @@ void Renderer::Render()
 	m_constBuffers.SetCamToPS(m_deviceContext);
 	m_constBuffers.SetLightsToPS(m_deviceContext);
 
-	//Shadowmap		NEW***
-	m_shadowMap.Render(m_deviceContext);
+	//Shadowmap		NEW*** //USE THE GENERATED MAP
+	m_shadowMap.RenderInLightPS(m_deviceContext);
 	
 	//Second pass - Only for lightning - output to the final render target
 	//Uses the information saves in g-buffer and compute the lightning

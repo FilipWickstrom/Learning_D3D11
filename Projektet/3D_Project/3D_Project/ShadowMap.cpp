@@ -32,6 +32,14 @@ ShadowMap::ShadowMap()
 	m_depthView = nullptr;
 	m_depthSRV = nullptr;
 	m_viewport = {};
+	m_shadowShader = nullptr;
+	m_nullRTV = nullptr;
+
+	//WVP
+	m_shadowWVP.view = m_viewMatrix;
+	m_shadowWVP.projection = m_projectionMatrix;
+	XMStoreFloat4x4(&m_shadowWVP.world, XMMatrixIdentity()); //Will be changed for every gameobject
+	m_shadowWVPBuffer = nullptr;
 }
 
 ShadowMap::~ShadowMap()
@@ -42,6 +50,12 @@ ShadowMap::~ShadowMap()
 		m_depthView->Release();
 	if (m_depthSRV)
 		m_depthSRV->Release();
+	if (m_shadowShader)
+		m_shadowShader->Release();
+	if (m_shadowWVPBuffer)
+		m_shadowWVPBuffer->Release();
+	if (m_nullRTV)
+		m_nullRTV->Release();
 
 }
 
@@ -147,6 +161,59 @@ bool ShadowMap::CreateDepthBuffer(ID3D11Device* device)
 	return true;
 }
 
+bool ShadowMap::LoadVertexShader(ID3D11Device* device)
+{
+	std::string shaderData;
+	std::ifstream reader;
+	
+	reader.open("Shaders/ShadowVS.cso", std::ios::binary | std::ios::ate);  //ate: Begins at the end
+	if (!reader.is_open())
+	{
+		std::cerr << "Could not open vertex shader for shadows..." << std::endl;
+		return false;
+	}
+
+	shaderData.reserve((unsigned int)reader.tellg());  //How many bytes to reserve in string. Reads from the pointer where it is
+	reader.seekg(0, std::ios::beg);
+	shaderData.assign((std::istreambuf_iterator<char>(reader)), std::istreambuf_iterator<char>());  //Copy data from start until string is filled
+
+	if (FAILED(device->CreateVertexShader(shaderData.c_str(), shaderData.length(), nullptr, &m_shadowShader)))
+	{
+		std::cerr << "Failed to create vertex shader for shadows..." << std::endl;
+		return false;
+	}
+	reader.close();
+
+	return true;
+}
+
+bool ShadowMap::CreateShadowWVPBuffer(ID3D11Device* device)
+{
+	D3D11_BUFFER_DESC desc = {};
+	desc.ByteWidth = sizeof(ShadowWVP);
+	desc.Usage = D3D11_USAGE_DYNAMIC;	//Only need to read on GPU no write
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.MiscFlags = 0;
+	desc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA data = {};
+	data.pSysMem = &m_shadowWVP;
+	data.SysMemPitch = 0;
+	data.SysMemSlicePitch = 0;
+
+	HRESULT hr = device->CreateBuffer(&desc, &data, &m_shadowWVPBuffer);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create shadow wvp buffer..." << std::endl;
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
 bool ShadowMap::Initialize(ID3D11Device* device)
 {
 	if (!CreateSpotLightBuffer(device))
@@ -161,14 +228,61 @@ bool ShadowMap::Initialize(ID3D11Device* device)
 		return false;
 	}
 
+	if (!LoadVertexShader(device))
+	{
+		std::cerr << "LoadVertexShader() failed..." << std::endl;
+		return false;
+	}
+
+	if (!CreateShadowWVPBuffer(device))
+	{
+		std::cerr << "CreateShadowWVPBuffer() failed..." << std::endl;
+		return false;
+	}
+
 	return true;
 }
 
-void ShadowMap::Render(ID3D11DeviceContext* deviceContext)
+void ShadowMap::SetShadowVS(ID3D11DeviceContext* deviceContext)
 {
+	//Going to use this viewport with 512x512 res
+	deviceContext->RSSetViewports(1, &m_viewport);
+
+	//Using this vertexshader
+	deviceContext->VSSetShader(m_shadowShader, nullptr, 0);
+	
+	//Not going to use the pixelshader
+	deviceContext->PSSetShader(nullptr, nullptr, 0);
+
+	//Only going to output to the depthbuffer
+	deviceContext->OMSetRenderTargets(1, &m_nullRTV, m_depthView);
+
+	//Clearing the previous view
+	deviceContext->ClearDepthStencilView(m_depthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	//Set WVP constant buffer
+	deviceContext->VSSetConstantBuffers(0, 1, &m_shadowWVPBuffer);
+}
+
+void ShadowMap::UpdateShadowWVP(ID3D11DeviceContext* deviceContext, XMFLOAT4X4 newWorld)
+{
+	m_shadowWVP.world = newWorld;
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	deviceContext->Map(m_shadowWVPBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &m_shadowWVP, sizeof(ShadowWVP));
+	deviceContext->Unmap(m_shadowWVPBuffer, 0);
+}
+
+void ShadowMap::RenderInLightPS(ID3D11DeviceContext* deviceContext)
+{
+	//LET SECOND PASS BIND FIRST THE VERTEX SHADER AND PIXELSHADER NEEDED***
+
 	//Set the constant buffer to pixelshader. Used in the second pass
 	deviceContext->PSSetConstantBuffers(2, 1, &m_SpotLightBuffer);
 
-	//MORE LATER***
+	//m_depthSRV.set
+
+	deviceContext->PSSetShaderResources(6, 1, &m_depthSRV);	//or is the srv empty?
 
 }

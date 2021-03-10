@@ -105,4 +105,5 @@ public:
 
 	//Drawing what it got in the buffer
 	void Render(ID3D11DeviceContext* deviceContext, Tessellation& tessellation);
+	void RenderShadows(ID3D11DeviceContext* deviceContext);
 };

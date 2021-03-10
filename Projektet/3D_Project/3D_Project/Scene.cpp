@@ -137,3 +137,14 @@ void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf
 		obj->Render(deviceContext, tessellation);
 	}
 }
+
+void Scene::RenderShadows(ID3D11DeviceContext* deviceContext, ShadowMap& shadowMap)
+{
+	for (MeshObject* obj : m_objects)
+	{
+		shadowMap.UpdateShadowWVP(deviceContext, obj->GetModelMatrix());
+
+		obj->RenderShadows(deviceContext);
+	}
+
+}
