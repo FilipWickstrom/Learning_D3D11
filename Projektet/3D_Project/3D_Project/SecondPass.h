@@ -32,5 +32,6 @@ public:
 
 	//Binding everything needed including all the gbuffers
 	void Bind(ID3D11DeviceContext* deviceContext, std::vector<ID3D11ShaderResourceView*>gbuffers);
+	void Render(ID3D11DeviceContext* deviceContext);
 
 };

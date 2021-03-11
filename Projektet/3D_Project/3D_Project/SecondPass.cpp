@@ -117,6 +117,10 @@ void SecondPass::Bind(ID3D11DeviceContext* deviceContext, std::vector<ID3D11Shad
 		deviceContext->PSSetShaderResources(i, 1, &gbuffers[i]);
 	}
 
+}
+
+void SecondPass::Render(ID3D11DeviceContext* deviceContext)
+{
 	//Finally render to the screenquad
 	m_screenQuad.Render(deviceContext);
 }

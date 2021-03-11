@@ -564,6 +564,8 @@ void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation& tessel
 
 	//Use tessellation for objects that use it
 	tessellation.SetShaders(deviceContext, m_tessallated, m_displacementMapSRV);
+	
+	//Main texture that is going to be used
 	deviceContext->PSSetShaderResources(0, 1, &m_diffuseTextureSRV);
 
 	//Setting to nullptr if not exist

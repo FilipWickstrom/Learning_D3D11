@@ -42,7 +42,7 @@ bool Scene::Load(ID3D11Device* device)
 
 	// Cube
 	MeshObject* cube = new MeshObject();
-	if (!cube->Load(device, "cube.obj", "brownBricks.mtl", { -8,1,0 }, { 1,1,1 }, { 0, 0, 0 }))
+	if (!cube->Load(device, "cube.obj", "brownBricks.mtl", { -6,1,0 }, { 1,1,1 }, { 0, 0, 0 }))
 	{
 		std::cerr << "Failed to load the cube..." << std::endl;
 		return false;
@@ -113,6 +113,14 @@ bool Scene::Load(ID3D11Device* device)
 		return false;
 	}
 	m_objects.push_back(wetRocks);
+
+	MeshObject* shadowWall = new MeshObject();
+	if (!shadowWall->Load(device, "plane.obj", "default.mtl", { -9.5, 1.5, 0 }, { 3, 1, 3 }, { 90, 90, 0 }))
+	{
+		std::cerr << "Failed to load the shadow wall..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(shadowWall);
 
 	return true;
 }

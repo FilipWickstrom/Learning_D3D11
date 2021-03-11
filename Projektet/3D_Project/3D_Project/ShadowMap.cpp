@@ -33,7 +33,6 @@ ShadowMap::ShadowMap()
 	m_depthSRV = nullptr;
 	m_viewport = {};
 	m_shadowShader = nullptr;
-	m_nullRTV = nullptr;
 
 	//WVP
 	m_shadowWVP.view = m_viewMatrix;
@@ -54,8 +53,6 @@ ShadowMap::~ShadowMap()
 		m_shadowShader->Release();
 	if (m_shadowWVPBuffer)
 		m_shadowWVPBuffer->Release();
-	if (m_nullRTV)
-		m_nullRTV->Release();
 
 }
 
@@ -93,7 +90,7 @@ bool ShadowMap::CreateDepthBuffer(ID3D11Device* device)
 	textureDesc.ArraySize = 1;
 	textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	textureDesc.CPUAccessFlags = 0;						//No CPU access
-	textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;	//24 bits for depth, 8 for stencil (not needed though)
+	textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;	//24 bits for depth, 8 for stencil (not needed though)	//USE DXGI_FORMAT_R32_TYPELESS instead?
 	textureDesc.Height = m_height;
 	textureDesc.Width = m_width;
 	textureDesc.MipLevels = 1;                         //Multisampled texture
@@ -130,7 +127,7 @@ bool ShadowMap::CreateDepthBuffer(ID3D11Device* device)
 			depthMap->Release();
 		return false;
 	}
-
+	
 	/*----- Prepare the shader resource -----*/
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
@@ -243,7 +240,7 @@ bool ShadowMap::Initialize(ID3D11Device* device)
 	return true;
 }
 
-void ShadowMap::SetShadowVS(ID3D11DeviceContext* deviceContext)
+void ShadowMap::BindShadowVS(ID3D11DeviceContext* deviceContext)
 {
 	//Going to use this viewport with 512x512 res
 	deviceContext->RSSetViewports(1, &m_viewport);
@@ -255,7 +252,10 @@ void ShadowMap::SetShadowVS(ID3D11DeviceContext* deviceContext)
 	deviceContext->PSSetShader(nullptr, nullptr, 0);
 
 	//Only going to output to the depthbuffer
-	deviceContext->OMSetRenderTargets(1, &m_nullRTV, m_depthView);
+	
+	ID3D11RenderTargetView* nullRTV = nullptr;
+	deviceContext->OMSetRenderTargets(1, &nullRTV, m_depthView);
+	//deviceContext->OMSetDepthStencilState()
 
 	//Clearing the previous view
 	deviceContext->ClearDepthStencilView(m_depthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
@@ -274,15 +274,20 @@ void ShadowMap::UpdateShadowWVP(ID3D11DeviceContext* deviceContext, XMFLOAT4X4 n
 	deviceContext->Unmap(m_shadowWVPBuffer, 0);
 }
 
-void ShadowMap::RenderInLightPS(ID3D11DeviceContext* deviceContext)
+void ShadowMap::BindToPS(ID3D11DeviceContext* deviceContext)
 {
-	//LET SECOND PASS BIND FIRST THE VERTEX SHADER AND PIXELSHADER NEEDED***
-
 	//Set the constant buffer to pixelshader. Used in the second pass
 	deviceContext->PSSetConstantBuffers(2, 1, &m_SpotLightBuffer);
 
-	//m_depthSRV.set
+	//Using this as depth as a texture
+	deviceContext->PSSetShaderResources(6, 1, &m_depthSRV);
 
-	deviceContext->PSSetShaderResources(6, 1, &m_depthSRV);	//or is the srv empty?
+	//Set the constant buffer
+	deviceContext->PSSetConstantBuffers(3, 1, &m_shadowWVPBuffer);
+}
 
+void ShadowMap::DisableSRV(ID3D11DeviceContext* deviceContext)
+{
+	ID3D11ShaderResourceView* nullSRV = nullptr;
+	deviceContext->PSSetShaderResources(6, 1, &nullSRV);
 }

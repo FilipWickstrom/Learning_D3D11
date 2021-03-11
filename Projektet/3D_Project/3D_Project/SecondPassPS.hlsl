@@ -43,6 +43,13 @@ cbuffer SpotLight : register(b2)
     float padding;
 }
 
+cbuffer ShadowWVP : register(b3)
+{
+    row_major float4x4 World;
+    row_major float4x4 View;
+    row_major float4x4 Projection;
+};
+
 struct PixelInput
 {
     float4 Position : SV_POSITION;
@@ -78,7 +85,7 @@ float GetSpecular(float3 lightVector, float3 normal, float3 viewVector, float sh
 
 
 float4 main( PixelInput input ) : SV_TARGET
-{ 
+{
     //With phong shading
     if (renderMode == 1)
     {
@@ -99,16 +106,39 @@ float4 main( PixelInput input ) : SV_TARGET
         float4 diffuseIntensity = float4(0.0f, 0.0f, 0.0f, 0.0f);
         float4 specularIntensity = float4(0.0f, 0.0f, 0.0f, 0.0f);
         
+        //TESTING
+        //***DO SHADOW CHECK. IF NO SHADOW DO THIS UNDER. IF SHADOW, JUST RETURN AMBIENT***
+        float4x4 lightViewProj = mul(View, Projection);
+        float4 lightPos = mul(float4(G_Position, 1.0f), lightViewProj);
+        
+        //???
+        lightPos.xy = lightPos.xy / lightPos.w;
+        
+        //From [-1, 1] to [0, 1]
+        float2 shadowTex = float2(0.5f * lightPos.x + 0.5f, -0.5f * lightPos.y + 0.5f);
+        
+        //???
+        float depth = lightPos.z / lightPos.w;
+        
+        float closestDepth = shadowMap.Sample(theSampler, shadowTex).r;
+        
+        float bias = 0.05f;
+        if (depth < closestDepth)
+        {
+            return ambientIntensity;
+        }
+        //TESTING
+        
         /*------ Spotlight -------*/
         float3 lightVector = s_position - G_Position;
         float distance = length(lightVector);
         lightVector = normalize(lightVector);
         
-        //Angle between the two vectors. Can be between 1.0f to 0.0f
+            //Angle between the two vectors. Can be between 1.0f to 0.0f
         float angle = max(dot(-lightVector, normalize(s_direction)), 0.0f);
-        //Smooth out and make less sharp
+            //Smooth out and make less sharp
         float smooth = pow(angle, s_exponent);
-        //Attenuation depending on distance away and the smoothness
+            //Attenuation depending on distance away and the smoothness
         float totalAtt = GetAttenuation(distance, s_range) * smooth;
        
         diffuseIntensity += GetDiffuse(lightVector, G_Normal) * float4(s_colour, 1.0f) * M_Diffuse * totalAtt;
@@ -135,6 +165,7 @@ float4 main( PixelInput input ) : SV_TARGET
         }
         
         return G_Texture * (ambientIntensity + diffuseIntensity) + specularIntensity;
+        
     }
     
     //Show only normals
@@ -151,7 +182,7 @@ float4 main( PixelInput input ) : SV_TARGET
     
     // Rendermode 0, or something else
     // Just render the colours of the models 
-    else 
+    else
     {
         return colourTexture.Sample(theSampler, input.TexCoord);
     }

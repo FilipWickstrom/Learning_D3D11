@@ -42,7 +42,6 @@ private:
 	ID3D11ShaderResourceView* m_depthSRV;	//communicating with pixelshader later
 	D3D11_VIEWPORT m_viewport;				//can be smaller than main resolution
 	ID3D11VertexShader* m_shadowShader;
-	ID3D11RenderTargetView* m_nullRTV;
 
 	//Constant buffer
 	struct ShadowWVP
@@ -66,10 +65,12 @@ public:
 
 	bool Initialize(ID3D11Device* device);
 
-	void SetShadowVS(ID3D11DeviceContext* deviceContext);
+	void BindShadowVS(ID3D11DeviceContext* deviceContext);
 	void UpdateShadowWVP(ID3D11DeviceContext* deviceContext, XMFLOAT4X4 newWorld);
 
-	void RenderInLightPS(ID3D11DeviceContext* deviceContext);
+	void BindToPS(ID3D11DeviceContext* deviceContext);
+
+	void DisableSRV(ID3D11DeviceContext* deviceContext);
 
 	//Set position  - update position and matrix
 	//const get view matrix?
