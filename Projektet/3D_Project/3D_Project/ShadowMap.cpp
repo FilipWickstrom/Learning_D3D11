@@ -2,11 +2,11 @@
 
 ShadowMap::ShadowMap()
 {
-	m_width = 512;
-	m_height = 512;
+	m_width = 1024;
+	m_height = 1024;
 	
 	//View matrix
-	m_pos =		{ 5.0f, 5.0f, 0.0f };	//Right side of spawn heigh up
+	m_pos =		{ 5.0f, 2.0f, 0.0f };	//Right side of spawn 2 up
 	m_focus =	{-5.0f, 0.0f, 0.0f };	//Left side of spawn
 	m_up =		{ 0.0f, 1.0f, 0.0f };
 	XMVECTOR pos = XMLoadFloat3(&m_pos);
@@ -15,9 +15,9 @@ ShadowMap::ShadowMap()
 	XMStoreFloat4x4(&m_viewMatrix, XMMatrixLookAtLH(pos, focus, up));
 
 	//Projection matrix
-	m_nearPlane = 0.01f;
+	m_nearPlane = 0.1f;
 	m_farPlane = 100.0f;
-	m_fov = XM_PI * 0.33f;	//~60 degrees
+	m_fov = XM_PI * 0.5f;	//90 degrees
 	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovLH(m_fov, (float)(m_width/m_height), m_nearPlane, m_farPlane));
 
 	//Setting up the spotlight
@@ -25,7 +25,7 @@ ShadowMap::ShadowMap()
 	m_spotLight.direction = XMFLOAT3(m_focus.x - m_pos.x, m_focus.y - m_pos.y, m_focus.z - m_pos.z); //From pos to focuspoint
 	m_spotLight.range = 20.0f;
 	m_spotLight.colour = { 1.0f, 1.0f, 1.0f };
-	m_spotLight.exponent = 20.0f;
+	m_spotLight.exponent = 4.0f;
 	m_SpotLightBuffer = nullptr;
 
 	//Depth buffer

@@ -102,12 +102,12 @@ bool ConstantBuffers::Initialize(ID3D11Device* device, const Camera& camera)
 	m_lights.pointlights[0].range = 7.0f;
 
 	//Front light - yellow
-	m_lights.pointlights[1].position = { 0.0f, 5.0f, 8.0f, 1.0f };
+	m_lights.pointlights[1].position = { 6.0f, 3.0f, 8.0f, 1.0f };
 	m_lights.pointlights[1].colour = { 0.6f, 0.6f, 0.2f, 1.0f };
 	m_lights.pointlights[1].range = 10.0f;
 
 	//Back light - blue
-	m_lights.pointlights[2].position = { 0.0f, 5.0f, -8.0f, 1.0f };
+	m_lights.pointlights[2].position = { 7.0f, 3.0f, -8.0f, 1.0f };
 	m_lights.pointlights[2].colour = { 0.2f, 0.2f, 0.8f, 1.0f };
 	m_lights.pointlights[2].range = 10.0f;
 

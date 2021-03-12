@@ -71,9 +71,4 @@ public:
 	void BindToPS(ID3D11DeviceContext* deviceContext);
 
 	void DisableSRV(ID3D11DeviceContext* deviceContext);
-
-	//Set position  - update position and matrix
-	//const get view matrix?
-	//const get projection matrix?
-
 };

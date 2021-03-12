@@ -12,7 +12,9 @@ Texture2D specular          : register(t5);
 Texture2D shadowMap         : register(t6);
 
 //Anisotropic sampler
-SamplerState theSampler : register(s0);
+SamplerState anisoSampler : register(s0);
+
+/*----- Constant buffers: START ------*/
 
 struct Light
 {
@@ -21,7 +23,6 @@ struct Light
     float range;
     float3 padding;
 };
-
 cbuffer Lights : register(b0)
 {
     Light pointlights[NROFLIGHTS];
@@ -50,11 +51,50 @@ cbuffer ShadowWVP : register(b3)
     row_major float4x4 Projection;
 };
 
+/*----- Constant buffers: END ------*/
+
 struct PixelInput
 {
     float4 Position : SV_POSITION;
     float2 TexCoord : TEXCOORD;
 };
+
+struct GBuffer
+{
+    float4 colourTexture;
+    float3 positionWS;
+    float3 normalWS;
+};
+
+struct Material
+{
+    float4 ambient;
+    float4 diffuse;
+    float4 specular;
+    float shininess;
+};
+
+/*----- Help functions: START ------*/
+
+GBuffer GetGBuffer(float2 texCoord)
+{
+    GBuffer output;
+    output.colourTexture = colourTexture.Sample(anisoSampler, texCoord);
+    output.positionWS = positionTexture.Sample(anisoSampler, texCoord).xyz;
+    output.normalWS = normalTexture.Sample(anisoSampler, texCoord).xyz;
+    return output;
+}
+
+Material GetMaterial(float2 texCoord)
+{
+    Material output;
+    output.ambient = float4(ambient.Sample(anisoSampler, texCoord).xyz, 1.0f);
+    output.diffuse = float4(diffuse.Sample(anisoSampler, texCoord).xyz, 1.0f);
+    float4 tempSpec = specular.Sample(anisoSampler, texCoord);
+    output.specular = float4(tempSpec.xyz, 1.0f);
+    output.shininess = tempSpec.w;
+    return output;
+}
 
 float GetAttenuation(float distance, float range)
 {
@@ -83,54 +123,56 @@ float GetSpecular(float3 lightVector, float3 normal, float3 viewVector, float sh
     return pow(reflectDotView, shininess);
 }
 
+/*----- Help functions: END ------*/
 
 float4 main( PixelInput input ) : SV_TARGET
 {
     //With phong shading
     if (renderMode == 1)
     {
-        //Get the gbuffers
-        float4 G_Texture = colourTexture.Sample(theSampler, input.TexCoord);
-        float3 G_Position = positionTexture.Sample(theSampler, input.TexCoord).xyz;
-        float3 G_Normal = normalTexture.Sample(theSampler, input.TexCoord).xyz;
-        
-        //Material
-        float4 M_Ambient = float4(ambient.Sample(theSampler, input.TexCoord).xyz, 1.0f);
-        float4 M_Diffuse = float4(diffuse.Sample(theSampler, input.TexCoord).xyz, 1.0f);
-        float4 G_Specular = specular.Sample(theSampler, input.TexCoord);
-        float4 M_Specular = float4(G_Specular.xyz, 1.0f);
-        float M_Shininess = G_Specular.w;
+        //Getting what is saved in gbuffers
+        GBuffer gbuffer = GetGBuffer(input.TexCoord);
+        Material material = GetMaterial(input.TexCoord);
         
         //For final colour
-        float4 ambientIntensity = float4(0.2f, 0.2f, 0.2f, 0.0f) * M_Ambient; //%20 ambient light
+        float4 ambientIntensity = float4(0.2f, 0.2f, 0.2f, 0.0f) * material.ambient; //%20 ambient light
         float4 diffuseIntensity = float4(0.0f, 0.0f, 0.0f, 0.0f);
         float4 specularIntensity = float4(0.0f, 0.0f, 0.0f, 0.0f);
         
         //TESTING
-        //***DO SHADOW CHECK. IF NO SHADOW DO THIS UNDER. IF SHADOW, JUST RETURN AMBIENT***
-        float4x4 lightViewProj = mul(View, Projection);
-        float4 lightPos = mul(float4(G_Position, 1.0f), lightViewProj);
+        //Do shadowmap function later. If in range, return 1.0f, if not return 0.0f
         
-        //???
-        lightPos.xy = lightPos.xy / lightPos.w;
+        //From the shadowmap/spotlight perspective
+        float4x4 lightViewProjMatrix = mul(View, Projection);
+
+        //Get the clipspace coordinate from spotlight
+        float4 lightViewPos = mul(float4(gbuffer.positionWS, 1.0f), lightViewProjMatrix);
+
+        //
+        float3 shadowMapCoords = lightViewPos.xyz / lightViewPos.w;
         
-        //From [-1, 1] to [0, 1]
-        float2 shadowTex = float2(0.5f * lightPos.x + 0.5f, -0.5f * lightPos.y + 0.5f);
+        //Adjust from [-1, 1] clipspace to [0, 1] texturecoordinates
+        shadowMapCoords.x = 0.5f * shadowMapCoords.x + 0.5f;
+        shadowMapCoords.y = -0.5f * shadowMapCoords.y + 0.5f;
         
-        //???
-        float depth = lightPos.z / lightPos.w;
-        
-        float closestDepth = shadowMap.Sample(theSampler, shadowTex).r;
-        
-        float bias = 0.05f;
-        if (depth < closestDepth)
+        //Inside of [0, 1] space, otherwise ignore
+        if (saturate(shadowMapCoords.x) == shadowMapCoords.x && 
+            saturate(shadowMapCoords.y) == shadowMapCoords.y &&
+            saturate(shadowMapCoords.z) == shadowMapCoords.z)
         {
-            return ambientIntensity;
-        }
+            //Add bias to avoid shadow acne
+            float currentDepth = shadowMapCoords.z - (1.0f / 600.0f);
+            float closestDepth = shadowMap.Sample(anisoSampler, shadowMapCoords.xy).r;
+        
+            if (closestDepth < currentDepth)
+            {
+                return gbuffer.colourTexture * ambientIntensity;
+            }
+        } 
         //TESTING
         
-        /*------ Spotlight -------*/
-        float3 lightVector = s_position - G_Position;
+        /*------ Spotlight -------*/        //SEPERATE FUNCTION FOR THIS LATER???
+        float3 lightVector = s_position - gbuffer.positionWS;
         float distance = length(lightVector);
         lightVector = normalize(lightVector);
         
@@ -141,49 +183,50 @@ float4 main( PixelInput input ) : SV_TARGET
             //Attenuation depending on distance away and the smoothness
         float totalAtt = GetAttenuation(distance, s_range) * smooth;
        
-        diffuseIntensity += GetDiffuse(lightVector, G_Normal) * float4(s_colour, 1.0f) * M_Diffuse * totalAtt;
-        float3 viewVector = normalize(camPos - G_Position);
-        specularIntensity += GetSpecular(lightVector, G_Normal, viewVector, M_Shininess) * float4(s_colour, 1.0f) * M_Specular * totalAtt;
+        diffuseIntensity += GetDiffuse(lightVector, gbuffer.normalWS) * float4(s_colour, 1.0f) * material.diffuse * totalAtt;
+        float3 viewVector = normalize(camPos - gbuffer.positionWS);
+        specularIntensity += GetSpecular(lightVector, gbuffer.normalWS, viewVector, material.shininess) * float4(s_colour, 1.0f) * material.specular * totalAtt;
         /*----- Spotlight end ----- */
         
         //Goes through all the pointlights
         for (int i = 0; i < NROFLIGHTS; i++)
         {
             //Vector from the point to the light
-            float3 lightVector = pointlights[i].position.xyz - G_Position;
+            float3 lightVector = pointlights[i].position.xyz - gbuffer.positionWS;
             float distance = length(lightVector);
             lightVector = normalize(lightVector);
             
             //Falloff for the light
             float attenuationFactor = GetAttenuation(distance, pointlights[i].range);
     
-            diffuseIntensity += GetDiffuse(lightVector, G_Normal) * attenuationFactor * pointlights[i].colour * M_Diffuse;
+            diffuseIntensity += GetDiffuse(lightVector, gbuffer.normalWS) * attenuationFactor * pointlights[i].colour * material.diffuse;
             
-            float3 viewVector = normalize(camPos - G_Position);
+            float3 viewVector = normalize(camPos - gbuffer.positionWS);
             
-            specularIntensity += GetSpecular(lightVector, G_Normal, viewVector, M_Shininess) * attenuationFactor * pointlights[i].colour * M_Specular;
+            specularIntensity += GetSpecular(lightVector, gbuffer.normalWS, viewVector, material.shininess) * 
+                                 attenuationFactor * pointlights[i].colour * material.specular;
         }
         
-        return G_Texture * (ambientIntensity + diffuseIntensity) + specularIntensity;
+        return gbuffer.colourTexture * (ambientIntensity + diffuseIntensity) + specularIntensity;
         
     }
     
     //Show only normals
     else if (renderMode == 2)
     {
-        return normalTexture.Sample(theSampler, input.TexCoord);
+        return normalTexture.Sample(anisoSampler, input.TexCoord);
     }
     
     //Position in the world
     else if (renderMode == 3)
     {
-        return positionTexture.Sample(theSampler, input.TexCoord);
+        return positionTexture.Sample(anisoSampler, input.TexCoord);
     }
     
     // Rendermode 0, or something else
     // Just render the colours of the models 
     else
     {
-        return colourTexture.Sample(theSampler, input.TexCoord);
+        return colourTexture.Sample(anisoSampler, input.TexCoord);
     }
 }
