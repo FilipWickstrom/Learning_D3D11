@@ -15,7 +15,7 @@ ShadowMap::ShadowMap()
 	XMStoreFloat4x4(&m_viewMatrix, XMMatrixLookAtLH(pos, focus, up));
 
 	//Projection matrix
-	m_nearPlane = 0.1f;
+	m_nearPlane = 1.0f;
 	m_farPlane = 100.0f;
 	m_fov = XM_PI * 0.5f;	//90 degrees
 	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovLH(m_fov, (float)(m_width/m_height), m_nearPlane, m_farPlane));
@@ -90,7 +90,7 @@ bool ShadowMap::CreateDepthBuffer(ID3D11Device* device)
 	textureDesc.ArraySize = 1;
 	textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	textureDesc.CPUAccessFlags = 0;						//No CPU access
-	textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;	//24 bits for depth, 8 for stencil (not needed though)	//USE DXGI_FORMAT_R32_TYPELESS instead?
+	textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;	//24 bits for depth, 8 for stencil (not needed though)
 	textureDesc.Height = m_height;
 	textureDesc.Width = m_width;
 	textureDesc.MipLevels = 1;                         //Multisampled texture

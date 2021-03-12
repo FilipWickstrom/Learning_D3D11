@@ -155,13 +155,16 @@ float4 main( PixelInput input ) : SV_TARGET
         shadowMapCoords.x = 0.5f * shadowMapCoords.x + 0.5f;
         shadowMapCoords.y = -0.5f * shadowMapCoords.y + 0.5f;
         
+        //float4 shadowMapCoords = lightViewPos * float4(0.5f, -0.5f, 1.0f, 1.0f) + (float4(0.5f, 0.5f, 0.0f, 0.0f) * lightViewPos.w);
+        //shadowMapCoords.xyz = shadowMapCoords.xyz / shadowMapCoords.w;
+        
         //Inside of [0, 1] space, otherwise ignore
         if (saturate(shadowMapCoords.x) == shadowMapCoords.x && 
             saturate(shadowMapCoords.y) == shadowMapCoords.y &&
             saturate(shadowMapCoords.z) == shadowMapCoords.z)
         {
             //Add bias to avoid shadow acne
-            float currentDepth = shadowMapCoords.z - (1.0f / 600.0f);
+            float currentDepth = shadowMapCoords.z - 0.0005f;
             float closestDepth = shadowMap.Sample(anisoSampler, shadowMapCoords.xy).r;
         
             if (closestDepth < currentDepth)
