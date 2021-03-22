@@ -32,7 +32,7 @@ private:
 		XMFLOAT3 direction;		//from m_focus
 		float exponent;
 		XMFLOAT3 colour;
-		float padding;
+		float resolution;
 	};
 	Spotlight m_spotLight;
 	ID3D11Buffer* m_SpotLightBuffer;
@@ -52,13 +52,18 @@ private:
 	} m_shadowWVP;
 	ID3D11Buffer* m_shadowWVPBuffer;
 
+	ID3D11RasterizerState* m_depthBiasRasterizer;	//delete!!!
+	ID3D11SamplerState* m_shadowSampler;
+
 //Help functions
 private:
 	bool CreateSpotLightBuffer(ID3D11Device* device);
-	bool CreateDepthBuffer(ID3D11Device* device);
+	bool CreateDepthBuffer(ID3D11Device* device);	//That uses 32 bit depth
 	bool LoadVertexShader(ID3D11Device* device);
 	bool CreateShadowWVPBuffer(ID3D11Device* device);
 
+	bool CreateDepthBiasRasterizer(ID3D11Device* device);
+	bool CreateShadowSampler(ID3D11Device* device);
 public:
 	ShadowMap();
 	~ShadowMap();

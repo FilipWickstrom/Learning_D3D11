@@ -13,6 +13,8 @@ Texture2D shadowMap         : register(t6);
 
 //Anisotropic sampler
 SamplerState anisoSampler : register(s0);
+//
+SamplerComparisonState shadowSampler : register(s1);    //remove later????
 
 /*----- Constant buffers: START ------*/
 
@@ -41,14 +43,14 @@ cbuffer SpotLight : register(b2)
     float3 s_direction; 
     float s_exponent;
     float3 s_colour;
-    float padding;
+    float s_resolution;
 }
 
 cbuffer ShadowWVP : register(b3)
 {
-    row_major float4x4 World;
-    row_major float4x4 View;
-    row_major float4x4 Projection;
+    row_major float4x4 S_World;
+    row_major float4x4 S_View;
+    row_major float4x4 S_Projection;
 };
 
 /*----- Constant buffers: END ------*/
@@ -123,6 +125,56 @@ float GetSpecular(float3 lightVector, float3 normal, float3 viewVector, float sh
     return pow(reflectDotView, shininess);
 }
 
+float Shadow(float3 posWS, float3 normalWS, float3 lightPosWS)
+{
+    //From the shadowmap/spotlight perspective
+    float4x4 lightViewProjMatrix = mul(S_View, S_Projection);
+
+    //Get the clipspace coordinate from spotlight
+    float4 lightViewPos = mul(float4(posWS, 1.0f), lightViewProjMatrix);
+
+    //Perspective devide
+    float3 shadowMapCoords = lightViewPos.xyz / lightViewPos.w;
+    
+    //Adjust from [-1, 1] clipspace to [0, 1] texturecoordinates
+    shadowMapCoords.x = 0.5f * shadowMapCoords.x + 0.5f;
+    shadowMapCoords.y = -0.5f * shadowMapCoords.y + 0.5f;
+     
+    //Inside of [0, 1] space, otherwise ignore not visible in the lights view
+    //Only accepts values inside of the view of the light
+    if (saturate(shadowMapCoords.x) == shadowMapCoords.x &&
+        saturate(shadowMapCoords.y) == shadowMapCoords.y)
+    {
+        float3 lightDir = normalize(lightPosWS - posWS);
+        normalWS = normalize(normalWS);
+        float dotValue = dot(normalWS, lightDir);
+        //float bias = 0.005f * tan(acos(dotValue));
+        //bias = clamp(bias, 0, 0.01f);
+        //float bias = 0.0001f * sqrt(1 - pow(dot(normalize(normalWS), -lightDir), 2) / dot(normalize(normalWS), -lightDir));
+        
+        float bias = 0.005f; //= 0.01f;   //1.0f / pow(2, 32);
+        float currentDepth = shadowMapCoords.z - bias;
+                
+        //float shadowFactor = shadowMap.SampleCmpLevelZero(shadowSampler, shadowMapCoords.xy, currentDepth).r;
+        //return shadowFactor;
+        float shadowFactor = shadowMap.Sample(anisoSampler, shadowMapCoords.xy).r;
+        //Is in shadow
+        if (shadowFactor < currentDepth)
+        {
+            return 0.0f;
+        }
+        else
+        {
+            float lightIntensity = saturate(dotValue);
+            return lightIntensity;
+        }
+    }
+    return 1.0f;
+}
+
+//void CalcSpotlight(float4& diffuse, float4 specular)      //funkar inte med & calc intensity float?
+//{ }
+
 /*----- Help functions: END ------*/
 
 float4 main( PixelInput input ) : SV_TARGET
@@ -140,39 +192,16 @@ float4 main( PixelInput input ) : SV_TARGET
         float4 specularIntensity = float4(0.0f, 0.0f, 0.0f, 0.0f);
         
         //TESTING
-        //Do shadowmap function later. If in range, return 1.0f, if not return 0.0f
+        float shadow = Shadow(gbuffer.positionWS, gbuffer.normalWS, s_position);
+        //If it has a shadow. STOP HERE. 
+        //if (shadow == 0.0f)
+        //{
+        //    return gbuffer.colourTexture * ambientIntensity;
+        //}
         
-        //From the shadowmap/spotlight perspective
-        float4x4 lightViewProjMatrix = mul(View, Projection);
-
-        //Get the clipspace coordinate from spotlight
-        float4 lightViewPos = mul(float4(gbuffer.positionWS, 1.0f), lightViewProjMatrix);
-
-        //
-        float3 shadowMapCoords = lightViewPos.xyz / lightViewPos.w;
         
-        //Adjust from [-1, 1] clipspace to [0, 1] texturecoordinates
-        shadowMapCoords.x = 0.5f * shadowMapCoords.x + 0.5f;
-        shadowMapCoords.y = -0.5f * shadowMapCoords.y + 0.5f;
+        //Else does not have a shadow
         
-        //float4 shadowMapCoords = lightViewPos * float4(0.5f, -0.5f, 1.0f, 1.0f) + (float4(0.5f, 0.5f, 0.0f, 0.0f) * lightViewPos.w);
-        //shadowMapCoords.xyz = shadowMapCoords.xyz / shadowMapCoords.w;
-        
-        //Inside of [0, 1] space, otherwise ignore
-        if (saturate(shadowMapCoords.x) == shadowMapCoords.x && 
-            saturate(shadowMapCoords.y) == shadowMapCoords.y &&
-            saturate(shadowMapCoords.z) == shadowMapCoords.z)
-        {
-            //Add bias to avoid shadow acne
-            float currentDepth = shadowMapCoords.z - 0.0005f;
-            float closestDepth = shadowMap.Sample(anisoSampler, shadowMapCoords.xy).r;
-        
-            if (closestDepth < currentDepth)
-            {
-                return gbuffer.colourTexture * ambientIntensity;
-            }
-        } 
-        //TESTING
         
         /*------ Spotlight -------*/        //SEPERATE FUNCTION FOR THIS LATER???
         float3 lightVector = s_position - gbuffer.positionWS;
@@ -210,7 +239,7 @@ float4 main( PixelInput input ) : SV_TARGET
                                  attenuationFactor * pointlights[i].colour * material.specular;
         }
         
-        return gbuffer.colourTexture * (ambientIntensity + diffuseIntensity) + specularIntensity;
+        return gbuffer.colourTexture * (ambientIntensity + (diffuseIntensity * shadow)) + (specularIntensity * shadow);
         
     }
     

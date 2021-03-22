@@ -42,13 +42,13 @@ bool Scene::Load(ID3D11Device* device)
 
 	// Cube
 	MeshObject* cube = new MeshObject();
-	//if (!cube->Load(device, "cube.obj", "brownBricks.mtl", { -6,1,0 }, { 1,1,1 }, { 0, 0, 0 }))
-	if (!cube->Load(device, "cube.obj", "brownBricks.mtl", { -6,-1,0 }, { 1,1,1 }, { 0, 0, 0 }))
+	if (!cube->Load(device, "cube.obj", "brownBricks.mtl", { -6,0,0 }, { 1,1,1 }, { 0, 0, 0 }))
+	//if (!cube->Load(device, "cube.obj", "brownBricks.mtl", { -6,-1,0 }, { 1,1,1 }, { 0, 0, 0 }))
 	{
 		std::cerr << "Failed to load the cube..." << std::endl;
 		return false;
 	}
-	//cube->SetRotate(true, 0.01f);
+	cube->SetRotate(true, 0.01f);
 	m_objects.push_back(cube);
 
 	// Noah - behind you! Ahhh!
@@ -62,7 +62,7 @@ bool Scene::Load(ID3D11Device* device)
 
 	// Sphere
 	MeshObject* sphere = new MeshObject();
-	if (!sphere->Load(device, "newSphere.obj", "default.mtl", { -6, -1, 5 }, { 1, 1, 1 }, { 0, 0, 0 }))
+	if (!sphere->Load(device, "sphere.obj", "default.mtl", { -6, -0.5, 5 }, { 1, 1, 1 }, { 0, 0, 0 }))
 	{
 		std::cerr << "Failed to load the sphere..." << std::endl;
 		return false;

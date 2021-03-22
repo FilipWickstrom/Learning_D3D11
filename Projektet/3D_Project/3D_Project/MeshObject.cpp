@@ -541,12 +541,12 @@ void MeshObject::Rotate(float& dt)
 	if (m_canRotate)
 	{
 		//Reset after 360 degrees
-		if (m_rotation.x >= 360.0f)
-			m_rotation.x = 0.0f;
+		/*if (m_rotation.x >= 360.0f)
+			m_rotation.x = 0.0f;*/
 		if (m_rotation.y >= 360.0f)
 			m_rotation.y = 0.0f;	
 
-		m_rotation.x += (m_rotationSpeed * dt);
+		//m_rotation.x += (m_rotationSpeed * dt);
 		m_rotation.y += (m_rotationSpeed * dt);
 		
 		UpdateModelMatrix({ m_position.x, m_position.y, m_position.z },

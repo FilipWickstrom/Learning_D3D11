@@ -2,12 +2,11 @@
 
 ShadowMap::ShadowMap()
 {
-	m_width = 1024;
-	m_height = 1024;
+	m_width = m_height = 2048;
 	
 	//View matrix
-	m_pos =		{ 5.0f, 2.0f, 0.0f };	//Right side of spawn 2 up
-	m_focus =	{-5.0f, 0.0f, 0.0f };	//Left side of spawn
+	m_pos =		{ 5.0f, 10.0f, 0.0f };	//Right side of spawn 0 up
+	m_focus =	{-5.0f, 5.0f, 0.0f };	//Left side of spawn
 	m_up =		{ 0.0f, 1.0f, 0.0f };
 	XMVECTOR pos = XMLoadFloat3(&m_pos);
 	XMVECTOR focus = XMLoadFloat3(&m_focus);
@@ -15,17 +14,19 @@ ShadowMap::ShadowMap()
 	XMStoreFloat4x4(&m_viewMatrix, XMMatrixLookAtLH(pos, focus, up));
 
 	//Projection matrix
-	m_nearPlane = 1.0f;
-	m_farPlane = 100.0f;
+	//Near and far plane should be tight for more precise values
+	m_nearPlane = 12.0f;
+	m_farPlane = 20.0f;
 	m_fov = XM_PI * 0.5f;	//90 degrees
 	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovLH(m_fov, (float)(m_width/m_height), m_nearPlane, m_farPlane));
 
 	//Setting up the spotlight
 	m_spotLight.position = m_pos;
 	m_spotLight.direction = XMFLOAT3(m_focus.x - m_pos.x, m_focus.y - m_pos.y, m_focus.z - m_pos.z); //From pos to focuspoint
-	m_spotLight.range = 20.0f;
+	m_spotLight.range = 30.0f;
 	m_spotLight.colour = { 1.0f, 1.0f, 1.0f };
 	m_spotLight.exponent = 4.0f;
+	m_spotLight.resolution = float(m_width);
 	m_SpotLightBuffer = nullptr;
 
 	//Depth buffer
@@ -39,6 +40,9 @@ ShadowMap::ShadowMap()
 	m_shadowWVP.projection = m_projectionMatrix;
 	XMStoreFloat4x4(&m_shadowWVP.world, XMMatrixIdentity()); //Will be changed for every gameobject
 	m_shadowWVPBuffer = nullptr;
+
+	m_depthBiasRasterizer = nullptr;
+	m_shadowSampler = nullptr;
 }
 
 ShadowMap::~ShadowMap()
@@ -54,6 +58,10 @@ ShadowMap::~ShadowMap()
 	if (m_shadowWVPBuffer)
 		m_shadowWVPBuffer->Release();
 
+	if (m_depthBiasRasterizer)
+		m_depthBiasRasterizer->Release();
+	if (m_shadowSampler)
+		m_shadowSampler->Release();
 }
 
 bool ShadowMap::CreateSpotLightBuffer(ID3D11Device* device)
@@ -90,14 +98,14 @@ bool ShadowMap::CreateDepthBuffer(ID3D11Device* device)
 	textureDesc.ArraySize = 1;
 	textureDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	textureDesc.CPUAccessFlags = 0;						//No CPU access
-	textureDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;	//24 bits for depth, 8 for stencil (not needed though)
+	textureDesc.Format = DXGI_FORMAT_R32_TYPELESS;		//32 bits for depth
 	textureDesc.Height = m_height;
 	textureDesc.Width = m_width;
-	textureDesc.MipLevels = 1;                         //Multisampled texture
+	textureDesc.MipLevels = 1;							//Multisampled texture
 	textureDesc.MiscFlags = 0;
-	textureDesc.SampleDesc.Count = 1;                  //Only one sample per pixel
+	textureDesc.SampleDesc.Count = 1;					//Only one sample per pixel
 	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;           //Read and write access to GPU
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;			//Read and write access to GPU
 
 	//Depth map
 	ID3D11Texture2D* depthMap = nullptr;
@@ -114,7 +122,7 @@ bool ShadowMap::CreateDepthBuffer(ID3D11Device* device)
 
 	/*----- Prepare the depth view ------*/
 	D3D11_DEPTH_STENCIL_VIEW_DESC viewDesc = {};
-	viewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;        //24 bits of depth and 8 for stencil. Values from 0.0f - 1.0f
+	viewDesc.Format = DXGI_FORMAT_D32_FLOAT;				//32 bit depth values
 	viewDesc.Texture2D.MipSlice = 0;                        //Index of mipmap to use
 	viewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D; //How the resource can be accessed
 	viewDesc.Flags = 0;
@@ -130,7 +138,7 @@ bool ShadowMap::CreateDepthBuffer(ID3D11Device* device)
 	
 	/*----- Prepare the shader resource -----*/
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;	//32 bits float values
 	srvDesc.Texture2D.MipLevels = 1;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
@@ -211,6 +219,29 @@ bool ShadowMap::CreateShadowWVPBuffer(ID3D11Device* device)
 	}
 }
 
+bool ShadowMap::CreateDepthBiasRasterizer(ID3D11Device* device)
+{
+	D3D11_RASTERIZER_DESC desc = CD3D11_RASTERIZER_DESC(CD3D11_DEFAULT{});
+	desc.DepthBias = 100000;
+	desc.SlopeScaledDepthBias = 0.0f;
+	desc.DepthBiasClamp = 1.0f;
+
+	return !FAILED(device->CreateRasterizerState(&desc, &m_depthBiasRasterizer));
+}
+
+bool ShadowMap::CreateShadowSampler(ID3D11Device* device)
+{
+	D3D11_SAMPLER_DESC desc = CD3D11_SAMPLER_DESC{ CD3D11_DEFAULT{} };
+
+	desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
+	desc.BorderColor[0] = 1.0f;
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;		
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	desc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
+
+	return !FAILED(device->CreateSamplerState(&desc, &m_shadowSampler));
+}
+
 bool ShadowMap::Initialize(ID3D11Device* device)
 {
 	if (!CreateSpotLightBuffer(device))
@@ -237,12 +268,24 @@ bool ShadowMap::Initialize(ID3D11Device* device)
 		return false;
 	}
 
+	if (!CreateDepthBiasRasterizer(device))
+	{
+		std::cerr << "CreateDepthBiasRasterizer() failed..." << std::endl;
+		return false;
+	}
+
+	if (!CreateShadowSampler(device))
+	{
+		std::cerr << "CreateShadowSampler() failed..." << std::endl;
+		return false;
+	}
+
 	return true;
 }
 
 void ShadowMap::BindShadowVS(ID3D11DeviceContext* deviceContext)
 {
-	//Going to use this viewport with 512x512 res
+	//Going to use this viewport the correct resolution
 	deviceContext->RSSetViewports(1, &m_viewport);
 
 	//Using this vertexshader
@@ -252,16 +295,16 @@ void ShadowMap::BindShadowVS(ID3D11DeviceContext* deviceContext)
 	deviceContext->PSSetShader(nullptr, nullptr, 0);
 
 	//Only going to output to the depthbuffer
-	
 	ID3D11RenderTargetView* nullRTV = nullptr;
 	deviceContext->OMSetRenderTargets(1, &nullRTV, m_depthView);
-	//deviceContext->OMSetDepthStencilState()
 
 	//Clearing the previous view
 	deviceContext->ClearDepthStencilView(m_depthView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	//Set WVP constant buffer
 	deviceContext->VSSetConstantBuffers(0, 1, &m_shadowWVPBuffer);
+
+	//deviceContext->RSSetState(m_depthBiasRasterizer);	//new***
 }
 
 void ShadowMap::UpdateShadowWVP(ID3D11DeviceContext* deviceContext, XMFLOAT4X4 newWorld)
@@ -284,10 +327,14 @@ void ShadowMap::BindToPS(ID3D11DeviceContext* deviceContext)
 
 	//Set the constant buffer
 	deviceContext->PSSetConstantBuffers(3, 1, &m_shadowWVPBuffer);
+
+	deviceContext->PSSetSamplers(1, 1, &m_shadowSampler);
 }
 
 void ShadowMap::DisableSRV(ID3D11DeviceContext* deviceContext)
 {
 	ID3D11ShaderResourceView* nullSRV = nullptr;
 	deviceContext->PSSetShaderResources(6, 1, &nullSRV);
+
+	deviceContext->RSSetState(nullptr);
 }
