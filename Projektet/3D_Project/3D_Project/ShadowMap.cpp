@@ -6,7 +6,7 @@ ShadowMap::ShadowMap()
 	
 	//View matrix
 	m_pos =		{ 5.0f, 10.0f, 0.0f };	//Right side of spawn 0 up
-	m_focus =	{-5.0f, 5.0f, 0.0f };	//Left side of spawn
+	m_focus =	{-5.0f, 0.0f, 0.0f };	//Left side of spawn
 	m_up =		{ 0.0f, 1.0f, 0.0f };
 	XMVECTOR pos = XMLoadFloat3(&m_pos);
 	XMVECTOR focus = XMLoadFloat3(&m_focus);
@@ -16,17 +16,17 @@ ShadowMap::ShadowMap()
 	//Projection matrix
 	//Near and far plane should be tight for more precise values
 	m_nearPlane = 12.0f;
-	m_farPlane = 20.0f;
+	m_farPlane = 30.0f;
 	m_fov = XM_PI * 0.5f;	//90 degrees
 	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovLH(m_fov, (float)(m_width/m_height), m_nearPlane, m_farPlane));
 
 	//Setting up the spotlight
 	m_spotLight.position = m_pos;
 	m_spotLight.direction = XMFLOAT3(m_focus.x - m_pos.x, m_focus.y - m_pos.y, m_focus.z - m_pos.z); //From pos to focuspoint
-	m_spotLight.range = 30.0f;
-	m_spotLight.colour = { 1.0f, 1.0f, 1.0f };
+	m_spotLight.range = 20.0f;
+	m_spotLight.colour = { 2.0f, 1.0f, 1.0f };
 	m_spotLight.exponent = 4.0f;
-	m_spotLight.resolution = float(m_width);
+	m_spotLight.fov = m_fov;
 	m_SpotLightBuffer = nullptr;
 
 	//Depth buffer
@@ -40,9 +40,6 @@ ShadowMap::ShadowMap()
 	m_shadowWVP.projection = m_projectionMatrix;
 	XMStoreFloat4x4(&m_shadowWVP.world, XMMatrixIdentity()); //Will be changed for every gameobject
 	m_shadowWVPBuffer = nullptr;
-
-	m_depthBiasRasterizer = nullptr;
-	m_shadowSampler = nullptr;
 }
 
 ShadowMap::~ShadowMap()
@@ -57,11 +54,6 @@ ShadowMap::~ShadowMap()
 		m_shadowShader->Release();
 	if (m_shadowWVPBuffer)
 		m_shadowWVPBuffer->Release();
-
-	if (m_depthBiasRasterizer)
-		m_depthBiasRasterizer->Release();
-	if (m_shadowSampler)
-		m_shadowSampler->Release();
 }
 
 bool ShadowMap::CreateSpotLightBuffer(ID3D11Device* device)
@@ -219,29 +211,6 @@ bool ShadowMap::CreateShadowWVPBuffer(ID3D11Device* device)
 	}
 }
 
-bool ShadowMap::CreateDepthBiasRasterizer(ID3D11Device* device)
-{
-	D3D11_RASTERIZER_DESC desc = CD3D11_RASTERIZER_DESC(CD3D11_DEFAULT{});
-	desc.DepthBias = 100000;
-	desc.SlopeScaledDepthBias = 0.0f;
-	desc.DepthBiasClamp = 1.0f;
-
-	return !FAILED(device->CreateRasterizerState(&desc, &m_depthBiasRasterizer));
-}
-
-bool ShadowMap::CreateShadowSampler(ID3D11Device* device)
-{
-	D3D11_SAMPLER_DESC desc = CD3D11_SAMPLER_DESC{ CD3D11_DEFAULT{} };
-
-	desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
-	desc.BorderColor[0] = 1.0f;
-	desc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;		
-	desc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-	desc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
-
-	return !FAILED(device->CreateSamplerState(&desc, &m_shadowSampler));
-}
-
 bool ShadowMap::Initialize(ID3D11Device* device)
 {
 	if (!CreateSpotLightBuffer(device))
@@ -268,18 +237,6 @@ bool ShadowMap::Initialize(ID3D11Device* device)
 		return false;
 	}
 
-	if (!CreateDepthBiasRasterizer(device))
-	{
-		std::cerr << "CreateDepthBiasRasterizer() failed..." << std::endl;
-		return false;
-	}
-
-	if (!CreateShadowSampler(device))
-	{
-		std::cerr << "CreateShadowSampler() failed..." << std::endl;
-		return false;
-	}
-
 	return true;
 }
 
@@ -303,8 +260,6 @@ void ShadowMap::BindShadowVS(ID3D11DeviceContext* deviceContext)
 
 	//Set WVP constant buffer
 	deviceContext->VSSetConstantBuffers(0, 1, &m_shadowWVPBuffer);
-
-	//deviceContext->RSSetState(m_depthBiasRasterizer);	//new***
 }
 
 void ShadowMap::UpdateShadowWVP(ID3D11DeviceContext* deviceContext, XMFLOAT4X4 newWorld)
@@ -327,14 +282,10 @@ void ShadowMap::BindToPS(ID3D11DeviceContext* deviceContext)
 
 	//Set the constant buffer
 	deviceContext->PSSetConstantBuffers(3, 1, &m_shadowWVPBuffer);
-
-	deviceContext->PSSetSamplers(1, 1, &m_shadowSampler);
 }
 
 void ShadowMap::DisableSRV(ID3D11DeviceContext* deviceContext)
 {
 	ID3D11ShaderResourceView* nullSRV = nullptr;
 	deviceContext->PSSetShaderResources(6, 1, &nullSRV);
-
-	deviceContext->RSSetState(nullptr);
 }
