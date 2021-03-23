@@ -27,12 +27,12 @@ private:
 
 	struct Spotlight
 	{
-		XMFLOAT3 position;		//from m_pos
-		float range;			//from the far plane?
-		XMFLOAT3 direction;		//from m_focus
-		float exponent;
+		XMFLOAT3 position;
+		float range;
+		XMFLOAT3 direction;
+		float outerAngle;
 		XMFLOAT3 colour;
-		float fov;
+		float innerAngle;
 	};
 	Spotlight m_spotLight;
 	ID3D11Buffer* m_SpotLightBuffer;

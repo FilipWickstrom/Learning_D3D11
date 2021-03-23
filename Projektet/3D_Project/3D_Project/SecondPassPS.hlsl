@@ -36,12 +36,12 @@ cbuffer Camera : register(b1)
 
 cbuffer SpotLight : register(b2)
 {
-    float3 C_SpotPos; //s_position;
-    float C_SpotRange; //s_range;
-    float3 C_SpotDir; //s_direction; 
-    float C_SpotExp; //s_exponent;
-    float3 C_SpotColour; //s_colour;
-    float C_SpotFOV;
+    float3 C_SpotPos;
+    float C_SpotRange;
+    float3 C_SpotDir;
+    float C_SpotOutAngle;
+    float3 C_SpotColour;
+    float C_SpotInAngle;
 }
 
 cbuffer ShadowWVP : register(b3)
@@ -125,13 +125,17 @@ float CalcSpecular(float3 lightVector, float3 normal, float3 viewVector, float s
 
 float CalcShadow(float3 posWS)
 {
+    float shadowValue = 1.0f;
+    
     //From the shadowmap/spotlight perspective
     float4x4 lightViewProjMatrix = mul(C_SpotView, C_SpotProjection);
 
     //Get the clipspace coordinate from spotlight
     float4 lightViewPos = mul(float4(posWS, 1.0f), lightViewProjMatrix);
 
-    //Perspective devide
+    //Perspective divide:
+    //"The further away something is, the more it will be pulled towards the center of the screen"
+    //https://www.learnopengles.com/tag/perspective-divide/
     float3 shadowMapCoords = lightViewPos.xyz / lightViewPos.w;
     
     //Adjust from [-1, 1] clipspace to [0, 1] texturecoordinates
@@ -155,65 +159,38 @@ float CalcShadow(float3 posWS)
         //Something else is infront - This pixel is in shadow
         if (shadowMapDepth < currentDepth)
         {
-            return 0.0f;
+            shadowValue = 0.0f;
         }
     }
-    //Not on the map, then shadow will not affect
-    return 1.0f;
+    return shadowValue;
 }
 
 float CalcSpotAttenuation(float3 posWS)
 { 
-    //Vector between pixelposition and spotlights position    
-    //float3 lightVector = C_SpotPos - posWS;
-    //float distance = length(lightVector);
-    //lightVector = normalize(lightVector);
+    float attenuation = 0.0f;
     
-    /*
-    //Angle between the two vectors. Can be between 1.0f to 0.0f
-    float angle = max(dot(-lightVector, normalize(s_direction)), 0.0f);
-    
-    //Smooth out and make less sharp
-    float smooth = pow(angle, s_exponent);
-    
-    //Attenuation depending on distance away and the smoothness
-    return CalcAttenuation(distance, C_SpotRange) * smooth;
-    */
-    
-    /* not that good
-    float att = 1.0f;
-    float angle1 = 0.39f;
-    float angle2 = 0.78f;
-    
-    float3 lightDirection = normalize(s_direction);
-    float rho = dot(lightDirection, lightVector);
-    att *= saturate((rho - angle2) / (angle1 - angle2
-    return att;
-    */
-    
+    //Vector from spotlights position to the focuspoint
     float3 lightDir = normalize(C_SpotDir);
-    float distance = length(posWS - C_SpotPos);
-    float3 spotToPosWS = normalize(posWS - C_SpotPos);
-    float dotValue = dot(lightDir, spotToPosWS);
-    //float maxAngle = 0.9f;  //80% of 90 degrees
-    float maxAngle = 1.0f / C_SpotFOV;  //From radians to the scale of 0.0f to 1.0f
-    float innerAngle = 0.3f * maxAngle; //90% of the max
     
-    //float att = CalcAttenuation(distance, C_SpotRange);
-    
-    //Inside of the big cone
-    if (dotValue > maxAngle)
-    {
-        float epsilon = maxAngle - innerAngle;
-        float intensity = clamp((dotValue - maxAngle) / epsilon, 0.0f, 1.0f);
-        return intensity;
-        
-        //check if inside of the small cone
-        //falloff depending on angle         
-    }
-    else
-        return 0.0f;
+    //Vector from spotlights position to current pixels position
+    float3 spotToPosWS = posWS - C_SpotPos;
+    float distance = length(spotToPosWS);
+    spotToPosWS = normalize(spotToPosWS);
+    float currentAngle = dot(lightDir, spotToPosWS);
    
+    //Inside of the big cone
+    if (currentAngle > C_SpotOutAngle)
+    {
+        //Can be between 0.0f and 1.0f
+        float intensity = clamp((currentAngle - C_SpotOutAngle) / (C_SpotOutAngle - C_SpotInAngle), 0.0f, 1.0f);
+        
+        //Falloff depending on how far away from the light
+        float distanceFalloff = CalcAttenuation(distance, C_SpotRange);
+        
+        //Total attenuation
+        attenuation = intensity * distanceFalloff;
+    }
+    return attenuation;
 }
 
 /*----- Help functions: END ------*/
@@ -238,28 +215,25 @@ float4 main( PixelInput input ) : SV_TARGET
         
         /* - - - - - - - Spotlight - - - - - - - */
         float spotAtt = CalcSpotAttenuation(gbuffer.positionWS);
-        //diffuseIntensity += spotAtt;
-        //specularIntensity += spotAtt;
-        
-        
+       
         //Shadow only affects on the spotlight
         float3 lightVector = normalize(C_SpotPos - gbuffer.positionWS);
         
         diffuseIntensity += CalcDiffuse(lightVector, gbuffer.normalWS) * 
+                            material.diffuse *
                             float4(C_SpotColour, 1.0f) * 
-                            material.diffuse * 
                             spotAtt * 
                             shadow;
         
         float3 viewVector = normalize(C_CamPos - gbuffer.positionWS);
         specularIntensity += CalcSpecular(lightVector, gbuffer.normalWS, viewVector, material.shininess) * 
+                             material.specular *
                              float4(C_SpotColour, 1.0f) *
-                             material.specular * 
                              spotAtt * 
                              shadow;
         
         /* - - - - - - - Point lights - - - - - - - */
-        for (int i = 0; i < 0; i++)    //NROFLIGHTS
+        for (int i = 0; i < NROFLIGHTS; i++)
         {
             //Vector from the point to the light
             float3 pointlightVector = C_Pointlights[i].position.xyz - gbuffer.positionWS;
@@ -270,15 +244,15 @@ float4 main( PixelInput input ) : SV_TARGET
             float attenuationFactor = CalcAttenuation(distance, C_Pointlights[i].range);
     
             diffuseIntensity += CalcDiffuse(pointlightVector, gbuffer.normalWS) *
-                                attenuationFactor * 
                                 C_Pointlights[i].colour * 
+                                attenuationFactor *
                                 material.diffuse;
             
             float3 viewVector = normalize(C_CamPos - gbuffer.positionWS);
             
             specularIntensity += CalcSpecular(pointlightVector, gbuffer.normalWS, viewVector, material.shininess) *
-                                 attenuationFactor * 
                                  C_Pointlights[i].colour * 
+                                 attenuationFactor * 
                                  material.specular;
         }
         

@@ -101,7 +101,7 @@ public:
 
 	//Set rotation and do rotation around two axis
 	void SetRotate(bool on, float speed);
-	void Rotate(float& dt);
+	void RotateY(float& dt);
 
 	//Drawing what it got in the buffer
 	void Render(ID3D11DeviceContext* deviceContext, Tessellation& tessellation);

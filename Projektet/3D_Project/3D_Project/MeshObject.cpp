@@ -535,18 +535,15 @@ void MeshObject::SetRotate(bool on, float speed)
 	m_rotationSpeed = speed;
 }
 
-void MeshObject::Rotate(float& dt)
+void MeshObject::RotateY(float& dt)
 {
-	//If it can rotate it does it around two axis
+	//If it can rotate it does it around the y-axis
 	if (m_canRotate)
 	{
 		//Reset after 360 degrees
-		/*if (m_rotation.x >= 360.0f)
-			m_rotation.x = 0.0f;*/
 		if (m_rotation.y >= 360.0f)
 			m_rotation.y = 0.0f;	
 
-		//m_rotation.x += (m_rotationSpeed * dt);
 		m_rotation.y += (m_rotationSpeed * dt);
 		
 		UpdateModelMatrix({ m_position.x, m_position.y, m_position.z },
@@ -583,6 +580,5 @@ void MeshObject::RenderShadows(ID3D11DeviceContext* deviceContext)
 	UINT stride = sizeof(SimpleVertex);
 	UINT offset = 0;
 	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
-
 	deviceContext->Draw(m_vertexCount, 0);
 }

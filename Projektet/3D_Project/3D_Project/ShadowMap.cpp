@@ -17,16 +17,16 @@ ShadowMap::ShadowMap()
 	//Near and far plane should be tight for more precise values
 	m_nearPlane = 12.0f;
 	m_farPlane = 30.0f;
-	m_fov = XM_PI * 0.5f;	//90 degrees
+	m_fov = XM_PI * 0.4f;	//72 degrees
 	XMStoreFloat4x4(&m_projectionMatrix, XMMatrixPerspectiveFovLH(m_fov, (float)(m_width/m_height), m_nearPlane, m_farPlane));
 
 	//Setting up the spotlight
 	m_spotLight.position = m_pos;
 	m_spotLight.direction = XMFLOAT3(m_focus.x - m_pos.x, m_focus.y - m_pos.y, m_focus.z - m_pos.z); //From pos to focuspoint
-	m_spotLight.range = 20.0f;
-	m_spotLight.colour = { 2.0f, 1.0f, 1.0f };
-	m_spotLight.exponent = 4.0f;
-	m_spotLight.fov = m_fov;
+	m_spotLight.colour = { 2.0f, 1.0f, 1.0f };	//Red
+	m_spotLight.range = m_farPlane;
+	m_spotLight.outerAngle = 1.0f / m_fov;	//In scale 0.0f to 1.0f
+	m_spotLight.innerAngle = 0.5f * m_spotLight.outerAngle;
 	m_SpotLightBuffer = nullptr;
 
 	//Depth buffer

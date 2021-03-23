@@ -43,7 +43,6 @@ bool Scene::Load(ID3D11Device* device)
 	// Cube
 	MeshObject* cube = new MeshObject();
 	if (!cube->Load(device, "cube.obj", "brownBricks.mtl", { -6,0,0 }, { 1,1,1 }, { 0, 0, 0 }))
-	//if (!cube->Load(device, "cube.obj", "brownBricks.mtl", { -6,-1,0 }, { 1,1,1 }, { 0, 0, 0 }))
 	{
 		std::cerr << "Failed to load the cube..." << std::endl;
 		return false;
@@ -132,7 +131,7 @@ void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf
 	for (MeshObject* obj : m_objects)
 	{
 		//Rotate object that can do it
-		obj->Rotate(dt);
+		obj->RotateY(dt);
 
 		//Each object has it own world matrix that is needed to be set
 		constBuf.UpdateWorld(deviceContext, obj->GetModelMatrix());
@@ -153,8 +152,6 @@ void Scene::RenderShadows(ID3D11DeviceContext* deviceContext, ShadowMap& shadowM
 	for (MeshObject* obj : m_objects)
 	{
 		shadowMap.UpdateShadowWVP(deviceContext, obj->GetModelMatrix());
-
 		obj->RenderShadows(deviceContext);
 	}
-
 }
