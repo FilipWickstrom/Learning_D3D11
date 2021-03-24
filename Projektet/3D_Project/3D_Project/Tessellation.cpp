@@ -83,8 +83,7 @@ bool Tessellation::CreateRasterizerState(ID3D11Device* device)
 	desc.MultisampleEnable = false;
 	desc.AntialiasedLineEnable = false;
 
-	HRESULT hr = device->CreateRasterizerState(&desc, &m_rasterizerState);
-	return !FAILED(hr);
+	return !FAILED(device->CreateRasterizerState(&desc, &m_rasterizerState));
 }
 
 bool Tessellation::CreateTessellSettings(ID3D11Device* device)

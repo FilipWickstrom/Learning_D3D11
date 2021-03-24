@@ -58,7 +58,6 @@ MeshObject::~MeshObject()
 		m_settingsBuffer->Release();
 }
 
-//Some more work needs to be done...
 bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 {
 	//Start reading from file

@@ -9,7 +9,7 @@ using namespace DirectX;
 class ShadowMap
 {
 private:
-	//Shadow resolution for now? Separate for the light?
+	//Resolution of the shadowmap
 	UINT m_width;
 	UINT m_height;
 
@@ -21,8 +21,8 @@ private:
 
 	//Projection
 	float m_fov;
-	float m_nearPlane;		//near range of light
-	float m_farPlane;		//far range of light
+	float m_nearPlane;
+	float m_farPlane;
 	XMFLOAT4X4 m_projectionMatrix;
 
 	struct Spotlight
@@ -39,8 +39,8 @@ private:
 
 	//Depthbuffer
 	ID3D11DepthStencilView* m_depthView;
-	ID3D11ShaderResourceView* m_depthSRV;	//communicating with pixelshader later
-	D3D11_VIEWPORT m_viewport;				//can be smaller than main resolution
+	ID3D11ShaderResourceView* m_depthSRV;	//Communicates with pixelshader
+	D3D11_VIEWPORT m_viewport;
 	ID3D11VertexShader* m_shadowShader;
 
 	//Constant buffer
@@ -55,7 +55,7 @@ private:
 //Help functions
 private:
 	bool CreateSpotLightBuffer(ID3D11Device* device);
-	bool CreateDepthBuffer(ID3D11Device* device);	//That uses 32 bit depth
+	bool CreateDepthBuffer(ID3D11Device* device);	//Uses 32 bit depth
 	bool LoadVertexShader(ID3D11Device* device);
 	bool CreateShadowWVPBuffer(ID3D11Device* device);
 

@@ -186,6 +186,11 @@ void ConstantBuffers::UpdateCam(ID3D11DeviceContext* deviceContext, Camera& came
 	deviceContext->Unmap(m_camBuffer, 0);
 }
 
+void ConstantBuffers::SetCamToGS(ID3D11DeviceContext* deviceContext)
+{
+	deviceContext->GSSetConstantBuffers(0, 1, &m_camBuffer);
+}
+
 void ConstantBuffers::UpdateMaterial(ID3D11DeviceContext* deviceContext, XMFLOAT4 ambient, XMFLOAT4 diffuse, XMFLOAT4 specular)
 {
 	m_material.ambient = ambient;

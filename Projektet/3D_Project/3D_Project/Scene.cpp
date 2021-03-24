@@ -115,6 +115,7 @@ bool Scene::Load(ID3D11Device* device)
 	}
 	m_objects.push_back(wetRocks);
 
+	// Wall on the left side to shadow on
 	MeshObject* shadowWall = new MeshObject();
 	if (!shadowWall->Load(device, "plane.obj", "default.mtl", { -10, 1, 0 }, { 10, 1, 3 }, { 90, 90, 0 }))
 	{
@@ -122,6 +123,15 @@ bool Scene::Load(ID3D11Device* device)
 		return false;
 	}
 	m_objects.push_back(shadowWall);
+
+	// CCTV to indicate the second camera
+	MeshObject* cctv = new MeshObject();
+	if (!cctv->Load(device, "cctv.obj", "cctv.mtl", { 9, 3, 0 }, { 1, 1, 1 }, { 0, -90, 0 }))
+	{
+		std::cerr << "Failed to load the cctv..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(cctv);
 
 	return true;
 }

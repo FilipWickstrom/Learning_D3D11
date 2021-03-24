@@ -8,8 +8,10 @@
 #include "InputKeyboardMouse.h"
 #include "FPSCounter.h"
 #include "Tessellation.h"
-
 #include "ShadowMap.h"
+
+#include "BackFaceCulling.h"
+#include "AltCamera.h"
 
 class Renderer
 {
@@ -44,6 +46,10 @@ private:
 
 	//Shadowmap
 	ShadowMap m_shadowMap;
+
+	//Backface culling manual
+	BackFaceCulling m_backFaceCulling;
+	AltCamera m_altCamera;
 
 private:
 	void Render();

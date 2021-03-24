@@ -19,7 +19,7 @@ void InputKeyboardMouse::Initialize(HWND& window, float moveSpeed, float mouseSe
 
 void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Tessellation& tessellator, 
 									   Scene& theScene, ConstantBuffers& constBuffs, 
-									   ID3D11DeviceContext* deviceContext)
+									   ID3D11DeviceContext* deviceContext, AltCamera& altCamera)
 {
 	XMVECTOR movement = { 0.0f, 0.0f, 0.0f, 0.0f };
 	XMVECTOR upOrDown = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -128,6 +128,29 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Tessellation& t
 	else if (kb.NumPad3)
 		constBuffs.SetRenderMode(3);
 
+	/* ------- Alt camera ------*/
+	if (kb.NumPad7)
+	{
+		//Idea:
+		//get the position of the main camera.
+		//get the position of the alt camera.
+		//also targetPos???
+		//calc a new, view matrix with this. Add the positions? 
+		//update the view matrix with this
+		
+		//altCamera.updateView(camera);
+		altCamera.UpdateView(camera);
+		constBuffs.UpdateView(deviceContext, altCamera.GetViewMatrix());
+		constBuffs.UpdateProjection(deviceContext, altCamera.GetProjectionMatrix());
+	}
+	else if (kb.NumPad8)
+	{
+		//do the same here?
+
+		constBuffs.UpdateView(deviceContext, camera.GetViewMatrix());
+		constBuffs.UpdateProjection(deviceContext, camera.GetProjMatrix());
+	}
+
 }
 
 void InputKeyboardMouse::MouseInput(float dt, Camera& camera)
@@ -150,9 +173,9 @@ void InputKeyboardMouse::MouseInput(float dt, Camera& camera)
 
 void InputKeyboardMouse::CheckInput(float dt, Camera& camera, Tessellation& tessellator, 
 									Scene& theScene, ConstantBuffers& constBuffs, 
-									ID3D11DeviceContext* deviceContext)
+									ID3D11DeviceContext* deviceContext, AltCamera& altCamera)
 {
 	MouseInput(dt, camera);
-	KeyboardInput(dt, camera, tessellator, theScene, constBuffs, deviceContext);
+	KeyboardInput(dt, camera, tessellator, theScene, constBuffs, deviceContext, altCamera);
 	camera.UpdateViewMatrix();
 }

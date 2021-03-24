@@ -9,6 +9,7 @@
 #include "Tessellation.h"
 #include "Scene.h"
 #include "ConstantBuffers.h"
+#include "AltCamera.h"
 
 using namespace DirectX;
 
@@ -26,7 +27,8 @@ private:
 					   Tessellation& tessellator, 
 					   Scene& theScene,						//Using normal maps or not
 					   ConstantBuffers& constBuffs,			//For updating light position
-					   ID3D11DeviceContext* deviceContext);	//For updating the constant buffer
+					   ID3D11DeviceContext* deviceContext,	//For updating the constant buffer
+					   AltCamera& altCamera);				//Altcamera for presentation
 
 	void MouseInput(float dt, Camera& camera);
 
@@ -40,5 +42,6 @@ public:
 					Tessellation& tessellator, 
 					Scene& theScene,
 					ConstantBuffers& constBuffs,
-					ID3D11DeviceContext* deviceContext);
+					ID3D11DeviceContext* deviceContext,
+					AltCamera& altCamera);
 };

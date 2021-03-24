@@ -2,6 +2,7 @@
 
 ShadowMap::ShadowMap()
 {
+	//Resolution (2048x2048)
 	m_width = m_height = 2048;
 	
 	//View matrix

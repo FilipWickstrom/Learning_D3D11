@@ -86,6 +86,7 @@ public:
 	//Camera
 	void SetCamToPS(ID3D11DeviceContext* deviceContext);
 	void UpdateCam(ID3D11DeviceContext* deviceContext, Camera& camera);
+	void SetCamToGS(ID3D11DeviceContext* deviceContext);
 
 	//Material
 	void UpdateMaterial(ID3D11DeviceContext* deviceContext, XMFLOAT4 ambient, XMFLOAT4 diffuse, XMFLOAT4 specular);

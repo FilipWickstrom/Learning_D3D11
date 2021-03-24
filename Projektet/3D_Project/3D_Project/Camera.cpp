@@ -60,7 +60,7 @@ void Camera::UpdateViewMatrix()
 	//Calculates the up vector
 	XMVECTOR upDirection = XMVector3TransformCoord(m_DEFAULT_UP, camRotationMatrix);
 
-	//Finally update the 
+	//Finally update the viewmatrix
 	XMStoreFloat4x4(&m_viewMatrix, XMMatrixLookAtLH(m_posVector, targetVector, upDirection));
 
 	//Rotation only dependent on yaw. So that right is always right side

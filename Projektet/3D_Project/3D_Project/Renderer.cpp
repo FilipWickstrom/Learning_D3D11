@@ -69,12 +69,21 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-	//NEW***
+	//Setting up the shadowmap
 	if (!m_shadowMap.Initialize(m_device))
 	{
 		std::cerr << "Shadowmap: Initialize() failed..." << std::endl;
 		return false;
 	}
+
+	//NEW***
+	if (!m_backFaceCulling.Initialize(m_device))
+	{
+		std::cerr << "BackFaceCulling: Initialize() failed..." << std::endl;
+		return false;
+	}
+
+	m_altCamera.Initialize({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f });
 
 	m_fpscounter.StartClock();
 
@@ -88,6 +97,10 @@ void Renderer::Render()
 	//Binds the right targets and clears them before new information
 	m_firstPass.Bind(m_deviceContext);
 
+	//Bind the geometry shader settings***
+	m_backFaceCulling.Bind(m_deviceContext);
+	m_constBuffers.SetCamToGS(m_deviceContext);
+
 	//WVP - for vertex shader and domain shader
 	m_constBuffers.SetWVP(m_deviceContext);
 
@@ -99,6 +112,9 @@ void Renderer::Render()
 
 	//Turning off the tessellation before screenquad
 	m_firstPass.TurnOffTessellation(m_deviceContext);
+
+	//Do not wont backface culling to to anything more now***
+	m_backFaceCulling.UnBind(m_deviceContext);
 
 	//Setups all the settings for the shadowmap
 	m_shadowMap.BindShadowVS(m_deviceContext);
@@ -160,7 +176,8 @@ void Renderer::StartGameLoop(HWND& window)
 		}
 			
 		//Check mouse and keyboard
-		m_inputKeyboardMouse.CheckInput(m_deltatime, m_camera, m_firstPass.GetTessellation(), m_scene, m_constBuffers, m_deviceContext);
+		m_inputKeyboardMouse.CheckInput(m_deltatime, m_camera, m_firstPass.GetTessellation(), 
+										m_scene, m_constBuffers, m_deviceContext, m_altCamera);
 
 		//Update the view matrix from camera
 		m_constBuffers.UpdateView(m_deviceContext, m_camera.GetViewMatrix());
