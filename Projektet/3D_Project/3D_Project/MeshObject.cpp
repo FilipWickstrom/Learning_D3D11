@@ -35,6 +35,7 @@ MeshObject::MeshObject()
 	m_position = { 0,0,0 };
 	m_scale = { 1,1,1 };
 	m_rotation = { 0,0,0 };
+	m_visible = true;
 }
 
 MeshObject::~MeshObject()
@@ -435,9 +436,24 @@ bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string materia
 	}
 
 	//Load in the modell matrix
-	UpdateModelMatrix(pos, scl, rot);
+	UpdateModelMatrix(XMFLOAT3(pos[0], pos[1], pos[2]), XMFLOAT3(scl[0], scl[1], scl[2]), XMFLOAT3(rot[0], rot[1], rot[2]));
 
 	return true;
+}
+
+const XMFLOAT3 MeshObject::GetPosition() const
+{
+	return m_position;
+}
+
+const XMFLOAT3 MeshObject::GetScale() const
+{
+	return m_scale;
+}
+
+const XMFLOAT3 MeshObject::GetRotation() const
+{
+	return m_rotation;
 }
 
 void MeshObject::SetTessellated(bool trueOrFalse)
@@ -488,16 +504,16 @@ bool MeshObject::LoadDisplacementMap(ID3D11Device* device, std::string displacem
 	return !FAILED(hr);
 }
 
-void MeshObject::UpdateModelMatrix(std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
+void MeshObject::UpdateModelMatrix(XMFLOAT3 pos, XMFLOAT3 scl, XMFLOAT3 rot)
 {
-	m_position	= XMFLOAT3(pos[0], pos[1], pos[2]);
-	m_scale		= XMFLOAT3(scl[0], scl[1], scl[2]);
-	m_rotation	= XMFLOAT3(rot[0], rot[1], rot[2]);
+	m_position = pos;
+	m_scale = scl;
+	m_rotation = rot;
 
 	float degToRad = XM_PI / 180;
-	XMStoreFloat4x4(&m_modelMatrix, XMMatrixScaling(scl[0], scl[1], scl[2]) *
-									XMMatrixRotationRollPitchYaw(rot[0]*degToRad, rot[1]*degToRad, rot[2]*degToRad) *
-									XMMatrixTranslation(pos[0], pos[1], pos[2]));
+	XMStoreFloat4x4(&m_modelMatrix, XMMatrixScaling(scl.x, scl.y, scl.z) *
+									XMMatrixRotationRollPitchYaw(rot.x*degToRad, rot.y*degToRad, rot.z*degToRad) *
+									XMMatrixTranslation(pos.x, pos.y, pos.z));
 }
 
 const XMFLOAT4X4 MeshObject::GetModelMatrix() const
@@ -552,26 +568,41 @@ void MeshObject::RotateY(float& dt)
 	//Else just skips it
 }
 
-void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation& tessellation)
+void MeshObject::SetVisible(bool trueOrFalse)
 {
-	UINT stride = sizeof(SimpleVertex);
-	UINT offset = 0;
-	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
+	m_visible = trueOrFalse;
+}
 
-	//Use tessellation for objects that use it
-	tessellation.SetShaders(deviceContext, m_tessallated, m_displacementMapSRV);
-	
-	//Main texture that is going to be used
-	deviceContext->PSSetShaderResources(0, 1, &m_diffuseTextureSRV);
+const bool MeshObject::IsVisible() const
+{
+	return m_visible;
+}
 
-	//Setting to nullptr if not exist
-	deviceContext->PSSetShaderResources(1, 1, &m_normalMapSRV);		
-	
-	//Can be different settings for objects
-	deviceContext->VSSetConstantBuffers(1, 1, &m_settingsBuffer);	
-	deviceContext->PSSetConstantBuffers(1, 1, &m_settingsBuffer);	
+void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation* tessellation)
+{
+	//Only render if it is visible
+	if (m_visible)
+	{
+		UINT stride = sizeof(SimpleVertex);
+		UINT offset = 0;
+		deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 
-	deviceContext->Draw(m_vertexCount, 0);
+		//Use tessellation for objects that use it
+		if (tessellation != nullptr)
+			tessellation->SetShaders(deviceContext, m_tessallated, m_displacementMapSRV);
+
+		//Main texture that is going to be used
+		deviceContext->PSSetShaderResources(0, 1, &m_diffuseTextureSRV);
+
+		//Setting to nullptr if not exist
+		deviceContext->PSSetShaderResources(1, 1, &m_normalMapSRV);
+
+		//Can be different settings for objects
+		deviceContext->VSSetConstantBuffers(1, 1, &m_settingsBuffer);
+		deviceContext->PSSetConstantBuffers(1, 1, &m_settingsBuffer);
+
+		deviceContext->Draw(m_vertexCount, 0);
+	}
 }
 
 void MeshObject::RenderShadows(ID3D11DeviceContext* deviceContext)

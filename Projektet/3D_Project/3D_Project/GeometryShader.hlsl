@@ -42,9 +42,9 @@ void main(triangle GSInput input[3] : SV_POSITION, inout TriangleStream< GSOutpu
     
     //Make a normal of this face/triangle
     float3 triNormal = normalize(cross(vec1, vec2));
-    
+       
     //Direction that points from first point to the camera
-    float3 camDir = normalize(C_CameraPos - v0);                    //change to view direction???
+    float3 camDir = normalize(C_CameraPos - v0);
     
     //Normal of the face have to be between 0.0f to 1.0f
     //Will be -1 if backward face is showing

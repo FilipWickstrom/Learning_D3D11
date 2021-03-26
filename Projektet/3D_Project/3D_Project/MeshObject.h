@@ -67,6 +67,9 @@ private:
 	XMFLOAT3 m_scale;
 	XMFLOAT3 m_rotation;
 
+	//Render the mesh or not
+	bool m_visible;
+
 private:
 	bool LoadOBJ(ID3D11Device* device, std::string objfile);
 	bool LoadTexture(ID3D11Device* device, std::string texture);
@@ -84,14 +87,17 @@ public:
 			  std::array<float, 3>scl = { 1.0f,1.0f,1.0f },
 			  std::array<float, 3>rot = { 0.0f,0.0f,0.0f });
 
+	//Get orientation
+	const XMFLOAT3 GetPosition() const;
+	const XMFLOAT3 GetScale() const;
+	const XMFLOAT3 GetRotation() const;
+
 	//Tessellated or not
 	void SetTessellated(bool trueOrFalse);
 	bool LoadDisplacementMap(ID3D11Device* device, std::string displacementMap);
 
 	//Update the model matrix and uses some defaults if no input
-	void UpdateModelMatrix(std::array<float, 3>pos = { 0.0f,0.0f,0.0f },
-						   std::array<float, 3>scl = { 1.0f,1.0f,1.0f },
-						   std::array<float, 3>rot = { 0.0f,0.0f,0.0f });
+	void UpdateModelMatrix(XMFLOAT3 pos, XMFLOAT3 scl, XMFLOAT3 rot);
 
 	const XMFLOAT4X4 GetModelMatrix() const;
 	const Material GetMaterial() const;
@@ -103,7 +109,11 @@ public:
 	void SetRotate(bool on, float speed);
 	void RotateY(float& dt);
 
+	//Hide
+	void SetVisible(bool trueOrFalse);
+	const bool IsVisible() const;
+
 	//Drawing what it got in the buffer
-	void Render(ID3D11DeviceContext* deviceContext, Tessellation& tessellation);
+	void Render(ID3D11DeviceContext* deviceContext, Tessellation* tessellation);
 	void RenderShadows(ID3D11DeviceContext* deviceContext);
 };

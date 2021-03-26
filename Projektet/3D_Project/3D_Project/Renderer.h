@@ -11,7 +11,7 @@
 #include "ShadowMap.h"
 
 #include "BackFaceCulling.h"
-#include "AltCamera.h"
+#include "Rasterizer.h"
 
 class Renderer
 {
@@ -20,13 +20,16 @@ private:
 	UINT m_winWidth;
 	UINT m_winHeight;
 
-	//Settings			//Should later be changeble with ImGui
+	//Settings
 	bool m_VSync;
 	
 	//Points to all the buffers
 	ID3D11Device* m_device;
 	ID3D11DeviceContext* m_deviceContext;
 	IDXGISwapChain* m_swapChain;
+	
+	//Rasterizer
+	Rasterizer m_rasterizer;
 
 	//Deferred rendering
 	FirstPass m_firstPass;
@@ -49,7 +52,7 @@ private:
 
 	//Backface culling manual
 	BackFaceCulling m_backFaceCulling;
-	AltCamera m_altCamera;
+	MeshObject m_cameraMesh;
 
 private:
 	void Render();

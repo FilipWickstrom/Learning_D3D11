@@ -10,10 +10,6 @@ private:
 	ID3D11HullShader* m_hullShader;
 	ID3D11DomainShader* m_domainShader;
 
-	//Wireframe
-	ID3D11RasterizerState* m_rasterizerState;
-	bool m_wireframeOn;
-
 	//Constant buffer with settings
 	struct tessellSettings
 	{
@@ -25,7 +21,6 @@ private:
 
 private:
 	bool LoadShaders(ID3D11Device* device);
-	bool CreateRasterizerState(ID3D11Device* device);
 	bool CreateTessellSettings(ID3D11Device* device);
 
 public:
@@ -36,8 +31,6 @@ public:
 	void SetShaders(ID3D11DeviceContext* deviceContext, 
 					bool useTessellation,  
 					ID3D11ShaderResourceView* displaceMapSRV);
-	
-	void SetWireframe(bool trueorfalse);
 
 	//For screen quad
 	void TurnOff(ID3D11DeviceContext* deviceContext);

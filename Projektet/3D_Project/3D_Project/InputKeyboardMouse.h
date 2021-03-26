@@ -9,7 +9,7 @@
 #include "Tessellation.h"
 #include "Scene.h"
 #include "ConstantBuffers.h"
-#include "AltCamera.h"
+#include "Rasterizer.h"
 
 using namespace DirectX;
 
@@ -24,11 +24,12 @@ private:
 private:
 	void KeyboardInput(float dt, 
 					   Camera& camera, 
+					   Rasterizer& rasterizer,
 					   Tessellation& tessellator, 
 					   Scene& theScene,						//Using normal maps or not
 					   ConstantBuffers& constBuffs,			//For updating light position
 					   ID3D11DeviceContext* deviceContext,	//For updating the constant buffer
-					   AltCamera& altCamera);				//Altcamera for presentation
+					   MeshObject& cameraMesh);				//Showing where the main camera is when second is active
 
 	void MouseInput(float dt, Camera& camera);
 
@@ -39,9 +40,10 @@ public:
 	void Initialize(HWND& window, float moveSpeed, float mouseSens);
 	void CheckInput(float dt, 
 					Camera& camera, 
+					Rasterizer& rasterizer,
 					Tessellation& tessellator, 
 					Scene& theScene,
 					ConstantBuffers& constBuffs,
 					ID3D11DeviceContext* deviceContext,
-					AltCamera& altCamera);
+					MeshObject& cameraMesh);
 };

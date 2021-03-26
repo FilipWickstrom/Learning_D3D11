@@ -13,6 +13,7 @@ ConstantBuffers::ConstantBuffers()
 
 	m_followCamera = true;
 	m_renderMode = 1;
+	m_usingSecondCam = false;
 }
 
 ConstantBuffers::~ConstantBuffers()
@@ -174,10 +175,10 @@ void ConstantBuffers::SetCamToPS(ID3D11DeviceContext* deviceContext)
 	deviceContext->PSSetConstantBuffers(1, 1, &m_camBuffer);
 }
 
-void ConstantBuffers::UpdateCam(ID3D11DeviceContext* deviceContext, Camera& camera)
+void ConstantBuffers::UpdateCam(ID3D11DeviceContext* deviceContext)
 {
 	//Update to the current location of the camera
-	m_camStruct.camPos = camera.GetPosition();
+	m_camStruct.camPos = m_currentCamPos;
 	m_camStruct.renderMode = m_renderMode;
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -189,6 +190,21 @@ void ConstantBuffers::UpdateCam(ID3D11DeviceContext* deviceContext, Camera& came
 void ConstantBuffers::SetCamToGS(ID3D11DeviceContext* deviceContext)
 {
 	deviceContext->GSSetConstantBuffers(0, 1, &m_camBuffer);
+}
+
+void ConstantBuffers::SetCamPos(XMFLOAT3 position)
+{
+	m_currentCamPos = position;
+}
+
+const bool ConstantBuffers::IsUsingSecondCam() const
+{
+	return m_usingSecondCam;
+}
+
+void ConstantBuffers::SetSecondCamera(bool onOrOff)
+{
+	m_usingSecondCam = onOrOff;
 }
 
 void ConstantBuffers::UpdateMaterial(ID3D11DeviceContext* deviceContext, XMFLOAT4 ambient, XMFLOAT4 diffuse, XMFLOAT4 specular)

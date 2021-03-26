@@ -24,8 +24,9 @@ public:
 	//Render all the mesh objects
 	void Render(ID3D11DeviceContext* deviceContext,
 				ConstantBuffers& constBuf, 
-				Tessellation& tessellation,
+				Tessellation* tessellation,
 				float& dt);
 
+	//Render all the objects for doing the shadow effect
 	void RenderShadows(ID3D11DeviceContext* deviceContext, ShadowMap& shadowMap);
 };

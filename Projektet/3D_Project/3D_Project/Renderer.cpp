@@ -39,6 +39,12 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
+	if (!m_rasterizer.Initialize(m_device))
+	{
+		std::cerr << "Initialize() for rasterizer failed..." << std::endl;
+		return false;
+	}
+
 	//Reads the ico-files for the shaders and saves to buffers
 	if (!m_firstPass.Initialize(m_device, m_winWidth, m_winHeight))
 	{
@@ -83,7 +89,13 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-	m_altCamera.Initialize({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f });
+	// Showing where the main camera is
+	if (!m_cameraMesh.Load(m_device, "cube.obj", "red.mtl", { 0,0,0 }, {0.1f, 0.1f, 0.1f}))
+	{
+		std::cerr << "Failed to load the alt camera..." << std::endl;
+		return false;
+	}
+	m_cameraMesh.SetVisible(false);
 
 	m_fpscounter.StartClock();
 
@@ -97,7 +109,10 @@ void Renderer::Render()
 	//Binds the right targets and clears them before new information
 	m_firstPass.Bind(m_deviceContext);
 
-	//Bind the geometry shader settings***
+	//Rasterizer binding current state for it
+	m_rasterizer.Bind(m_deviceContext);
+
+	//Bind the geometry shader with back face culling
 	m_backFaceCulling.Bind(m_deviceContext);
 	m_constBuffers.SetCamToGS(m_deviceContext);
 
@@ -108,13 +123,19 @@ void Renderer::Render()
 	m_constBuffers.SetMaterialPS(m_deviceContext);
 
 	//Render all the objects in the scene
-	m_scene.Render(m_deviceContext, m_constBuffers, m_firstPass.GetTessellation(), m_deltatime);
+	m_scene.Render(m_deviceContext, m_constBuffers, &m_firstPass.GetTessellation(), m_deltatime);
 
-	//Turning off the tessellation before screenquad
+	//Turning off things before the screenquad
 	m_firstPass.TurnOffTessellation(m_deviceContext);
-
-	//Do not wont backface culling to to anything more now***
 	m_backFaceCulling.UnBind(m_deviceContext);
+	m_rasterizer.UnBind(m_deviceContext);
+
+	//Draw the main camera when needed
+	if (m_cameraMesh.IsVisible())
+	{
+		m_constBuffers.UpdateWorld(m_deviceContext, m_cameraMesh.GetModelMatrix());
+		m_cameraMesh.Render(m_deviceContext, nullptr);
+	}
 
 	//Setups all the settings for the shadowmap
 	m_shadowMap.BindShadowVS(m_deviceContext);
@@ -128,7 +149,6 @@ void Renderer::Render()
 	/* ------ Second pass - lighting only - reads from gbuffers ----- */
 
 	//Preparation for lights
-	m_constBuffers.UpdateCam(m_deviceContext, m_camera);
 	m_constBuffers.UpdateLights(m_deviceContext, m_camera);
 	m_constBuffers.SetCamToPS(m_deviceContext);
 	m_constBuffers.SetLightsToPS(m_deviceContext);
@@ -176,11 +196,12 @@ void Renderer::StartGameLoop(HWND& window)
 		}
 			
 		//Check mouse and keyboard
-		m_inputKeyboardMouse.CheckInput(m_deltatime, m_camera, m_firstPass.GetTessellation(), 
-										m_scene, m_constBuffers, m_deviceContext, m_altCamera);
+		m_inputKeyboardMouse.CheckInput(m_deltatime, m_camera, m_rasterizer, m_firstPass.GetTessellation(), 
+										m_scene, m_constBuffers, m_deviceContext, m_cameraMesh);
 
 		//Update the view matrix from camera
 		m_constBuffers.UpdateView(m_deviceContext, m_camera.GetViewMatrix());
+		m_constBuffers.UpdateCam(m_deviceContext);
 
 		//Draw the scene
 		Render();

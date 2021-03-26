@@ -17,9 +17,9 @@ void InputKeyboardMouse::Initialize(HWND& window, float moveSpeed, float mouseSe
 	m_mouse->SetWindow(window);
 }
 
-void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Tessellation& tessellator, 
-									   Scene& theScene, ConstantBuffers& constBuffs, 
-									   ID3D11DeviceContext* deviceContext, AltCamera& altCamera)
+void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Rasterizer& rasterizer, 
+									   Tessellation& tessellator, Scene& theScene, ConstantBuffers& constBuffs, 
+									   ID3D11DeviceContext* deviceContext, MeshObject& cameraMesh)
 {
 	XMVECTOR movement = { 0.0f, 0.0f, 0.0f, 0.0f };
 	XMVECTOR upOrDown = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -78,9 +78,9 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Tessellation& t
 	/*-------- Tessellation settings --------*/
 	//Wireframe
 	if (kb.V)
-		tessellator.SetWireframe(true);
+		rasterizer.TurnOnWireframe(true);
 	else if (kb.B)
-		tessellator.SetWireframe(false);
+		rasterizer.TurnOnWireframe(false);
 	
 	//Level of detail of tessellation (1, 4, 8, 16, 32)
 	if (kb.D1)
@@ -129,27 +129,27 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Tessellation& t
 		constBuffs.SetRenderMode(3);
 
 	/* ------- Alt camera ------*/
+	
+	//Turn on main camera
 	if (kb.NumPad7)
 	{
-		//Idea:
-		//get the position of the main camera.
-		//get the position of the alt camera.
-		//also targetPos???
-		//calc a new, view matrix with this. Add the positions? 
-		//update the view matrix with this
-		
-		//altCamera.updateView(camera);
-		altCamera.UpdateView(camera);
-		constBuffs.UpdateView(deviceContext, altCamera.GetViewMatrix());
-		constBuffs.UpdateProjection(deviceContext, altCamera.GetProjectionMatrix());
+		constBuffs.SetSecondCamera(false);
+		cameraMesh.SetVisible(false);
 	}
+	//Turn on second camera
 	else if (kb.NumPad8)
 	{
-		//do the same here?
-
-		constBuffs.UpdateView(deviceContext, camera.GetViewMatrix());
-		constBuffs.UpdateProjection(deviceContext, camera.GetProjMatrix());
+		constBuffs.SetSecondCamera(true);
+		constBuffs.SetCamPos(camera.GetPosition());
+		cameraMesh.UpdateModelMatrix(camera.GetPosition(), cameraMesh.GetScale(), cameraMesh.GetRotation());
+		cameraMesh.SetVisible(true);
 	}
+	//Using the main camera
+	if (!constBuffs.IsUsingSecondCam())
+	{
+		constBuffs.SetCamPos(camera.GetPosition());
+	}
+	//THIRD OPTION. RENDER WITH AND WITHOUT BACKFACECULLING
 
 }
 
@@ -171,11 +171,11 @@ void InputKeyboardMouse::MouseInput(float dt, Camera& camera)
 }
 
 
-void InputKeyboardMouse::CheckInput(float dt, Camera& camera, Tessellation& tessellator, 
-									Scene& theScene, ConstantBuffers& constBuffs, 
-									ID3D11DeviceContext* deviceContext, AltCamera& altCamera)
+void InputKeyboardMouse::CheckInput(float dt, Camera& camera, Rasterizer& rasterizer,
+									Tessellation& tessellator, Scene& theScene, ConstantBuffers& constBuffs, 
+									ID3D11DeviceContext* deviceContext, MeshObject& cameraMesh)
 {
 	MouseInput(dt, camera);
-	KeyboardInput(dt, camera, tessellator, theScene, constBuffs, deviceContext, altCamera);
+	KeyboardInput(dt, camera, rasterizer, tessellator, theScene, constBuffs, deviceContext, cameraMesh);
 	camera.UpdateViewMatrix();
 }

@@ -98,6 +98,15 @@ bool Scene::Load(ID3D11Device* device)
 	}
 	m_objects.push_back(tessPlane);
 
+	// Plane with wet rocks with normalmap
+	MeshObject* wetRocks = new MeshObject();
+	if (!wetRocks->Load(device, "plane.obj", "wetRocks.mtl", { 7, 1, 10 }, { 3, 1, 3 }, { -90, 0, 0 }))
+	{
+		std::cerr << "Failed to load the wet rocks wall..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(wetRocks);
+
 	// Brick wall with normal map
 	MeshObject* normalPlane = new MeshObject();
 	if (!normalPlane->Load(device, "plane.obj", "bricks.mtl", { 10, 1, 7 }, { 3, 1, 3 }, { -90, 90, 0 }))
@@ -106,14 +115,6 @@ bool Scene::Load(ID3D11Device* device)
 		return false;
 	}
 	m_objects.push_back(normalPlane);
-
-	MeshObject* wetRocks = new MeshObject();
-	if (!wetRocks->Load(device, "plane.obj", "wetRocks.mtl", { 7, 1, 10 }, { 3, 1, 3 }, { -90, 0, 0 }))
-	{
-		std::cerr << "Failed to load the wet rocks wall..." << std::endl;
-		return false;
-	}
-	m_objects.push_back(wetRocks);
 
 	// Wall on the left side to shadow on
 	MeshObject* shadowWall = new MeshObject();
@@ -124,19 +125,10 @@ bool Scene::Load(ID3D11Device* device)
 	}
 	m_objects.push_back(shadowWall);
 
-	// CCTV to indicate the second camera
-	MeshObject* cctv = new MeshObject();
-	if (!cctv->Load(device, "cctv.obj", "cctv.mtl", { 9, 3, 0 }, { 1, 1, 1 }, { 0, -90, 0 }))
-	{
-		std::cerr << "Failed to load the cctv..." << std::endl;
-		return false;
-	}
-	m_objects.push_back(cctv);
-
 	return true;
 }
 
-void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf, Tessellation& tessellation, float& dt)
+void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf, Tessellation* tessellation, float& dt)
 {
 	for (MeshObject* obj : m_objects)
 	{
@@ -145,7 +137,7 @@ void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf
 
 		//Each object has it own world matrix that is needed to be set
 		constBuf.UpdateWorld(deviceContext, obj->GetModelMatrix());
-		
+
 		//Each object has its own material
 		constBuf.UpdateMaterial(deviceContext, obj->GetMaterial().ambient, obj->GetMaterial().diffuse, obj->GetMaterial().specular);
 
@@ -153,7 +145,7 @@ void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf
 		obj->UseNormalMap(deviceContext, m_useNormalMaps);
 
 		//Render the object
-		obj->Render(deviceContext, tessellation);
+		obj->Render(deviceContext, tessellation);	
 	}
 }
 
@@ -161,7 +153,10 @@ void Scene::RenderShadows(ID3D11DeviceContext* deviceContext, ShadowMap& shadowM
 {
 	for (MeshObject* obj : m_objects)
 	{
-		shadowMap.UpdateShadowWVP(deviceContext, obj->GetModelMatrix());
-		obj->RenderShadows(deviceContext);
+		if (obj->IsVisible())
+		{
+			shadowMap.UpdateShadowWVP(deviceContext, obj->GetModelMatrix());
+			obj->RenderShadows(deviceContext);
+		}
 	}
 }

@@ -4,8 +4,6 @@ Tessellation::Tessellation()
 {
 	m_hullShader = nullptr;
 	m_domainShader = nullptr;
-	m_rasterizerState = nullptr;
-	m_wireframeOn = false;
 	m_tessellationBuffer = nullptr;
 	m_tessellSettings.level = 16.0f;
 	m_tessellSettings.depth = 0.4f;
@@ -17,8 +15,6 @@ Tessellation::~Tessellation()
 		m_hullShader->Release();
 	if (m_domainShader)
 		m_domainShader->Release();
-	if (m_rasterizerState)
-		m_rasterizerState->Release();
 	if (m_tessellationBuffer)
 		m_tessellationBuffer->Release();
 }
@@ -69,23 +65,6 @@ bool Tessellation::LoadShaders(ID3D11Device* device)
 	return true;
 }
 
-bool Tessellation::CreateRasterizerState(ID3D11Device* device)
-{
-	D3D11_RASTERIZER_DESC desc;
-	desc.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
-	desc.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK;
-	desc.FrontCounterClockwise = false;						//Going to be clockwise order
-	desc.DepthBias = 0;
-	desc.DepthBiasClamp = 0.0f;
-	desc.SlopeScaledDepthBias = 0.0f;
-	desc.DepthClipEnable = true;
-	desc.ScissorEnable = false;
-	desc.MultisampleEnable = false;
-	desc.AntialiasedLineEnable = false;
-
-	return !FAILED(device->CreateRasterizerState(&desc, &m_rasterizerState));
-}
-
 bool Tessellation::CreateTessellSettings(ID3D11Device* device)
 {
 	D3D11_BUFFER_DESC desc = {};
@@ -111,13 +90,6 @@ bool Tessellation::Initialize(ID3D11Device* device)
 	if (!LoadShaders(device))
 	{
 		std::cerr << "Loadshaders() failed..." << std::endl;
-		return false;
-	}
-
-	//Create the rasterizer
-	if (!CreateRasterizerState(device))
-	{
-		std::cerr << "CreateRasterizerState() failed..." << std::endl;
 		return false;
 	}
 
@@ -149,22 +121,10 @@ void Tessellation::SetShaders(ID3D11DeviceContext* deviceContext, bool useTessel
 		deviceContext->DSSetShader(nullptr, nullptr, 0);
 		deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
-
-	//Wireframe shows if on
-	if (m_wireframeOn)
-		deviceContext->RSSetState(m_rasterizerState);
-	else
-		deviceContext->RSSetState(nullptr);
-}
-
-void Tessellation::SetWireframe(bool trueorfalse)
-{
-	m_wireframeOn = trueorfalse;
 }
 
 void Tessellation::TurnOff(ID3D11DeviceContext* deviceContext)
 {
-	deviceContext->RSSetState(nullptr);
 	deviceContext->HSSetShader(nullptr, nullptr, 0);
 	deviceContext->DSSetShader(nullptr, nullptr, 0);
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

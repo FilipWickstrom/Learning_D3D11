@@ -44,6 +44,8 @@ private:
 	};
 	CamStruct m_camStruct;
 	ID3D11Buffer* m_camBuffer;
+	XMFLOAT3 m_currentCamPos;
+	bool m_usingSecondCam;
 
 	//	Material for current object
 	struct Material
@@ -85,8 +87,11 @@ public:
 
 	//Camera
 	void SetCamToPS(ID3D11DeviceContext* deviceContext);
-	void UpdateCam(ID3D11DeviceContext* deviceContext, Camera& camera);
+	void UpdateCam(ID3D11DeviceContext* deviceContext);
 	void SetCamToGS(ID3D11DeviceContext* deviceContext);
+	void SetCamPos(XMFLOAT3 position);
+	const bool IsUsingSecondCam() const;
+	void SetSecondCamera(bool onOrOff);
 
 	//Material
 	void UpdateMaterial(ID3D11DeviceContext* deviceContext, XMFLOAT4 ambient, XMFLOAT4 diffuse, XMFLOAT4 specular);
