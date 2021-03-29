@@ -50,9 +50,8 @@ private:
 	//Shadowmap
 	ShadowMap m_shadowMap;
 
-	//Backface culling manual
+	//Manual back face culling
 	BackFaceCulling m_backFaceCulling;
-	MeshObject m_cameraMesh;
 
 private:
 	void Render();

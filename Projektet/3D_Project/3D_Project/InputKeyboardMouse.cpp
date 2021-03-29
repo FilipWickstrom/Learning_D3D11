@@ -19,7 +19,7 @@ void InputKeyboardMouse::Initialize(HWND& window, float moveSpeed, float mouseSe
 
 void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Rasterizer& rasterizer, 
 									   Tessellation& tessellator, Scene& theScene, ConstantBuffers& constBuffs, 
-									   ID3D11DeviceContext* deviceContext, MeshObject& cameraMesh)
+									   ID3D11DeviceContext* deviceContext, BackFaceCulling& culling)
 {
 	XMVECTOR movement = { 0.0f, 0.0f, 0.0f, 0.0f };
 	XMVECTOR upOrDown = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -128,29 +128,17 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Rasterizer& ras
 	else if (kb.NumPad3)
 		constBuffs.SetRenderMode(3);
 
-	/* ------- Alt camera ------*/
-	
-	//Turn on main camera
-	if (kb.NumPad7)
+	/* ------- Back face culling ------*/
+	//With my manunal back face culling
+	if (kb.NumPad4)
 	{
-		constBuffs.SetSecondCamera(false);
-		cameraMesh.SetVisible(false);
+		culling.SetCullingOn(true);
 	}
-	//Turn on second camera
-	else if (kb.NumPad8)
+	//Without any culling at all
+	else if (kb.NumPad5)
 	{
-		constBuffs.SetSecondCamera(true);
-		constBuffs.SetCamPos(camera.GetPosition());
-		cameraMesh.UpdateModelMatrix(camera.GetPosition(), cameraMesh.GetScale(), cameraMesh.GetRotation());
-		cameraMesh.SetVisible(true);
+		culling.SetCullingOn(false);
 	}
-	//Using the main camera
-	if (!constBuffs.IsUsingSecondCam())
-	{
-		constBuffs.SetCamPos(camera.GetPosition());
-	}
-	//THIRD OPTION. RENDER WITH AND WITHOUT BACKFACECULLING
-
 }
 
 void InputKeyboardMouse::MouseInput(float dt, Camera& camera)
@@ -173,9 +161,9 @@ void InputKeyboardMouse::MouseInput(float dt, Camera& camera)
 
 void InputKeyboardMouse::CheckInput(float dt, Camera& camera, Rasterizer& rasterizer,
 									Tessellation& tessellator, Scene& theScene, ConstantBuffers& constBuffs, 
-									ID3D11DeviceContext* deviceContext, MeshObject& cameraMesh)
+									ID3D11DeviceContext* deviceContext,	BackFaceCulling& culling)
 {
 	MouseInput(dt, camera);
-	KeyboardInput(dt, camera, rasterizer, tessellator, theScene, constBuffs, deviceContext, cameraMesh);
+	KeyboardInput(dt, camera, rasterizer, tessellator, theScene, constBuffs, deviceContext, culling);
 	camera.UpdateViewMatrix();
 }

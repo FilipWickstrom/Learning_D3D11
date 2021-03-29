@@ -19,7 +19,7 @@ bool Rasterizer::CreateRasterizerStates(ID3D11Device* device)
 {
     D3D11_RASTERIZER_DESC desc;
     desc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE;       //Do not use any kind of culling
-    desc.FrontCounterClockwise = false;						//Going to be clockwise order
+    desc.FrontCounterClockwise = false;						//Front has clockwise winding
     desc.DepthBias = 0;
     desc.DepthBiasClamp = 0.0f;
     desc.SlopeScaledDepthBias = 0.0f;

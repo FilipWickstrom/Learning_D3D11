@@ -3,7 +3,7 @@
 BackFaceCulling::BackFaceCulling()
 {
 	m_geometryShader = nullptr;
-	m_cullingOn = true;				//MAKE SWITCHABLE		//FIX TOMORROW
+	m_cullingOn = true;
 }
 
 BackFaceCulling::~BackFaceCulling()
@@ -43,14 +43,11 @@ bool BackFaceCulling::Initialize(ID3D11Device* device)
 		std::cerr << "LoadGeometryShader() failed..." << std::endl;
 		return false;
 	}
-
 	return true;
 }
 
 void BackFaceCulling::Bind(ID3D11DeviceContext* deviceContext)
 {
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);	//NEEDED?
-
 	if (m_cullingOn)
 		deviceContext->GSSetShader(m_geometryShader, nullptr, 0);
 	else
@@ -60,4 +57,9 @@ void BackFaceCulling::Bind(ID3D11DeviceContext* deviceContext)
 void BackFaceCulling::UnBind(ID3D11DeviceContext* deviceContext)
 {
 	deviceContext->GSSetShader(nullptr, nullptr, 0);
+}
+
+void BackFaceCulling::SetCullingOn(bool onOrOff)
+{
+	m_cullingOn = onOrOff;
 }

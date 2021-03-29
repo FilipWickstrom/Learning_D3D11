@@ -1,10 +1,4 @@
 
-cbuffer Camera : register(b0)
-{
-    float3 C_CameraPos;
-    uint C_RenderMode;
-}
-
 struct GSInput
 {
     float4 PositionCS : SV_POSITION;
@@ -14,7 +8,6 @@ struct GSInput
     float3 TangentWS : TANGENTWS;
     float3 BiTangentWS : BITANGENTWS;
 };
-
 
 struct GSOutput
 {
@@ -32,23 +25,21 @@ void main(triangle GSInput input[3] : SV_POSITION, inout TriangleStream< GSOutpu
     GSOutput element;
     
     //All 3 vertices for this triangle
-    float3 v0 = input[0].PositionWS.xyz;
-    float3 v1 = input[1].PositionWS.xyz;
-    float3 v2 = input[2].PositionWS.xyz;
+    float3 v0 = input[0].PositionCS.xyz;
+    float3 v1 = input[1].PositionCS.xyz;
+    float3 v2 = input[2].PositionCS.xyz;
     
-    //Make 2 vectors of this three
-    float3 vec1 = v1 - v0;
-    float3 vec2 = v2 - v0;
+    float3 vec1 = v1 - v0; //v1 head, v0 tail
+    float3 vec2 = v2 - v0; //v2 head, v0 tail
     
-    //Make a normal of this face/triangle
-    float3 triNormal = normalize(cross(vec1, vec2));
-       
-    //Direction that points from first point to the camera
-    float3 camDir = normalize(C_CameraPos - v0);
+    //Normal of the surface
+    float3 faceNormal = normalize(cross(vec1, vec2));
+    //Camera pos ( (0,0,0) in screenspace) is head, v0 is tail
+    float3 camera = normalize(float3(0, 0, 0) - v0);
     
     //Normal of the face have to be between 0.0f to 1.0f
-    //Will be -1 if backward face is showing
-    if (dot(triNormal, camDir) >= 0.0f)
+    //Will be -1 if back face is showing
+    if (dot(camera, faceNormal) >= 0)
     {
         for (uint i = 0; i < 3; i++)
         {
@@ -61,4 +52,5 @@ void main(triangle GSInput input[3] : SV_POSITION, inout TriangleStream< GSOutpu
             output.Append(element);
         }
     }
+    
 }

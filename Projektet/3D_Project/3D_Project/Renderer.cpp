@@ -81,21 +81,13 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		std::cerr << "Shadowmap: Initialize() failed..." << std::endl;
 		return false;
 	}
-
-	//NEW***
+	
+	//Back face culling
 	if (!m_backFaceCulling.Initialize(m_device))
 	{
 		std::cerr << "BackFaceCulling: Initialize() failed..." << std::endl;
 		return false;
 	}
-
-	// Showing where the main camera is
-	if (!m_cameraMesh.Load(m_device, "cube.obj", "red.mtl", { 0,0,0 }, {0.1f, 0.1f, 0.1f}))
-	{
-		std::cerr << "Failed to load the alt camera..." << std::endl;
-		return false;
-	}
-	m_cameraMesh.SetVisible(false);
 
 	m_fpscounter.StartClock();
 
@@ -114,7 +106,6 @@ void Renderer::Render()
 
 	//Bind the geometry shader with back face culling
 	m_backFaceCulling.Bind(m_deviceContext);
-	m_constBuffers.SetCamToGS(m_deviceContext);
 
 	//WVP - for vertex shader and domain shader
 	m_constBuffers.SetWVP(m_deviceContext);
@@ -129,13 +120,6 @@ void Renderer::Render()
 	m_firstPass.TurnOffTessellation(m_deviceContext);
 	m_backFaceCulling.UnBind(m_deviceContext);
 	m_rasterizer.UnBind(m_deviceContext);
-
-	//Draw the main camera when needed
-	if (m_cameraMesh.IsVisible())
-	{
-		m_constBuffers.UpdateWorld(m_deviceContext, m_cameraMesh.GetModelMatrix());
-		m_cameraMesh.Render(m_deviceContext, nullptr);
-	}
 
 	//Setups all the settings for the shadowmap
 	m_shadowMap.BindShadowVS(m_deviceContext);
@@ -197,7 +181,7 @@ void Renderer::StartGameLoop(HWND& window)
 			
 		//Check mouse and keyboard
 		m_inputKeyboardMouse.CheckInput(m_deltatime, m_camera, m_rasterizer, m_firstPass.GetTessellation(), 
-										m_scene, m_constBuffers, m_deviceContext, m_cameraMesh);
+										m_scene, m_constBuffers, m_deviceContext, m_backFaceCulling);
 
 		//Update the view matrix from camera
 		m_constBuffers.UpdateView(m_deviceContext, m_camera.GetViewMatrix());

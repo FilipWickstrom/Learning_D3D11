@@ -148,7 +148,7 @@ float CalcShadow(float3 posWS)
         saturate(shadowMapCoords.y) == shadowMapCoords.y)
     {
         //Fixed bias that works in this scene
-        float bias = 0.01f;
+        float bias = 0.005f;
         
         //The depth after transforming to lights space
         float currentDepth = shadowMapCoords.z - bias;

@@ -7,11 +7,8 @@ class BackFaceCulling
 {
 private:
 	ID3D11GeometryShader* m_geometryShader;
-
-	//ON ELLER OFF?
 	bool m_cullingOn;
 
-//Helpfunctions
 private:
 	bool LoadGeometryShader(ID3D11Device* device);
 
@@ -20,8 +17,7 @@ public:
 	~BackFaceCulling();
 
 	bool Initialize(ID3D11Device* device);
-
 	void Bind(ID3D11DeviceContext* deviceContext);
 	void UnBind(ID3D11DeviceContext* deviceContext);
-
+	void SetCullingOn(bool onOrOff);
 };

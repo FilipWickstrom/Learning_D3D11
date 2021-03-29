@@ -10,7 +10,7 @@
 #include "Scene.h"
 #include "ConstantBuffers.h"
 #include "Rasterizer.h"
-
+#include "BackFaceCulling.h"
 using namespace DirectX;
 
 class InputKeyboardMouse
@@ -29,7 +29,7 @@ private:
 					   Scene& theScene,						//Using normal maps or not
 					   ConstantBuffers& constBuffs,			//For updating light position
 					   ID3D11DeviceContext* deviceContext,	//For updating the constant buffer
-					   MeshObject& cameraMesh);				//Showing where the main camera is when second is active
+					   BackFaceCulling& culling);			//Use the geometry shader or not
 
 	void MouseInput(float dt, Camera& camera);
 
@@ -45,5 +45,5 @@ public:
 					Scene& theScene,
 					ConstantBuffers& constBuffs,
 					ID3D11DeviceContext* deviceContext,
-					MeshObject& cameraMesh);
+					BackFaceCulling& culling);
 };

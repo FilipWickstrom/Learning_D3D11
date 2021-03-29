@@ -18,7 +18,6 @@ public:
 	~Rasterizer();
 
 	bool Initialize(ID3D11Device* device);
-
 	void Bind(ID3D11DeviceContext* deviceContext);
 	void UnBind(ID3D11DeviceContext* deviceContext);
 	void TurnOnWireframe(bool onOrOff);
