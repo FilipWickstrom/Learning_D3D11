@@ -89,6 +89,12 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
+	if (!m_gaussFilter.Initialize(m_device, m_swapChain))
+	{
+		std::cerr << "GaussianFilter: Initialize() failed... " << std::endl;
+		return false;
+	}
+
 	m_fpscounter.StartClock();
 
 	return true;
@@ -151,6 +157,9 @@ void Renderer::Render()
 	m_shadowMap.DisableSRV(m_deviceContext);
 
 	/*------------ Second pass done ------------------*/
+
+	//Final postprocessing with compute shader
+	m_gaussFilter.Render(m_deviceContext);
 
 	//Present the final result
 	Present();
