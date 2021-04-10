@@ -19,7 +19,8 @@ void InputKeyboardMouse::Initialize(HWND& window, float moveSpeed, float mouseSe
 
 void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Rasterizer& rasterizer, 
 									   Tessellation& tessellator, Scene& theScene, ConstantBuffers& constBuffs, 
-									   ID3D11DeviceContext* deviceContext, BackFaceCulling& culling)
+									   ID3D11DeviceContext* deviceContext, BackFaceCulling& culling, 
+									   GaussianFilter& gaussFilter)
 {
 	XMVECTOR movement = { 0.0f, 0.0f, 0.0f, 0.0f };
 	XMVECTOR upOrDown = { 0.0f, 1.0f, 0.0f, 0.0f };
@@ -83,7 +84,7 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Rasterizer& ras
 		rasterizer.TurnOnWireframe(false);
 	
 	//Level of detail of tessellation (1, 4, 8, 16, 32)
-	if (kb.D1)
+	else if (kb.D1)
 		tessellator.UpdateLOD(deviceContext, 1.0f);
 	else if (kb.D2)
 		tessellator.UpdateLOD(deviceContext, 4.0f);
@@ -95,7 +96,7 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Rasterizer& ras
 		tessellator.UpdateLOD(deviceContext, 32.0f);
 
 	//How much of the displacementmap to use
-	if (kb.D6)
+	else if (kb.D6)
 		tessellator.UpdateDepth(deviceContext, 0.2f);
 	else if (kb.D7)
 		tessellator.UpdateDepth(deviceContext, 0.4f);
@@ -107,19 +108,19 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Rasterizer& ras
 		tessellator.UpdateDepth(deviceContext, 1.0f);
 
 	/*--------Toggle on or off normalmapping--------*/
-	if (kb.N)
+	else if (kb.N)
 		theScene.UseNormalMaps(true);
 	else if (kb.M)
 		theScene.UseNormalMaps(false);
 
 	/* ------ Move main light ------*/
-	if (kb.Q)
+	else if (kb.Q)
 		constBuffs.SetFollowCamera(true);
 	else if (kb.E)
 		constBuffs.SetFollowCamera(false);
 	
 	/* --- Render mode: texture, lights on or normal mode --- */
-	if (kb.NumPad0)
+	else if (kb.NumPad0)
 		constBuffs.SetRenderMode(0);
 	else if (kb.NumPad1)
 		constBuffs.SetRenderMode(1);
@@ -130,15 +131,17 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Rasterizer& ras
 
 	/* ------- Back face culling ------*/
 	//With my manunal back face culling
-	if (kb.NumPad4)
-	{
+	else if (kb.NumPad4)
 		culling.SetCullingOn(true);
-	}
 	//Without any culling at all
 	else if (kb.NumPad5)
-	{
 		culling.SetCullingOn(false);
-	}
+
+	/* ------- Gauss Filter ------*/
+	else if (kb.NumPad7)
+		gaussFilter.TurnOnGaussFilter(true);
+	else if (kb.NumPad8)
+		gaussFilter.TurnOnGaussFilter(false);
 }
 
 void InputKeyboardMouse::MouseInput(float dt, Camera& camera)
@@ -161,9 +164,10 @@ void InputKeyboardMouse::MouseInput(float dt, Camera& camera)
 
 void InputKeyboardMouse::CheckInput(float dt, Camera& camera, Rasterizer& rasterizer,
 									Tessellation& tessellator, Scene& theScene, ConstantBuffers& constBuffs, 
-									ID3D11DeviceContext* deviceContext,	BackFaceCulling& culling)
+									ID3D11DeviceContext* deviceContext,	BackFaceCulling& culling, 
+									GaussianFilter& gaussFilter)
 {
 	MouseInput(dt, camera);
-	KeyboardInput(dt, camera, rasterizer, tessellator, theScene, constBuffs, deviceContext, culling);
+	KeyboardInput(dt, camera, rasterizer, tessellator, theScene, constBuffs, deviceContext, culling, gaussFilter);
 	camera.UpdateViewMatrix();
 }

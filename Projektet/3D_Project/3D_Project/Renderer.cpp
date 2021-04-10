@@ -89,7 +89,7 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-	if (!m_gaussFilter.Initialize(m_device, m_swapChain))
+	if (!m_gaussFilter.Initialize(m_device, m_swapChain, (float)m_winWidth, (float)m_winHeight, 2.0f, 3.0f))
 	{
 		std::cerr << "GaussianFilter: Initialize() failed... " << std::endl;
 		return false;
@@ -159,7 +159,7 @@ void Renderer::Render()
 	/*------------ Second pass done ------------------*/
 
 	//Final postprocessing with compute shader
-	m_gaussFilter.Render(m_deviceContext);
+	m_gaussFilter.Render(m_deviceContext, m_winWidth, m_winHeight);
 
 	//Present the final result
 	Present();
@@ -190,7 +190,7 @@ void Renderer::StartGameLoop(HWND& window)
 			
 		//Check mouse and keyboard
 		m_inputKeyboardMouse.CheckInput(m_deltatime, m_camera, m_rasterizer, m_firstPass.GetTessellation(), 
-										m_scene, m_constBuffers, m_deviceContext, m_backFaceCulling);
+										m_scene, m_constBuffers, m_deviceContext, m_backFaceCulling, m_gaussFilter);
 
 		//Update the view matrix from camera
 		m_constBuffers.UpdateView(m_deviceContext, m_camera.GetViewMatrix());

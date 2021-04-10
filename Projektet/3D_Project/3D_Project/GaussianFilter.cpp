@@ -4,6 +4,9 @@ GaussianFilter::GaussianFilter()
 {
 	m_computeShader = nullptr;
 	m_unorderedAccessView = nullptr;
+	m_gaussBuffer = nullptr;
+	m_gaussStruct = {};
+	m_useGaussFilter = false;
 }
 
 GaussianFilter::~GaussianFilter()
@@ -12,7 +15,8 @@ GaussianFilter::~GaussianFilter()
 		m_computeShader->Release();
 	if (m_unorderedAccessView)
 		m_unorderedAccessView->Release();
-
+	if (m_gaussBuffer)
+		m_gaussBuffer->Release();
 }
 
 bool GaussianFilter::CreateComputeShader(ID3D11Device* device)
@@ -47,7 +51,47 @@ bool GaussianFilter::CreateUnorderedAccessView(ID3D11Device* device, IDXGISwapCh
 	return !FAILED(hr);
 }
 
-bool GaussianFilter::Initialize(ID3D11Device* device, IDXGISwapChain* swapChain)
+void GaussianFilter::SetGaussStruct(float width, float height, float sigma, float radius)
+{
+	m_gaussStruct.winWidth = width;
+	m_gaussStruct.winHeight = height;
+	m_gaussStruct.sigma = sigma;
+	m_gaussStruct.radius = radius;
+	m_gaussStruct.doVertBlur = true;
+}
+
+bool GaussianFilter::CreateGaussConstBuff(ID3D11Device* device)
+{
+	D3D11_BUFFER_DESC desc = {};
+	desc.ByteWidth = sizeof(GaussStruct);
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.MiscFlags = 0;
+	desc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA data = {};
+	data.pSysMem = &m_gaussStruct;
+	data.SysMemPitch = 0;
+	data.SysMemSlicePitch = 0;
+
+	return !FAILED(device->CreateBuffer(&desc, &data, &m_gaussBuffer));
+}
+
+void GaussianFilter::SwapBlurDirection(ID3D11DeviceContext* deviceContext)
+{
+	if (m_gaussStruct.doVertBlur)
+		m_gaussStruct.doVertBlur = false;
+	else
+		m_gaussStruct.doVertBlur = true;
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	deviceContext->Map(m_gaussBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &m_gaussStruct, sizeof(GaussStruct));
+	deviceContext->Unmap(m_gaussBuffer, 0);
+}
+
+bool GaussianFilter::Initialize(ID3D11Device* device, IDXGISwapChain* swapChain, float width, float height, float sigma, float radius)
 {
 	if (!CreateComputeShader(device))
 	{
@@ -61,25 +105,44 @@ bool GaussianFilter::Initialize(ID3D11Device* device, IDXGISwapChain* swapChain)
 		return false;
 	}
 
+	SetGaussStruct(width, height, sigma, radius);
+	if (!CreateGaussConstBuff(device))
+	{
+		std::cerr << "CreateGaussConstBuff() failed..." << std::endl;
+		return false;
+	}
+
 	return true;
 }
 
-void GaussianFilter::Render(ID3D11DeviceContext* deviceContext)
+void GaussianFilter::Render(ID3D11DeviceContext* deviceContext, UINT winWidth, UINT winHeight)
 {
-	//We do not won't anything to change the rendertarget when are going to use it
-	ID3D11RenderTargetView* nullrtv = nullptr;
-	deviceContext->OMSetRenderTargets(1, &nullrtv, nullptr);
+	if (m_useGaussFilter)
+	{
+		//We do not won't anything to change the rendertarget when are going to use it
+		ID3D11RenderTargetView* nullrtv = nullptr;
+		deviceContext->OMSetRenderTargets(1, &nullrtv, nullptr);
 
-	//LATER IF GAUSS IS ON OR OFF***
+		//Binding
+		deviceContext->CSSetShader(m_computeShader, nullptr, 0);
+		deviceContext->CSSetUnorderedAccessViews(0, 1, &m_unorderedAccessView, nullptr);
+		deviceContext->CSSetConstantBuffers(0, 1, &m_gaussBuffer);
 
-	//Binding
-	deviceContext->CSSetShader(m_computeShader, nullptr, 0);
-	deviceContext->CSSetUnorderedAccessViews(0, 1, &m_unorderedAccessView, nullptr);
+		//Blur in one direction - either vertical or horizontal
+		deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 
-	//Use the compute shader
-	deviceContext->Dispatch(32, 32, 1);		//om detta skalas upp får man en större  variant på displayen
+		//Swap direction to blur
+		SwapBlurDirection(deviceContext);
+		deviceContext->CSSetConstantBuffers(0, 1, &m_gaussBuffer);
+		deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 
-	//Unbind the unordered access view
-	ID3D11UnorderedAccessView* nulluav = nullptr;
-	deviceContext->CSSetUnorderedAccessViews(0, 1, &nulluav, nullptr);
+		//Unbind the unordered access view
+		ID3D11UnorderedAccessView* nulluav = nullptr;
+		deviceContext->CSSetUnorderedAccessViews(0, 1, &nulluav, nullptr);
+	}
+}
+
+void GaussianFilter::TurnOnGaussFilter(bool trueOrFalse)
+{
+	m_useGaussFilter = trueOrFalse;
 }
