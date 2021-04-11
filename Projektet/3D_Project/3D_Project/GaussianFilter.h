@@ -1,8 +1,12 @@
 #pragma once
 #include <d3d11.h>
+#include <DirectXMath.h>
 #include <string>
 #include <fstream>
 #include <iostream>
+
+#define MATH_PI 3.14159265359
+#define MAXGAUSSWEIGHTS 32		//15 is max radius
 
 class GaussianFilter
 {
@@ -13,34 +17,29 @@ private:
 
 	struct GaussStruct
 	{
-		float sigma;
-		float radius;		//start with 2
-		float winWidth;
-		float winHeight;
-		bool doVertBlur;	//true = vertical, false = horizontal
-		float padding[3];	//bool on CPU = 1byte, and GPU = 4bytes
+										//On GPU-side:
+		UINT radius;					//4 bytes
+		float winWidth;					//4 bytes
+		float winHeight;				//4 bytes
+		bool doVertBlur;				//4 bytes, true = vertical, false = horizontal
+		float weights[MAXGAUSSWEIGHTS];	//32*4 = 128 bytes
+
 	} m_gaussStruct;
-
 	bool m_useGaussFilter;
-
-	//float gereratedFilter[radius * 2 + 1] ?
-	//float padding to fill out ? some array[? ? ? ]
 
 private:
 	bool CreateComputeShader(ID3D11Device* device);
 	bool CreateUnorderedAccessView(ID3D11Device* device, IDXGISwapChain* swapChain);
-	void SetGaussStruct(float width, float height, float sigma = 1.0f, float radius = 2.0f);
+	void SetGaussStruct(float width, float height, UINT radius = 2);
 	bool CreateGaussConstBuff(ID3D11Device* device);
 	void SwapBlurDirection(ID3D11DeviceContext* deviceContext);
-
-	//generate filter - update the constbuffer: return array of 5 floats?
-
+	bool GenerateGaussFilter();
 public:
 	GaussianFilter();
 	~GaussianFilter();
 
-	bool Initialize(ID3D11Device* device, IDXGISwapChain* swapChain, float width, float height, float sigma, float radius);
-	void Render(ID3D11DeviceContext* deviceContext, UINT winWidth, UINT winHeight);
+	bool Initialize(ID3D11Device* device, IDXGISwapChain* swapChain, float width, float height, UINT radius);
+	void Render(ID3D11DeviceContext* deviceContext, UINT winWidth, UINT winHeight, int nrOfLoops = 1);
 	void TurnOnGaussFilter(bool trueOrFalse);
 
 };

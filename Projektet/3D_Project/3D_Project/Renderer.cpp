@@ -8,7 +8,7 @@ Renderer::Renderer(UINT winWidth, UINT winHeight)
 	m_deviceContext = nullptr;
 	m_swapChain = nullptr;
 	m_deltatime = 0.0f;
-	m_VSync = true;
+	m_VSync = false;
 }
 
 Renderer::~Renderer()
@@ -89,7 +89,9 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-	if (!m_gaussFilter.Initialize(m_device, m_swapChain, (float)m_winWidth, (float)m_winHeight, 2.0f, 3.0f))
+
+	//SIGMA = max(Double(radius / 2), 1)	//2.5f for 5 radius
+	if (!m_gaussFilter.Initialize(m_device, m_swapChain, (float)m_winWidth, (float)m_winHeight, 5))
 	{
 		std::cerr << "GaussianFilter: Initialize() failed... " << std::endl;
 		return false;
