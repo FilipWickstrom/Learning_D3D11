@@ -92,13 +92,13 @@ void GaussianFilter::SwapBlurDirection(ID3D11DeviceContext* deviceContext)
 
 bool GaussianFilter::GenerateGaussFilter()
 {
-	if (m_gaussStruct.radius > ((MAXGAUSSWEIGHTS / 2) - 1) )
+	UINT radius = m_gaussStruct.radius;
+
+	if (radius > ((MAXGAUSSWEIGHTS / 2) - 1) || radius < 1)
 	{
-		std::cerr << "Reached weight limit..." << std::endl;
+		std::cerr << "Radius has to be in the range of 1 - 15..." << std::endl;
 		return false;
 	}
-
-	UINT radius = m_gaussStruct.radius;
 
 	//Calculates the sigma value to fit with the bell curve
 	float sigma = float(radius / 2.0f);
@@ -110,9 +110,20 @@ bool GaussianFilter::GenerateGaussFilter()
 	while (x <= 0)
 	{
 		//Formula from: https://en.wikipedia.org/wiki/Gaussian_blur
-		halfGaussWeights[index++] = (float)(1.0f / sqrt(2 * MATH_PI * pow(sigma, 2)) * exp(-pow(x, 2) / (2 * pow(sigma, 2))));
+		float weight = (float)(1.0f / sqrt(2 * MATH_PI * pow(sigma, 2)) * exp(-pow(x, 2) / (2 * pow(sigma, 2))));
+		halfGaussWeights[index++] = weight;
 		x++;
 	}
+
+	//Calculate sum to normalize the values later
+	float sum = 0.0f;
+	for (UINT i = 0; i < radius; i++)
+	{
+		sum += halfGaussWeights[i];
+	}
+	sum *= 2;							//Only went through half of the total array
+	sum += halfGaussWeights[radius];	//Add the middle
+
 
 	int weights = radius * 2 + 1;
 	int goBackIndex = radius - 1;
@@ -124,8 +135,11 @@ bool GaussianFilter::GenerateGaussFilter()
 		if (i <= (int)radius)
 			m_gaussStruct.weights[i] = halfGaussWeights[i];
 		//Walk backward
-		else
+		else if (goBackIndex >= 0)
 			m_gaussStruct.weights[i] = halfGaussWeights[goBackIndex--];
+
+		//Normalize the values
+		m_gaussStruct.weights[i] /= sum;
 	}
 
 	return true;

@@ -25,7 +25,7 @@ void main( uint3 DTid : SV_DispatchThreadID)        //uint groupIndex : SV_Group
     
     
     float4 finalColour;
-    int counter = 0;
+    uint counter = 0;
     int start = C_Radius * -1;
     int end = C_Radius;
     
@@ -34,6 +34,7 @@ void main( uint3 DTid : SV_DispatchThreadID)        //uint groupIndex : SV_Group
     {
         //Get the packed value on the right position
         float weight = (C_Weights[counter / 4])[counter % 4];
+        
         finalColour += backbuffer[DTid.xy + (dxy * i)] * weight;
         counter++;
     }

@@ -91,7 +91,7 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 
 
 	//SIGMA = max(Double(radius / 2), 1)	//2.5f for 5 radius
-	if (!m_gaussFilter.Initialize(m_device, m_swapChain, (float)m_winWidth, (float)m_winHeight, 5))
+	if (!m_gaussFilter.Initialize(m_device, m_swapChain, (float)m_winWidth, (float)m_winHeight, 4))
 	{
 		std::cerr << "GaussianFilter: Initialize() failed... " << std::endl;
 		return false;
