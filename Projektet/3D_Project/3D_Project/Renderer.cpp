@@ -89,9 +89,8 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-
-	//SIGMA = max(Double(radius / 2), 1)	//2.5f for 5 radius
-	if (!m_gaussFilter.Initialize(m_device, m_swapChain, (float)m_winWidth, (float)m_winHeight, 4))
+	//Gaussian filter - Max radius is 15 in this implementation
+	if (!m_gaussFilter.Initialize(m_device, m_swapChain, (float)m_winWidth, (float)m_winHeight, 5))
 	{
 		std::cerr << "GaussianFilter: Initialize() failed... " << std::endl;
 		return false;

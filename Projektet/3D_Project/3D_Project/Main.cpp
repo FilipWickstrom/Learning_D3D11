@@ -25,14 +25,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	//Setting up windowhandler, directx handler, pipeline, etc...
 	if (renderer.Setup(hInstance, nCmdShow, window))
-	{
-		//Game loop
 		renderer.StartGameLoop(window);
-	}
 	else
-	{
-		std::cerr << "ERROR: Setup failed..." << std::endl;
-	}
+		std::cerr << "Renderer.Setup() failed..." << std::endl;
 
 	return 0;
 }

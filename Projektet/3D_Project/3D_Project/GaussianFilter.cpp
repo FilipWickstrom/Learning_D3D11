@@ -102,6 +102,7 @@ bool GaussianFilter::GenerateGaussFilter()
 
 	//Calculates the sigma value to fit with the bell curve
 	float sigma = float(radius / 2.0f);
+
 	int x = radius * -1;
 	int index = 0;
 	float halfGaussWeights[MAXGAUSSWEIGHTS] = {};
@@ -123,7 +124,6 @@ bool GaussianFilter::GenerateGaussFilter()
 	}
 	sum *= 2;							//Only went through half of the total array
 	sum += halfGaussWeights[radius];	//Add the middle
-
 
 	int weights = radius * 2 + 1;
 	int goBackIndex = radius - 1;
@@ -192,7 +192,7 @@ void GaussianFilter::Render(ID3D11DeviceContext* deviceContext, UINT winWidth, U
 		//How many times to blur a frame
 		while (nrOfLoops > 0)
 		{
-			//Blur in one direction - either vertical or horizontal
+			//Blur in one direction: vertical or horizontal
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 
 			//Swap direction to blur

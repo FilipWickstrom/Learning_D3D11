@@ -23,7 +23,6 @@ void main( uint3 DTid : SV_DispatchThreadID)        //uint groupIndex : SV_Group
     else
         dxy = float2(0.0f, 1.0f/C_WinHeight);
     
-    
     float4 finalColour;
     uint counter = 0;
     int start = C_Radius * -1;

@@ -40,7 +40,7 @@ bool Scene::Load(ID3D11Device* device)
 	}
 	m_objects.push_back(cat);
 
-	// Cube
+	// Cube - rotating
 	MeshObject* cube = new MeshObject();
 	if (!cube->Load(device, "cube.obj", "brownBricks.mtl", { -6,0,0 }, { 1,1,1 }, { 0, 0, 0 }))
 	{
@@ -124,6 +124,15 @@ bool Scene::Load(ID3D11Device* device)
 		return false;
 	}
 	m_objects.push_back(shadowWall);
+
+	// Wall to test gaussian blur
+	MeshObject* gaussWall = new MeshObject();
+	if (!gaussWall->Load(device, "plane.obj", "feverdream.mtl", { 10, 1, -1.5f }, { 5.33f, 1, 3 }, { -90, 90, 0 }))
+	{
+		std::cerr << "Failed to load the gauss wall..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(gaussWall);
 
 	return true;
 }
