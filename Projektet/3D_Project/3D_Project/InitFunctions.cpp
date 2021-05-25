@@ -21,8 +21,9 @@ bool CreateDeviceAndSwapChain(HWND window, UINT winWidth, UINT winHeight, IDXGIS
 
 	//In debugging mode, show messages
 	UINT flags = 0;
-	if (_DEBUG)
-		flags = D3D11_CREATE_DEVICE_DEBUG;
+#ifdef _DEBUG
+	flags = D3D11_CREATE_DEVICE_DEBUG;
+#endif
 
 	D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 }; //Versions of hardware to support
 	HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, featureLevels, 1,

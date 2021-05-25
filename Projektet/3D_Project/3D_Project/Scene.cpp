@@ -134,6 +134,14 @@ bool Scene::Load(ID3D11Device* device)
 	}
 	m_objects.push_back(gaussWall);
 
+	MeshObject* bilateralWall = new MeshObject();
+	if (!bilateralWall->Load(device, "plane.obj", "bilateral.mtl", { 3, 1.5f, -10 }, { 3.5f, 1, 3.5f }, { -90, 180, 0 }))
+	{
+		std::cerr << "Failed to load in bilateralWall..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(bilateralWall);
+
 	return true;
 }
 

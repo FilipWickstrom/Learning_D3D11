@@ -20,7 +20,7 @@ VertexOutput main( VertexInput input )
     
     //Convertion from 0 to 1 coordinates to -1 to +1
     //Needed as the screen quad has this kinds of coordinates
-    output.Position = float4(output.TexCoord.x * 2 - 1, (1 - output.TexCoord.y) * 2 - 1, 0.0f, 1.0f);
+    output.Position = float4(input.TexCoord.x * 2 - 1, (1 - input.TexCoord.y) * 2 - 1, 0.0f, 1.0f);
     
 	return output;
 }

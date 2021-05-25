@@ -19,9 +19,15 @@ void RedirectIOToConsole()
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-	RedirectIOToConsole();	//For Debugging
+	//Can use the console in debugging mode
+	#ifdef _DEBUG
+		RedirectIOToConsole();
+	#endif
+
 	HWND window = {};
-	Renderer renderer(1280, 720);	//Size of renderwindow
+
+	//Size of renderwindow
+	Renderer renderer(1600, 900);
 
 	//Setting up windowhandler, directx handler, pipeline, etc...
 	if (renderer.Setup(hInstance, nCmdShow, window))

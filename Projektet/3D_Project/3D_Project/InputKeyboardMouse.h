@@ -11,7 +11,8 @@
 #include "ConstantBuffers.h"
 #include "Rasterizer.h"
 #include "BackFaceCulling.h"
-#include "GaussianFilter.h"
+#include "PostProcessing.h"
+
 using namespace DirectX;
 
 class InputKeyboardMouse
@@ -31,7 +32,7 @@ private:
 					   ConstantBuffers& constBuffs,			//For updating light position
 					   ID3D11DeviceContext* deviceContext,	//For updating the constant buffer
 					   BackFaceCulling& culling,			//Use the geometry shader or not
-					   GaussianFilter& gaussFilter);
+					   PostProcessing& postProcess);					   
 
 	void MouseInput(float dt, Camera& camera);
 
@@ -48,5 +49,5 @@ public:
 					ConstantBuffers& constBuffs,
 					ID3D11DeviceContext* deviceContext,
 					BackFaceCulling& culling,
-					GaussianFilter& gaussFilter);
+					PostProcessing& postProcess);
 };

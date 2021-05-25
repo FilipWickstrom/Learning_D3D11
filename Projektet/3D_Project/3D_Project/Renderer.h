@@ -11,8 +11,7 @@
 #include "ShadowMap.h"
 #include "BackFaceCulling.h"
 #include "Rasterizer.h"
-
-#include "GaussianFilter.h"
+#include "PostProcessing.h"
 
 class Renderer
 {
@@ -54,7 +53,8 @@ private:
 	//Manual back face culling
 	BackFaceCulling m_backFaceCulling;
 
-	GaussianFilter m_gaussFilter;
+	//Gaussin blur and bilateral filter
+	PostProcessing m_postProcess;
 
 private:
 	void Render();
