@@ -4,7 +4,11 @@
 #include <string>
 #include <fstream>
 
-const UINT MAXWEIGHTSIZE = 32;		//15 is max radius
+//Max radius at this none optimal way is 15
+//Not the best way as I'm saving the alot of weights
+//twice. Made an inprovement in "Lilla Spel"
+//where I'm only saving the necessary parts :)
+const UINT MAXWEIGHTSIZE = 32;
 const double PI = 3.14159265359f;
 
 enum class Filter { GAUSSIAN, BILATERAL };
@@ -18,6 +22,7 @@ private:
 	ID3D11Buffer* m_gaussSettingsBuf;
 	ID3D11Buffer* m_gaussWeightBuf;
 	ID3D11Buffer* m_bilateralSettingsBuf;
+	ID3D11Buffer* m_bilateralWeightBuf;
 
 	struct GaussSettings
 	{
@@ -39,9 +44,11 @@ private:
 		float padding;
 	} m_bilateralSettings;
 
-	/*
-	Weights for bilateral??? Or use the same as gauss uses
-	*/
+	//Also some gauss weights but others from gaussians filter
+	struct BilateralWeights
+	{
+		float weights[MAXWEIGHTSIZE];
+	} m_bilateralWeights;
 
 	bool m_useGauss;
 	bool m_useBilateral;
@@ -56,12 +63,9 @@ private:
 	void UpdateSettingsBuffer(ID3D11DeviceContext* deviceContext, const Filter& filter);
 	void SwapDirection(ID3D11DeviceContext* deviceContext, const Filter& filter);
 
-	//Generation
-	bool GenerateGaussFilter(UINT radius, float sigma = 0);
-
-
-	//EXTRA TO FIX LATER:
-	//Update weights
+	bool GenerateGaussFilter(UINT radius, 
+							 float sigma = 0, 
+							 const Filter& filter = Filter::GAUSSIAN);
 
 public:
 	PostProcessing();
@@ -70,13 +74,12 @@ public:
 	bool Initialize(ID3D11Device* device, 
 					IDXGISwapChain* swapChain, 
 					UINT gaussRadius = 3,
+					float gaussSigma = 0,
 					UINT bilateralRadius = 3, 
-					float bilateralSigma = 1.0f);
+					float bilateralSigma = 0.09f);	//Gives best result
 
 	void TurnOnGauss(bool toggle = true);
 	void TurnOnBilateral(bool toggle = true);
-
-	//Change settings??? sigma? Generate other filters???
 
 	void Render(ID3D11DeviceContext* deviceContext, UINT winWidth, UINT winHeight);
 

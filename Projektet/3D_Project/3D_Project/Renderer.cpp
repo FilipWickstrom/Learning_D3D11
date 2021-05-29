@@ -89,8 +89,8 @@ bool Renderer::Setup(HINSTANCE hInstance, int nCmdShow, HWND& window)
 		return false;
 	}
 
-	//Gaussian filter - Max radius is 15 in this implementation
-	if (!m_postProcess.Initialize(m_device, m_swapChain, 5, 5, 5.0f))
+	//Filters with compute shader - Max radius is 15 in this implementation
+	if (!m_postProcess.Initialize(m_device, m_swapChain, 5, 2.5, 5, 0.09f))
 	{
 		std::cerr << "Post process failed to initialize..." << std::endl;
 		return false;

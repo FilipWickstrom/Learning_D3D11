@@ -52,7 +52,7 @@ bool Scene::Load(ID3D11Device* device)
 
 	// Noah - behind you! Ahhh!
 	MeshObject* noah = new MeshObject();
-	if (!noah->Load(device, "betternoah.obj", "shinyDefault.mtl", { 8, 0, -8 }, { 1, 1, 1 }, {0, 135, 0}))
+	if (!noah->Load(device, "noah.obj", "shinyDefault.mtl", { 8, 0, -8 }, { 1, 1, 1 }, {0, 135, 0}))
 	{
 		std::cerr << "Failed to load Noah..." << std::endl;
 		return false;
@@ -125,22 +125,14 @@ bool Scene::Load(ID3D11Device* device)
 	}
 	m_objects.push_back(shadowWall);
 
-	// Wall to test gaussian blur
-	MeshObject* gaussWall = new MeshObject();
-	if (!gaussWall->Load(device, "plane.obj", "feverdream.mtl", { 10, 1, -1.5f }, { 5.33f, 1, 3 }, { -90, 90, 0 }))
+	// Wall to test gaussian blur and bilateral filter
+	MeshObject* detailedWall = new MeshObject();
+	if (!detailedWall->Load(device, "plane.obj", "feverdream.mtl", { 10, 1, -1.5f }, { 5.33f, 1, 3 }, { -90, 90, 0 }))
 	{
 		std::cerr << "Failed to load the gauss wall..." << std::endl;
 		return false;
 	}
-	m_objects.push_back(gaussWall);
-
-	MeshObject* bilateralWall = new MeshObject();
-	if (!bilateralWall->Load(device, "plane.obj", "bilateral.mtl", { 3, 1.5f, -10 }, { 3.5f, 1, 3.5f }, { -90, 180, 0 }))
-	{
-		std::cerr << "Failed to load in bilateralWall..." << std::endl;
-		return false;
-	}
-	m_objects.push_back(bilateralWall);
+	m_objects.push_back(detailedWall);
 
 	return true;
 }

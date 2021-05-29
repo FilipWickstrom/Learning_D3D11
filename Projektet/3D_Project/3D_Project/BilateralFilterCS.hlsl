@@ -10,23 +10,16 @@ cbuffer BilateralSettings : register(b0)
     float C_Sigma;
 }
 
-//Same weights as from gauss????
+//Weights that has been calculated like a gaussfilter
 cbuffer BilateralWeights : register(b1)
 {
     float4 C_Filter[MAXWEIGHTS / 4];
 }
 
-static const float filter[7] =
-{
-    0.030078323, 0.104983664, 0.222250419, 0.285375187, 0.222250419, 0.104983664, 0.030078323
-};
-
-groupshared float4 horizontalpoints[1280];
-groupshared float4 verticalpoints[720];
-
 [numthreads(8, 8, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
+    //Go vertical or horizontal
     float2 dxy = float2(0.0f, 0.0f);
     if (C_DoVertFilter)
         dxy = float2(1.0f, 0.0f);
@@ -34,38 +27,35 @@ void main( uint3 DTid : SV_DispatchThreadID )
         dxy = float2(0.0f, 1.0f);
     
     float4 centerColour = backbuffer[DTid.xy];
-    if (C_DoVertFilter)
-        verticalpoints[DTid.y] = centerColour;
-    else
-        horizontalpoints[DTid.x] = centerColour;
-    
-    GroupMemoryBarrierWithGroupSync();
-    
-    float4 colour = 0.0f;
+    float4 totalColour = 0.0f;
     float4 totalWeight = 0.0f;
     
-    int start = -3; //C_Radius * -1;
-    int end = 3; //C_Radius;
-    uint counter = 0;
+    int start = C_Radius * -1;
+    int end = C_Radius;
+    uint pos = 0;
     
     for (int i = start; i <= end; i++)
     {
-        float4 currentColour; // = backbuffer[DTid.xy + (dxy * i)];
-        if (C_DoVertFilter)
-            currentColour = verticalpoints[DTid.y + i];
-         else
-            currentColour = horizontalpoints[DTid.x + i];
+        //Unpackage the right gauss filter for it
+        float gaussWeight = (C_Filter[pos / 4])[pos++ % 4];
         
-        //Find delta and use it to calculate weighting
-        //Is being used to see if it was a "spike"
+        float4 currentColour = backbuffer[DTid.xy + (dxy*i)];
+        
+        //Difference in colour
         float4 delta = centerColour - currentColour;
-        float4 range = exp((-1.0f * delta * delta) / (2.0f * C_Sigma * C_Sigma));
         
-        colour += currentColour * range * filter[counter]; //C_Filter[counter];
-        totalWeight += range * filter[counter]; //C_Filter[counter];
-        counter++;
+        //Gaussian function - flatting out the colour depending on sigma value
+        //https://en.wikipedia.org/wiki/Gaussian_function
+        //exp = e^x where x = ((-1.0f*delta...
+        float G_range = exp((-1.0f * delta * delta) / (2.0f * C_Sigma * C_Sigma));
+        
+        //Like the picture on page 7
+        //https://people.csail.mit.edu/sparis/bf_course/slides/03_definition_bf.pdf
+        totalColour += currentColour * G_range * gaussWeight;
+        totalWeight += G_range * gaussWeight;
     }
     
-    //Normalize the colour
-    backbuffer[DTid.xy] = colour / totalWeight;
+    //Normalization of the colour
+    backbuffer[DTid.xy] = (totalColour / totalWeight);
+ 
 }

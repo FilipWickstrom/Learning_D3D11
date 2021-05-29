@@ -98,6 +98,14 @@ bool PostProcessing::CreateConstantBuffers(ID3D11Device* device)
 		return false;
 	}
 
+	desc.ByteWidth = sizeof(BilateralWeights);
+	data.pSysMem = &m_bilateralWeights;
+	if (FAILED(device->CreateBuffer(&desc, &data, &m_bilateralWeightBuf)))
+	{
+		std::cerr << "Failed to create weights for bilateral filter..." << std::endl;
+		return false;
+	}
+
 	return true;
 }
 
@@ -138,7 +146,7 @@ void PostProcessing::SwapDirection(ID3D11DeviceContext* deviceContext, const Fil
 	UpdateSettingsBuffer(deviceContext, filter);
 }
 
-bool PostProcessing::GenerateGaussFilter(UINT radius, float sigma)
+bool PostProcessing::GenerateGaussFilter(UINT radius, float sigma, const Filter& filter)
 {
 	if (radius > ((MAXWEIGHTSIZE / 2) - 1) || radius < 1)
 	{
@@ -146,7 +154,7 @@ bool PostProcessing::GenerateGaussFilter(UINT radius, float sigma)
 		return false;
 	}
 
-	//If not input we calculate the sigma
+	//If no input we calculate the sigma
 	if (sigma == 0)
 	{
 		//Calculates the sigma value to fit with the bell curve
@@ -156,7 +164,7 @@ bool PostProcessing::GenerateGaussFilter(UINT radius, float sigma)
 
 	int x = radius * -1;
 	int index = 0;
-	float halfGaussWeights[MAXWEIGHTSIZE] = {};
+	float halfGaussWeights[(MAXWEIGHTSIZE / 2) + 1] = {};
 
 	//Goes from the back to the main square, 0
 	while (x <= 0)
@@ -182,15 +190,27 @@ bool PostProcessing::GenerateGaussFilter(UINT radius, float sigma)
 	//Fix the final weights so that it is symmetrical
 	for (int i = 0; i < weights; i++)
 	{
-		//Walk forward
-		if (i <= (int)radius)
-			m_gaussWeights.weights[i] = halfGaussWeights[i];
-		//Walk backward
-		else if (goBackIndex >= 0)
-			m_gaussWeights.weights[i] = halfGaussWeights[goBackIndex--];
+		if (filter == Filter::GAUSSIAN)
+		{
+			//Walk forward
+			if (i <= (int)radius)
+				m_gaussWeights.weights[i] = halfGaussWeights[i];
+			//Walk backward
+			else if (goBackIndex >= 0)
+				m_gaussWeights.weights[i] = halfGaussWeights[goBackIndex--];
 
-		//Normalize the values
-		m_gaussWeights.weights[i] /= sum;
+			//Normalize the values
+			m_gaussWeights.weights[i] /= sum;
+		}
+		else if (filter == Filter::BILATERAL)
+		{
+			if (i <= (int)radius)
+				m_bilateralWeights.weights[i] = halfGaussWeights[i];
+			else if (goBackIndex >= 0)
+				m_bilateralWeights.weights[i] = halfGaussWeights[goBackIndex--];
+
+			m_bilateralWeights.weights[i] /= sum;
+		}
 	}
 
 	return true;
@@ -205,10 +225,12 @@ PostProcessing::PostProcessing()
 	m_gaussSettingsBuf = nullptr;
 	m_gaussWeightBuf = nullptr;
 	m_bilateralSettingsBuf = nullptr;
+	m_bilateralWeightBuf = nullptr;
 
 	m_gaussSettings = {};
 	m_gaussWeights = {};
 	m_bilateralSettings = {};
+	m_bilateralWeights = {};
 
 	m_useGauss = false;
 	m_useBilateral = false;
@@ -228,9 +250,16 @@ PostProcessing::~PostProcessing()
 		m_gaussWeightBuf->Release();
 	if (m_bilateralSettingsBuf)
 		m_bilateralSettingsBuf->Release();
+	if (m_bilateralWeightBuf)
+		m_bilateralWeightBuf->Release();
 }
 
-bool PostProcessing::Initialize(ID3D11Device* device, IDXGISwapChain* swapChain, UINT gaussRadius, UINT bilateralRadius, float bilateralSigma)
+bool PostProcessing::Initialize(ID3D11Device* device, 
+								IDXGISwapChain* swapChain, 
+								UINT gaussRadius, 
+								float gaussSigma,
+								UINT bilateralRadius, 
+								float bilateralSigma)
 {
 	if (!CreateUAV(device, swapChain))
 	{
@@ -246,13 +275,19 @@ bool PostProcessing::Initialize(ID3D11Device* device, IDXGISwapChain* swapChain,
 	m_gaussSettings.radius = gaussRadius;
 	m_gaussSettings.doVertBlur = true;
 
+	if (!GenerateGaussFilter(gaussRadius, gaussSigma, Filter::GAUSSIAN))
+	{
+		std::cerr << "GenerateGaussFilter() failed for gaussian blur..." << std::endl;
+		return false;
+	}
+
 	m_bilateralSettings.radius = bilateralRadius;
 	m_bilateralSettings.doVertFilter = true;
 	m_bilateralSettings.sigma = bilateralSigma;
-
-	if (!GenerateGaussFilter(gaussRadius))
+	
+	if (!GenerateGaussFilter(bilateralRadius, 0, Filter::BILATERAL))
 	{
-		std::cerr << "GenerateGaussFilter() faile..." << std::endl;
+		std::cerr << "GenerateGaussFilter() failed for bilateral filter..." << std::endl;
 		return false;
 	}
 
@@ -282,35 +317,30 @@ void PostProcessing::Render(ID3D11DeviceContext* deviceContext, UINT winWidth, U
 		//We do not won't anything to change the rendertarget when are going to use it
 		ID3D11RenderTargetView* nullrtv = nullptr;
 		deviceContext->OMSetRenderTargets(1, &nullrtv, nullptr);
+		deviceContext->CSSetUnorderedAccessViews(0, 1, &m_unorderedAccessView, nullptr);
 
 		if (m_useBilateral)
 		{
-			deviceContext->CSSetShader(m_gaussShader, nullptr, 0);
-			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_unorderedAccessView, nullptr);
+			deviceContext->CSSetShader(m_bilateralShader, nullptr, 0);
 			deviceContext->CSSetConstantBuffers(0, 1, &m_bilateralSettingsBuf);
-			deviceContext->CSSetConstantBuffers(1, 1, &m_gaussWeightBuf);						//Bileral weights?
+			deviceContext->CSSetConstantBuffers(1, 1, &m_bilateralWeightBuf);
 
-			//Blur in one direction
+			//Cross/plus pattern - more efficient
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::BILATERAL);
-
-			//Blur in the other direction
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::BILATERAL);
 		}
 
 		if (m_useGauss)
 		{
-			//Binding
 			deviceContext->CSSetShader(m_gaussShader, nullptr, 0);
-			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_unorderedAccessView, nullptr);
 			deviceContext->CSSetConstantBuffers(0, 1, &m_gaussSettingsBuf);
 			deviceContext->CSSetConstantBuffers(1, 1, &m_gaussWeightBuf);
 
 			//Blur in one direction
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::GAUSSIAN);
-
 			//Blur in the other direction
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::GAUSSIAN);
@@ -319,6 +349,7 @@ void PostProcessing::Render(ID3D11DeviceContext* deviceContext, UINT winWidth, U
 		//Unbind the unordered access view
 		ID3D11UnorderedAccessView* nulluav = nullptr;
 		deviceContext->CSSetUnorderedAccessViews(0, 1, &nulluav, nullptr);
+		//Unbinding the rest of the buffers
 		ID3D11Buffer* nullbuff = nullptr;
 		deviceContext->CSSetConstantBuffers(0, 1, &nullbuff);
 		deviceContext->CSSetConstantBuffers(1, 1, &nullbuff);

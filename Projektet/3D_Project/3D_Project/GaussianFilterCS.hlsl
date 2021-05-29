@@ -2,7 +2,6 @@
 
 //Read and write texture to backbuffer
 RWTexture2D<unorm float4> backbuffer : register(u0);
-//Can get size of the texture by GetDimensions()
 
 cbuffer GaussSettings : register(b0)
 { 
@@ -15,7 +14,9 @@ cbuffer GaussWeights : register(b1)
     float4 C_Weights[MAXWEIGHTS / 4];
 }
 
-//Each group works with 8x8 = 64 threads, Maximum is 1024 threads
+//Each group works with 8x8 = 64 threads, Maximum is 1024 threads.
+//8x8 is best for overall best performance on all platforms:
+//Nvidia, AMD or Intel graphics
 [numthreads(8, 8, 1)]
 void main( uint3 DTid : SV_DispatchThreadID)
 {
