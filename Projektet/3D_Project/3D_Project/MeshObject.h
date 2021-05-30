@@ -73,7 +73,9 @@ private:
 	//Water effect
 	bool m_hasAnimTexture;
 	std::vector<SimpleVertex> m_animVertices;
-	float m_movement;
+	std::vector<XMFLOAT2> m_origTexCoords;
+	DirectX::XMFLOAT2 m_animSpeed;
+	DirectX::XMFLOAT2 m_animOffset;
 
 private:
 	bool LoadOBJ(ID3D11Device* device, std::string objfile);
@@ -121,6 +123,8 @@ public:
 	//Water effect
 	void SetAnimatedTexture(bool toggle = true);
 	void UpdateTextureAnim(ID3D11DeviceContext* deviceContext, const float& dt);
+	void SetAnimationSpeed(XMFLOAT2 speed);
+
 
 	//Drawing what it got in the buffer
 	void Render(ID3D11DeviceContext* deviceContext, Tessellation* tessellation, const float& dt);

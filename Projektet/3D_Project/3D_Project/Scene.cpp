@@ -136,8 +136,9 @@ bool Scene::Load(ID3D11Device* device)
 
 	// Water texture 
 	MeshObject* waterWall = new MeshObject();
-	waterWall->SetAnimatedTexture(true);	//grid10x10???
-	if (!waterWall->Load(device, "plane.obj", "water.mtl", { 0,-1.5,5 }, {2,1,2}))
+	waterWall->SetAnimatedTexture(true);
+	waterWall->SetAnimationSpeed({ 0.0f, -0.0001f });
+	if (!waterWall->Load(device, "plane.obj", "water.mtl", { 0,-2,-14 }, { 4,1,4 }, {0,180,0}))
 	{
 		std::cerr << "Failed to load water floor..." << std::endl;
 		return false;

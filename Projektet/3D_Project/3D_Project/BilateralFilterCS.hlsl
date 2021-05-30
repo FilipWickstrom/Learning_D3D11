@@ -47,7 +47,7 @@ void main( uint3 DTid : SV_DispatchThreadID )
         //Gaussian function - flatting out the colour depending on sigma value
         //https://en.wikipedia.org/wiki/Gaussian_function
         //exp = e^x where x = ((-1.0f*delta...
-        float G_range = exp((-1.0f * delta * delta) / (2.0f * C_Sigma * C_Sigma));
+        float4 G_range = exp((-1.0f * delta * delta) / (2.0f * C_Sigma * C_Sigma));
         
         //Like the picture on page 7
         //https://people.csail.mit.edu/sparis/bf_course/slides/03_definition_bf.pdf

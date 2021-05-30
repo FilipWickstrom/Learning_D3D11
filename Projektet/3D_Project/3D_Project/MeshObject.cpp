@@ -38,7 +38,8 @@ MeshObject::MeshObject()
 	m_visible = true;
 
 	m_hasAnimTexture = false;
-	m_movement = 0.0f;
+	m_animSpeed = { 0.0f, 0.0f };
+	m_animOffset = { 0.0f, 0.0f };
 }
 
 MeshObject::~MeshObject()
@@ -62,6 +63,7 @@ MeshObject::~MeshObject()
 		m_settingsBuffer->Release();
 
 	m_animVertices.clear();
+	m_origTexCoords.clear();
 }
 
 bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
@@ -126,6 +128,7 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 					thevertex.position = positions[v - size_t(1)];
 					thevertex.normal = normals[vn - size_t(1)];
 					thevertex.texCoord = textureCoords[vt - size_t(1)];
+
 					vertices.push_back(thevertex);
 				}
 			}
@@ -191,6 +194,13 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 		{
 			//Save down all the vertices
 			m_animVertices = vertices;
+
+			//Save all the original texture coordinates in vector
+			for (size_t i = 0; i < vertices.size(); i++)
+			{
+				m_origTexCoords.push_back(vertices[i].texCoord);
+			}
+
 			//Make the vertex buffer dynamic so that we can write to it
 			bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 			bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -604,24 +614,28 @@ void MeshObject::SetAnimatedTexture(bool toggle)
 
 void MeshObject::UpdateTextureAnim(ID3D11DeviceContext* deviceContext, const float& dt)
 {
-	float speed = 0.0001f;
-	//m_movement = fmod(speed * dt, 1.0f);	//Can go to maximum 1.0f
+	//Wrap around 1.0f as it is the limit. 
+	//Makes it impossible to get float overflow
+	m_animOffset.x = fmod(m_animOffset.x  + (m_animSpeed.x * dt), 1.0f);
+	m_animOffset.y = fmod(m_animOffset.y + (m_animSpeed.y * dt), 1.0f);
 
 	//Update the coordinates with new information
 	for (size_t i = 0; i < m_animVertices.size(); i++)
 	{
-		m_animVertices[i].texCoord.y -= (speed * dt);
-		//Can reach limit for float as it is just rising...
-		
-		//m_animVertices[i].texCoord.y = fmod(m_animVertices[i].texCoord.y - movement, 0.0f);
+		m_animVertices[i].texCoord = { m_origTexCoords[i].x + m_animOffset.x,
+									   m_origTexCoords[i].y + m_animOffset.y };
 	}
 
-	//
+	//Update the vertex buffer
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-
 	deviceContext->Map(m_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &m_animVertices[0], sizeof(SimpleVertex) * m_vertexCount);
 	deviceContext->Unmap(m_vertexBuffer, 0);
+}
+
+void MeshObject::SetAnimationSpeed(XMFLOAT2 speed)
+{
+	m_animSpeed = speed;
 }
 
 void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation* tessellation, const float& dt)
