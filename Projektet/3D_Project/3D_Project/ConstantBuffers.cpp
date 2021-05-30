@@ -6,14 +6,13 @@ ConstantBuffers::ConstantBuffers()
 	m_WVPBuffer = nullptr;
 	m_lights = {};
 	m_lightsBuffer = nullptr;
-	m_camStruct = {};
+	m_camStruct.camPos = {0.0f,0.0f,0.0f};
+	m_camStruct.renderMode = 1;
 	m_camBuffer = nullptr;
 	m_material = {};
 	m_materialBuffer = nullptr;
-
 	m_followCamera = true;
-	m_renderMode = 1;
-	m_usingSecondCam = false;
+
 }
 
 ConstantBuffers::~ConstantBuffers()
@@ -177,10 +176,6 @@ void ConstantBuffers::SetCamToPS(ID3D11DeviceContext* deviceContext)
 
 void ConstantBuffers::UpdateCam(ID3D11DeviceContext* deviceContext)
 {
-	//Update to the current location of the camera
-	m_camStruct.camPos = m_currentCamPos;
-	m_camStruct.renderMode = m_renderMode;
-
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	deviceContext->Map(m_camBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	memcpy(mappedResource.pData, &m_camStruct, sizeof(CamStruct));
@@ -194,17 +189,7 @@ void ConstantBuffers::SetCamToGS(ID3D11DeviceContext* deviceContext)
 
 void ConstantBuffers::SetCamPos(XMFLOAT3 position)
 {
-	m_currentCamPos = position;
-}
-
-const bool ConstantBuffers::IsUsingSecondCam() const
-{
-	return m_usingSecondCam;
-}
-
-void ConstantBuffers::SetSecondCamera(bool onOrOff)
-{
-	m_usingSecondCam = onOrOff;
+	m_camStruct.camPos = position;
 }
 
 void ConstantBuffers::UpdateMaterial(ID3D11DeviceContext* deviceContext, XMFLOAT4 ambient, XMFLOAT4 diffuse, XMFLOAT4 specular)
@@ -231,6 +216,6 @@ void ConstantBuffers::SetFollowCamera(bool trueOrFalse)
 
 void ConstantBuffers::SetRenderMode(UINT mode)
 {
-	m_renderMode = mode;
+	m_camStruct.renderMode = mode;
 }
 

@@ -76,6 +76,7 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Rasterizer& ras
 	}
 
 	camera.Move(movement * m_moveSpeed * dt);
+	constBuffs.SetCamPos(camera.GetPosition());
 
 	/*-------- Tessellation settings --------*/
 	//Wireframe
@@ -173,7 +174,6 @@ void InputKeyboardMouse::CheckInput(float dt, Camera& camera, Rasterizer& raster
 									Tessellation& tessellator, Scene& theScene, ConstantBuffers& constBuffs, 
 									ID3D11DeviceContext* deviceContext,	BackFaceCulling& culling, 
 									PostProcessing& postProcess)
-									//GaussianFilter& gaussFilter)
 {
 	MouseInput(dt, camera);
 	KeyboardInput(dt, camera, rasterizer, tessellator, theScene, constBuffs, deviceContext, culling, postProcess);
