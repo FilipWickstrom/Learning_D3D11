@@ -36,6 +36,9 @@ MeshObject::MeshObject()
 	m_scale = { 1,1,1 };
 	m_rotation = { 0,0,0 };
 	m_visible = true;
+
+	m_hasAnimTexture = false;
+	m_movement = 0.0f;
 }
 
 MeshObject::~MeshObject()
@@ -57,6 +60,8 @@ MeshObject::~MeshObject()
 		m_normalMapSRV->Release();
 	if (m_settingsBuffer)
 		m_settingsBuffer->Release();
+
+	m_animVertices.clear();
 }
 
 bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
@@ -180,10 +185,23 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 
 		//Vertex buffer - setting up description
 		D3D11_BUFFER_DESC bufferDesc = {};
+
+		//Animated textures needs to be dynamic
+		if (m_hasAnimTexture)
+		{
+			//Save down all the vertices
+			m_animVertices = vertices;
+			//Make the vertex buffer dynamic so that we can write to it
+			bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+			bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		}
+		else
+		{
+			bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+			bufferDesc.CPUAccessFlags = 0;
+		}
 		bufferDesc.ByteWidth = sizeof(SimpleVertex) * m_vertexCount;
-		bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		bufferDesc.CPUAccessFlags = 0;
 		bufferDesc.MiscFlags = 0;
 		bufferDesc.StructureByteStride = 0;
 
@@ -203,6 +221,7 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 		std::cout << "Could not open the obj file..." << std::endl;
 		return false;
 	}
+
 	return true;
 }
 
@@ -404,7 +423,7 @@ bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string materia
 	// Check if file has not been set
 	if (m_diffuseFile == "")
 	{
-		m_diffuseFile = "defualt.png";
+		m_diffuseFile = "default.png";
 	}
 
 	// Load the diffuse texture
@@ -578,11 +597,43 @@ const bool MeshObject::IsVisible() const
 	return m_visible;
 }
 
-void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation* tessellation)
+void MeshObject::SetAnimatedTexture(bool toggle)
+{
+	m_hasAnimTexture = toggle;
+}
+
+void MeshObject::UpdateTextureAnim(ID3D11DeviceContext* deviceContext, const float& dt)
+{
+	float speed = 0.0001f;
+	//m_movement = fmod(speed * dt, 1.0f);	//Can go to maximum 1.0f
+
+	//Update the coordinates with new information
+	for (size_t i = 0; i < m_animVertices.size(); i++)
+	{
+		m_animVertices[i].texCoord.y -= (speed * dt);
+		//Can reach limit for float as it is just rising...
+		
+		//m_animVertices[i].texCoord.y = fmod(m_animVertices[i].texCoord.y - movement, 0.0f);
+	}
+
+	//
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+
+	deviceContext->Map(m_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, &m_animVertices[0], sizeof(SimpleVertex) * m_vertexCount);
+	deviceContext->Unmap(m_vertexBuffer, 0);
+}
+
+void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation* tessellation, const float& dt)
 {
 	//Only render if it is visible
 	if (m_visible)
 	{
+		if (m_hasAnimTexture)
+		{
+			UpdateTextureAnim(deviceContext, dt);
+		}
+
 		UINT stride = sizeof(SimpleVertex);
 		UINT offset = 0;
 		deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);

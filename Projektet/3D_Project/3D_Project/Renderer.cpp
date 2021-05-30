@@ -8,7 +8,7 @@ Renderer::Renderer(UINT winWidth, UINT winHeight)
 	m_deviceContext = nullptr;
 	m_swapChain = nullptr;
 	m_deltatime = 0.0f;
-	m_VSync = false;
+	m_VSync = true;
 }
 
 Renderer::~Renderer()

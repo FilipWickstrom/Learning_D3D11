@@ -134,6 +134,16 @@ bool Scene::Load(ID3D11Device* device)
 	}
 	m_objects.push_back(detailedWall);
 
+	// Water texture 
+	MeshObject* waterWall = new MeshObject();
+	waterWall->SetAnimatedTexture(true);	//grid10x10???
+	if (!waterWall->Load(device, "plane.obj", "water.mtl", { 0,-1.5,5 }, {2,1,2}))
+	{
+		std::cerr << "Failed to load water floor..." << std::endl;
+		return false;
+	}
+	m_objects.push_back(waterWall);
+
 	return true;
 }
 
@@ -154,7 +164,7 @@ void Scene::Render(ID3D11DeviceContext* deviceContext, ConstantBuffers& constBuf
 		obj->UseNormalMap(deviceContext, m_useNormalMaps);
 
 		//Render the object
-		obj->Render(deviceContext, tessellation);	
+		obj->Render(deviceContext, tessellation, dt);	
 	}
 }
 

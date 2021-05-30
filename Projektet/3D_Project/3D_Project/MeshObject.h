@@ -70,6 +70,11 @@ private:
 	//Render the mesh or not
 	bool m_visible;
 
+	//Water effect
+	bool m_hasAnimTexture;
+	std::vector<SimpleVertex> m_animVertices;
+	float m_movement;
+
 private:
 	bool LoadOBJ(ID3D11Device* device, std::string objfile);
 	bool LoadTexture(ID3D11Device* device, std::string texture);
@@ -113,7 +118,11 @@ public:
 	void SetVisible(bool trueOrFalse);
 	const bool IsVisible() const;
 
+	//Water effect
+	void SetAnimatedTexture(bool toggle = true);
+	void UpdateTextureAnim(ID3D11DeviceContext* deviceContext, const float& dt);
+
 	//Drawing what it got in the buffer
-	void Render(ID3D11DeviceContext* deviceContext, Tessellation* tessellation);
+	void Render(ID3D11DeviceContext* deviceContext, Tessellation* tessellation, const float& dt);
 	void RenderShadows(ID3D11DeviceContext* deviceContext);
 };
