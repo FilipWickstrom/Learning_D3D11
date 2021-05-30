@@ -29,6 +29,7 @@ HS_CONSTANT_DATA_OUTPUT ConstantPatchFunction(InputPatch<Vertex, 3> inputPatch, 
 {
     HS_CONSTANT_DATA_OUTPUT output;
 	
+    [unroll]
     for (int i = 0; i < 3; i++)
     {
         output.edgeTessFactor[i] = level;

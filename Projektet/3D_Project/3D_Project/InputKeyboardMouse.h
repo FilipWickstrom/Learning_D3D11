@@ -1,10 +1,8 @@
 #pragma once
-#pragma comment(lib, "DirectXTK.lib")
-
 #include <DirectXMath.h>
 #include <Windows.h>
-#include <directxTK/Keyboard.h>
-#include <directxTK/Mouse.h>
+#include <Keyboard.h>
+#include <Mouse.h>
 #include "Camera.h"
 #include "Tessellation.h"
 #include "Scene.h"

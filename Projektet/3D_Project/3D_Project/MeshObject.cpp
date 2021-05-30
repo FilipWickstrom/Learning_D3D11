@@ -2,7 +2,7 @@
 
 //Reading an image file
 #define STB_IMAGE_IMPLEMENTATION
-#include "Includes/stb/stb_image.h"
+#include <stb_image.h>
 
 MeshObject::MeshObject()
 	:m_vertexCount(0)
@@ -139,19 +139,21 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 		for (int i = 0; i < vertices.size(); i += 3)
 		{
 			//2 edges from the three points
-			XMFLOAT3 edge1 = XMFLOAT3(vertices[i + 1].position.x - vertices[i].position.x,
-									  vertices[i + 1].position.y - vertices[i].position.y,
-									  vertices[i + 1].position.z - vertices[i].position.z);
+			int ipos1 = i + 1;
+			XMFLOAT3 edge1 = XMFLOAT3(vertices[ipos1].position.x - vertices[i].position.x,
+									  vertices[ipos1].position.y - vertices[i].position.y,
+									  vertices[ipos1].position.z - vertices[i].position.z);
 
-			XMFLOAT3 edge2 = XMFLOAT3(vertices[i + 2].position.x - vertices[i].position.x,
-									  vertices[i + 2].position.y - vertices[i].position.y,
-									  vertices[i + 2].position.z - vertices[i].position.z);
-			//	
-			XMFLOAT2 uv1 = XMFLOAT2(vertices[i + 1].texCoord.x - vertices[i].texCoord.x,
-									   vertices[i + 1].texCoord.y - vertices[i].texCoord.y);
+			int ipos2 = i + 2;
+			XMFLOAT3 edge2 = XMFLOAT3(vertices[ipos2].position.x - vertices[i].position.x,
+									  vertices[ipos2].position.y - vertices[i].position.y,
+									  vertices[ipos2].position.z - vertices[i].position.z);
+				
+			XMFLOAT2 uv1 = XMFLOAT2(vertices[ipos1].texCoord.x - vertices[i].texCoord.x,
+									vertices[ipos1].texCoord.y - vertices[i].texCoord.y);
 			
-			XMFLOAT2 uv2 = XMFLOAT2(vertices[i + 2].texCoord.x - vertices[i].texCoord.x,
-									   vertices[i + 2].texCoord.y - vertices[i].texCoord.y);
+			XMFLOAT2 uv2 = XMFLOAT2(vertices[ipos2].texCoord.x - vertices[i].texCoord.x,
+									vertices[ipos2].texCoord.y - vertices[i].texCoord.y);
 			
 			//The determinant for 
 			float detUV = 1.0f / ((uv1.x * uv2.y) - (uv2.x * uv1.y));
@@ -162,8 +164,8 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 			tangent.z = detUV * ((uv2.y * edge1.z) - (uv1.y * edge2.z));
 
 			vertices[i].tangent = tangent;
-			vertices[i + 1].tangent = tangent;
-			vertices[i + 2].tangent = tangent;
+			vertices[ipos1].tangent = tangent;
+			vertices[ipos2].tangent = tangent;
 		}
 
 		/* - - - - - Math behind the scenes - - - - - -

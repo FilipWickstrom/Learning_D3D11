@@ -40,7 +40,7 @@ struct PixelOutput
     float4 Specular     : SV_Target5;
 };
 
-PixelOutput main(PixelInput input) : SV_TARGET
+PixelOutput main(PixelInput input)
 {
     PixelOutput output;
     
