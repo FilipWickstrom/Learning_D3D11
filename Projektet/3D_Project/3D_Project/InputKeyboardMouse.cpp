@@ -179,3 +179,15 @@ void InputKeyboardMouse::CheckInput(float dt, Camera& camera, Rasterizer& raster
 	KeyboardInput(dt, camera, rasterizer, tessellator, theScene, constBuffs, deviceContext, culling, postProcess);
 	camera.UpdateViewMatrix();
 }
+
+bool InputKeyboardMouse::CheckExit()
+{
+	auto kb = m_keyboard->GetState();
+
+	bool exit = false;
+	if (kb.Escape)
+	{
+		exit = true;
+	}
+	return exit;
+}

@@ -2,6 +2,8 @@
 
 //Read and write texture to backbuffer
 RWTexture2D<unorm float4> backbuffer : register(u0);
+//FIX A READ TEXTURE
+//FIX A WRITE TEXTURE
 
 cbuffer BilateralSettings : register(b0)
 {

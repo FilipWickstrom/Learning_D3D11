@@ -8,5 +8,5 @@ Kd 0.8 0.8 0.8
 Ks 0.8 0.8 0.8
 d 1
 illum 2
-map_Kd brownBrick.png
-map_Bump brownBrickNormal.png
+map_Kd Textures/brownBrick.png
+map_Bump Textures/brownBrickNormal.png

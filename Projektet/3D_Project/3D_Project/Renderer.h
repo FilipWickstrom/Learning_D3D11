@@ -19,6 +19,7 @@ private:
 	//Window settings
 	UINT m_winWidth;
 	UINT m_winHeight;
+	bool m_isRunning;
 
 	//Settings
 	bool m_VSync;

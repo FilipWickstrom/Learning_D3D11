@@ -14,6 +14,7 @@ MeshObject::MeshObject()
 	XMStoreFloat4x4(&m_modelMatrix, XMMatrixIdentity());
 
 	m_material = {};
+	m_mtlfile = "";
 
 	m_displacementMap = nullptr;
 	m_displacementMapSRV = nullptr;
@@ -24,8 +25,8 @@ MeshObject::MeshObject()
 
 	// Texture files
 	m_diffuseFile = "";
-	m_mtlfile = "";
 	m_normalFile = "";
+	m_displaceFile = "";
 
 	m_tessallated = false;
 	m_hasNormalMap = false;
@@ -81,7 +82,7 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 		std::vector <XMFLOAT3> positions;
 		std::vector <XMFLOAT2> textureCoords;
 		std::vector <XMFLOAT3> normals;
-		std::vector <SimpleVertex> vertices;
+		std::vector <Vertex> vertices;
 
 		while (getline(file, line))
 		{
@@ -124,13 +125,18 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 					vn = stoi(str);								// Saves the last
 
 					// Put into 
-					SimpleVertex thevertex; 
+					Vertex thevertex; 
 					thevertex.position = positions[v - size_t(1)];
 					thevertex.normal = normals[vn - size_t(1)];
 					thevertex.texCoord = textureCoords[vt - size_t(1)];
 
 					vertices.push_back(thevertex);
 				}
+			}
+			//Saves down the name of the material file
+			else if (prefix == "mtllib")
+			{
+				ss >> m_mtlfile;
 			}
 		}
 		file.close();
@@ -212,7 +218,7 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 			bufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
 			bufferDesc.CPUAccessFlags = 0;
 		}
-		bufferDesc.ByteWidth = sizeof(SimpleVertex) * m_vertexCount;
+		bufferDesc.ByteWidth = sizeof(Vertex) * m_vertexCount;
 		bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		bufferDesc.MiscFlags = 0;
 		bufferDesc.StructureByteStride = 0;
@@ -237,11 +243,11 @@ bool MeshObject::LoadOBJ(ID3D11Device* device, std::string objfile)
 	return true;
 }
 
-bool MeshObject::LoadTexture(ID3D11Device* device, std::string texture)
+bool MeshObject::LoadDiffuse(ID3D11Device* device)
 {
 	int textureWidth, textureHeight, channels;
 	//Unsigned char because 1 byte (8 bits) which is good for format later on
-	unsigned char* image = stbi_load(texture.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
+	unsigned char* image = stbi_load(m_diffuseFile.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
 	if (image == nullptr)
 	{
 		std::cerr << "Stbi_load() failed to find image..." << std::endl;
@@ -327,6 +333,11 @@ bool MeshObject::LoadMaterial(ID3D11Device* device)
 			{
 				ss >> m_normalFile;
 			}
+			//Displacementmap
+			else if (prefix == "map_Disp")
+			{
+				ss >> m_displaceFile;
+			}
 
 			//Others getting ignored
 		}
@@ -409,21 +420,24 @@ bool MeshObject::CreateSettingsBuff(ID3D11Device* device)
 	return true;
 }
 
-bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string material,
-					  std::array<float, 3> pos, std::array<float, 3> scl, std::array<float, 3> rot)
+bool MeshObject::Load(ID3D11Device* device, 
+					  std::string objfile,
+					  std::array<float, 3> pos, 
+					  std::array<float, 3> scl, 
+					  std::array<float, 3> rot)
 {
 	// Load in the obj-file. If failed dont do anything more
-	if (!LoadOBJ(device, "ObjFiles/" + obj))
+	if (!LoadOBJ(device, "ObjFiles/" + objfile))
 	{
-		std::cerr << "Failed to load in " << obj << "..." << std::endl;
+		std::cerr << "Failed to load in " << objfile << "..." << std::endl;
 		return false;
 	}
 
-	// Check the input of the material
-	if (material != "")
-		m_mtlfile = "Materials/" + material;
-	else
+	//If the object file did not find any material file we set it to a default
+	if (m_mtlfile == "")
+	{
 		m_mtlfile = "Materials/default.mtl";
+	}
 
 	// Loading in the material information and name of textures
 	if (!LoadMaterial(device))
@@ -432,14 +446,8 @@ bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string materia
 		return false;
 	}
 
-	// Check if file has not been set
-	if (m_diffuseFile == "")
-	{
-		m_diffuseFile = "default.png";
-	}
-
 	// Load the diffuse texture
-	if (!LoadTexture(device, "Textures/" + m_diffuseFile))
+	if (!LoadDiffuse(device))
 	{
 		std::cerr << "Failed to load in the diffuse texture..." << std::endl;
 		return false;
@@ -448,22 +456,29 @@ bool MeshObject::Load(ID3D11Device* device, std::string obj, std::string materia
 	//Load in the normal map if it exist
 	if (m_normalFile != "")
 	{
-		m_normalFile = "Textures/" + m_normalFile;
 		if (!LoadNormal(device))
 		{
 			std::cerr << "Failed to load in " << m_normalFile << std::endl;
 			return false;
 		}
-		else
+		m_hasNormalMap = true;
+		m_settings.useNormalMap = 1;
+		if (!CreateSettingsBuff(device))
 		{
-			m_hasNormalMap = true;
-			m_settings.useNormalMap = 1;
-			if (!CreateSettingsBuff(device))
-			{
-				std::cerr << "Failed to create cbuffer for settings..." << std::endl;
-				return false;
-			}
+			std::cerr << "Failed to create cbuffer for settings..." << std::endl;
+			return false;
 		}
+		
+	}
+
+	if (m_displaceFile != "")
+	{
+		if (!LoadDisplacement(device))
+		{
+			std::cerr << "Failed to create displacement map..." << std::endl;
+			return false;
+		}
+		m_tessallated = true;
 	}
 
 	//Load in the modell matrix
@@ -487,17 +502,10 @@ const XMFLOAT3 MeshObject::GetRotation() const
 	return m_rotation;
 }
 
-void MeshObject::SetTessellated(bool trueOrFalse)
+bool MeshObject::LoadDisplacement(ID3D11Device* device)
 {
-	m_tessallated = trueOrFalse;
-}
-
-bool MeshObject::LoadDisplacementMap(ID3D11Device* device, std::string displacementMap)
-{
-	displacementMap = "Textures/" + displacementMap;
-
 	int textureWidth, textureHeight, channels;
-	unsigned char* image = stbi_load(displacementMap.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
+	unsigned char* image = stbi_load(m_displaceFile.c_str(), &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
 	
 	if (image == nullptr)
 	{
@@ -631,7 +639,7 @@ void MeshObject::UpdateTextureAnim(ID3D11DeviceContext* deviceContext, const flo
 	//Update the vertex buffer
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	deviceContext->Map(m_vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	memcpy(mappedResource.pData, &m_animVertices[0], sizeof(SimpleVertex) * m_vertexCount);
+	memcpy(mappedResource.pData, &m_animVertices[0], sizeof(Vertex) * m_vertexCount);
 	deviceContext->Unmap(m_vertexBuffer, 0);
 }
 
@@ -650,7 +658,7 @@ void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation* tessel
 			UpdateTextureAnim(deviceContext, dt);
 		}
 
-		UINT stride = sizeof(SimpleVertex);
+		UINT stride = sizeof(Vertex);
 		UINT offset = 0;
 		deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 
@@ -674,7 +682,7 @@ void MeshObject::Render(ID3D11DeviceContext* deviceContext, Tessellation* tessel
 
 void MeshObject::RenderShadows(ID3D11DeviceContext* deviceContext)
 {
-	UINT stride = sizeof(SimpleVertex);
+	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 	deviceContext->IASetVertexBuffers(0, 1, &m_vertexBuffer, &stride, &offset);
 	deviceContext->Draw(m_vertexCount, 0);

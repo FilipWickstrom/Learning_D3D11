@@ -24,9 +24,8 @@ private:
 
 	//Where th model is in the world
 	XMFLOAT4X4 m_modelMatrix;
-	std::string m_mtlfile;
 
-	struct SimpleVertex
+	struct Vertex
 	{
 		XMFLOAT3 position;
 		XMFLOAT3 normal;
@@ -34,16 +33,18 @@ private:
 		XMFLOAT3 tangent;
 	};
 
+	std::string m_mtlfile;
 	struct Material
 	{
-		XMFLOAT4 ambient;		//Ka (float3)
-		XMFLOAT4 diffuse;		//Kd (float3)
-		XMFLOAT4 specular;		//Ks (float3) + Ns (float)
+		XMFLOAT4 ambient  = {};		//Ka (float3)
+		XMFLOAT4 diffuse  = {};		//Kd (float3)
+		XMFLOAT4 specular = {};		//Ks (float3) + Ns (float)
 	};
 	Material m_material;
 
 	//Tessellation
 	bool m_tessallated;
+	std::string m_displaceFile;
 	ID3D11Texture2D* m_displacementMap;
 	ID3D11ShaderResourceView* m_displacementMapSRV;
 
@@ -72,16 +73,19 @@ private:
 
 	//Water effect
 	bool m_hasAnimTexture;
-	std::vector<SimpleVertex> m_animVertices;
+	std::vector<Vertex> m_animVertices;
 	std::vector<XMFLOAT2> m_origTexCoords;
 	DirectX::XMFLOAT2 m_animSpeed;
 	DirectX::XMFLOAT2 m_animOffset;
 
 private:
 	bool LoadOBJ(ID3D11Device* device, std::string objfile);
-	bool LoadTexture(ID3D11Device* device, std::string texture);
 	bool LoadMaterial(ID3D11Device* device);
+	//Load textures
+	bool LoadDiffuse(ID3D11Device* device);
 	bool LoadNormal(ID3D11Device* device);
+	bool LoadDisplacement(ID3D11Device* device);
+
 	bool CreateSettingsBuff(ID3D11Device* device);
 
 public:
@@ -89,7 +93,8 @@ public:
 	~MeshObject();
 
 	//Loading in the model with file, texture and where and how it going to be placed
-	bool Load(ID3D11Device* device, std::string obj, std::string material, 
+	bool Load(ID3D11Device* device, 
+			  std::string objfile,
 			  std::array<float, 3>pos = { 0.0f,0.0f,0.0f },
 			  std::array<float, 3>scl = { 1.0f,1.0f,1.0f },
 			  std::array<float, 3>rot = { 0.0f,0.0f,0.0f });
@@ -98,10 +103,6 @@ public:
 	const XMFLOAT3 GetPosition() const;
 	const XMFLOAT3 GetScale() const;
 	const XMFLOAT3 GetRotation() const;
-
-	//Tessellated or not
-	void SetTessellated(bool trueOrFalse);
-	bool LoadDisplacementMap(ID3D11Device* device, std::string displacementMap);
 
 	//Update the model matrix and uses some defaults if no input
 	void UpdateModelMatrix(XMFLOAT3 pos, XMFLOAT3 scl, XMFLOAT3 rot);
@@ -124,7 +125,6 @@ public:
 	void SetAnimatedTexture(bool toggle = true);
 	void UpdateTextureAnim(ID3D11DeviceContext* deviceContext, const float& dt);
 	void SetAnimationSpeed(XMFLOAT2 speed);
-
 
 	//Drawing what it got in the buffer
 	void Render(ID3D11DeviceContext* deviceContext, Tessellation* tessellation, const float& dt);

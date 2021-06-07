@@ -6,5 +6,5 @@ Ks 0.500000 0.500000 0.500000
 Ni 1.450000
 d 1.000000
 illum 1
-map_Kd Water.png
-map_Bump WaterNormal.png
+map_Kd Textures/Water.png
+map_Bump Textures/WaterNormal.png

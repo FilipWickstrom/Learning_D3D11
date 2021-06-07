@@ -9,6 +9,7 @@ Renderer::Renderer(UINT winWidth, UINT winHeight)
 	m_swapChain = nullptr;
 	m_deltatime = 0.0f;
 	m_VSync = false;
+	m_isRunning = true;
 }
 
 Renderer::~Renderer()
@@ -177,21 +178,37 @@ void Renderer::Present()
 void Renderer::StartGameLoop(HWND& window)
 {
 	MSG msg = {};
-	while (msg.message != WM_QUIT)
+
+	//Keep the window running as long as possible
+	while (m_isRunning)
 	{
+		//Check if we are going to quit
+		if (m_inputKeyboardMouse.CheckExit())
+			m_isRunning = false;
+
 		m_deltatime = m_fpscounter.GetDeltatime();
 		m_fpscounter.RestartClock();
 
 		//Looks at the message and removes it from message queue
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		//While = takes all the message and checks them
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
+			if (msg.message == WM_QUIT)
+				m_isRunning = false;
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
 			
 		//Check mouse and keyboard
-		m_inputKeyboardMouse.CheckInput(m_deltatime, m_camera, m_rasterizer, m_firstPass.GetTessellation(), 
-										m_scene, m_constBuffers, m_deviceContext, m_backFaceCulling, m_postProcess);
+		m_inputKeyboardMouse.CheckInput(m_deltatime, 
+										m_camera, 
+										m_rasterizer, 
+										m_firstPass.GetTessellation(), 
+										m_scene, 
+										m_constBuffers, 
+										m_deviceContext, 
+										m_backFaceCulling, 
+										m_postProcess);
 
 		//Update the view matrix from camera
 		m_constBuffers.UpdateView(m_deviceContext, m_camera.GetViewMatrix());

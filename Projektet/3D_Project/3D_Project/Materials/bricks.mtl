@@ -8,5 +8,5 @@ Kd 0.8 0.8 0.8
 Ks 0.8 0.8 0.8
 d 1
 illum 2
-map_Kd brick.png
-map_Bump brickNormal.png
+map_Kd Textures/brick.png
+map_Bump Textures/brickNormal.png

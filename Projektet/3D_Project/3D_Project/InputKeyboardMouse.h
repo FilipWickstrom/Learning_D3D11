@@ -48,4 +48,5 @@ public:
 					ID3D11DeviceContext* deviceContext,
 					BackFaceCulling& culling,
 					PostProcessing& postProcess);
+	bool CheckExit();
 };

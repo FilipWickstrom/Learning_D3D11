@@ -1,6 +1,6 @@
 # Blender v2.91.2 OBJ File: ''
 # www.blender.org
-mtllib grid10x10.mtl
+mtllib Materials/wetRocksDisp.mtl
 o Grid
 v -1.000000 0.000000 1.000000
 v -0.777778 0.000000 1.000000

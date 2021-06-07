@@ -1,6 +1,6 @@
 # Blender v2.91.2 OBJ File: ''
 # www.blender.org
-mtllib smallcat.mtl
+mtllib Materials/oldpaper.mtl
 o cat.002
 v 1.565219 -0.132525 -0.000008
 v 1.257228 -0.283154 -0.000008

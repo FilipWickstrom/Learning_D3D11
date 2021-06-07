@@ -1,6 +1,6 @@
 # Blender v2.91.2 OBJ File: 'noahtest.blend'
 # www.blender.org
-mtllib betternoah.mtl
+mtllib Materials/shinyDefault.mtl
 o _3dcharacter
 v -0.060129 0.829683 0.983034
 v -0.021193 0.714143 0.989657
