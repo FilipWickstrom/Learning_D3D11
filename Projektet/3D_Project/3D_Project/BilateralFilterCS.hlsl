@@ -1,9 +1,7 @@
 #define MAXWEIGHTS 32
 
-//Read and write texture to backbuffer
-RWTexture2D<unorm float4> backbuffer : register(u0);
-//FIX A READ TEXTURE
-//FIX A WRITE TEXTURE
+Texture2D input : register(t0);
+RWTexture2D<unorm float4> output : register(u0);
 
 cbuffer BilateralSettings : register(b0)
 {
@@ -28,7 +26,7 @@ void main( uint3 DTid : SV_DispatchThreadID )
     else
         dxy = float2(0.0f, 1.0f);
     
-    float4 centerColour = backbuffer[DTid.xy];
+    float4 centerColour = input[DTid.xy]; //backbuffer[DTid.xy];
     float4 totalColour = 0.0f;
     float4 totalWeight = 0.0f;
     
@@ -41,7 +39,7 @@ void main( uint3 DTid : SV_DispatchThreadID )
         //Unpackage the right gauss filter for it
         float gaussWeight = (C_Filter[pos / 4])[pos++ % 4];
         
-        float4 currentColour = backbuffer[DTid.xy + (dxy*i)];
+        float4 currentColour = input[DTid.xy + (dxy*i)];
         
         //Difference in colour
         float4 delta = centerColour - currentColour;
@@ -58,6 +56,7 @@ void main( uint3 DTid : SV_DispatchThreadID )
     }
     
     //Normalization of the colour
-    backbuffer[DTid.xy] = (totalColour / totalWeight);
- 
+    //backbuffer[DTid.xy] = (totalColour / totalWeight);
+    output[DTid.xy] = totalColour / totalWeight;
+    
 }

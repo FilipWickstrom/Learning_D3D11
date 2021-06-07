@@ -1,16 +1,92 @@
 #include "PostProcessing.h"
 
-bool PostProcessing::CreateUAV(ID3D11Device* device, IDXGISwapChain* swapChain)
+bool PostProcessing::CreateViews(ID3D11Device* device, IDXGISwapChain* swapChain)
 {
+	//Get the backbuffers texture and map it to this SRV's and UAV's
 	ID3D11Texture2D* backBuffer = nullptr;
 	if (FAILED(swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer))))
 	{
 		std::cerr << "Failed to get back buffer..." << std::endl;
 		return false;
 	}
-	HRESULT hr = device->CreateUnorderedAccessView(backBuffer, nullptr, &m_unorderedAccessView);
+
+	HRESULT hr;
+	hr = device->CreateShaderResourceView(backBuffer, nullptr, &m_backbuffSRV);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create srv..." << std::endl;
+		backBuffer->Release();
+		return false;
+	}
+
+	hr = device->CreateUnorderedAccessView(backBuffer, nullptr, &m_backbuffUAV);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create uav..." << std::endl;
+		backBuffer->Release();
+		return false;
+	}
+
+	D3D11_TEXTURE2D_DESC backbuffDesc;
+	backBuffer->GetDesc(&backbuffDesc);
 	backBuffer->Release();
-	return !FAILED(hr);
+
+	//Create the middleground
+	D3D11_TEXTURE2D_DESC textDesc = {};
+	textDesc.Width = backbuffDesc.Width;
+	textDesc.Height = backbuffDesc.Height;
+	textDesc.MipLevels = 1;
+	textDesc.ArraySize = 1;
+	textDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textDesc.SampleDesc.Count = 1;
+	textDesc.SampleDesc.Quality = 0;
+	textDesc.Usage = D3D11_USAGE_DEFAULT;
+	textDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+	textDesc.CPUAccessFlags = 0;
+	textDesc.MiscFlags = 0;
+
+	ID3D11Texture2D* middleGroundText;
+
+	hr = device->CreateTexture2D(&textDesc, 0, &middleGroundText);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create texture..." << std::endl;
+		if (middleGroundText)
+			middleGroundText->Release();
+		return false;
+	}
+
+	//Shader resource view
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+	hr = device->CreateShaderResourceView(middleGroundText, &srvDesc, &m_middlegroundSRV);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create SRV..." << std::endl;
+		if (middleGroundText)
+			middleGroundText->Release();
+		return false;
+	}
+
+	//Unordered access view
+	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+	uavDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+	uavDesc.Texture2D.MipSlice = 0;
+	hr = device->CreateUnorderedAccessView(middleGroundText, &uavDesc, &m_middlegroundUAV);
+	if (FAILED(hr))
+	{
+		std::cerr << "Failed to create UAV..." << std::endl;
+		if (middleGroundText)
+			middleGroundText->Release();
+		return false;
+	}
+
+	middleGroundText->Release();
+	return true;
 }
 
 bool PostProcessing::LoadShaders(ID3D11Device* device)
@@ -219,7 +295,13 @@ bool PostProcessing::GenerateGaussFilter(UINT radius, float sigma, const Filter&
 
 PostProcessing::PostProcessing()
 {
-	m_unorderedAccessView = nullptr;
+	m_backbuffSRV = nullptr;
+	m_middlegroundUAV = nullptr;
+	m_middlegroundSRV = nullptr;
+	m_backbuffUAV = nullptr;
+	m_nullSRV = nullptr;
+	m_nullUAV = nullptr;
+
 	m_gaussShader = nullptr;
 	m_bilateralShader = nullptr;
 	m_gaussSettingsBuf = nullptr;
@@ -238,8 +320,19 @@ PostProcessing::PostProcessing()
 
 PostProcessing::~PostProcessing()
 {
-	if (m_unorderedAccessView)
-		m_unorderedAccessView->Release();
+	if (m_backbuffSRV)
+		m_backbuffSRV->Release();
+	if (m_middlegroundUAV)
+		m_middlegroundUAV->Release();
+	if (m_middlegroundSRV)
+		m_middlegroundSRV->Release();
+	if (m_backbuffUAV)
+		m_backbuffUAV->Release();
+	if (m_nullSRV)
+		m_nullSRV->Release();
+	if (m_nullUAV)
+		m_nullUAV->Release();
+
 	if (m_gaussShader)
 		m_gaussShader->Release();
 	if (m_bilateralShader)
@@ -261,9 +354,9 @@ bool PostProcessing::Initialize(ID3D11Device* device,
 								UINT bilateralRadius, 
 								float bilateralSigma)
 {
-	if (!CreateUAV(device, swapChain))
+	if (!CreateViews(device, swapChain))
 	{
-		std::cerr << "CreateUAV() failed..." << std::endl;
+		std::cerr << "CreateViews() failed..." << std::endl;
 		return false;
 	}
 	if (!LoadShaders(device))
@@ -317,7 +410,6 @@ void PostProcessing::Render(ID3D11DeviceContext* deviceContext, UINT winWidth, U
 		//We do not won't anything to change the rendertarget when are going to use it
 		ID3D11RenderTargetView* nullrtv = nullptr;
 		deviceContext->OMSetRenderTargets(1, &nullrtv, nullptr);
-		deviceContext->CSSetUnorderedAccessViews(0, 1, &m_unorderedAccessView, nullptr);
 
 		if (m_useBilateral)
 		{
@@ -325,11 +417,24 @@ void PostProcessing::Render(ID3D11DeviceContext* deviceContext, UINT winWidth, U
 			deviceContext->CSSetConstantBuffers(0, 1, &m_bilateralSettingsBuf);
 			deviceContext->CSSetConstantBuffers(1, 1, &m_bilateralWeightBuf);
 
+			//1. Bind the backbuffers SRV and the middlegrounds UAV
+			deviceContext->CSSetShaderResources(0, 1, &m_backbuffSRV);
+			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_middlegroundUAV, nullptr);
+
 			//Cross/plus pattern - more efficient
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::BILATERAL);
+
+			deviceContext->CSSetShaderResources(0, 1, &m_nullSRV);
+			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_nullUAV, nullptr);
+			deviceContext->CSSetShaderResources(0, 1, &m_middlegroundSRV);
+			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_backbuffUAV, nullptr);
+
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::BILATERAL);
+
+			deviceContext->CSSetShaderResources(0, 1, &m_nullSRV);
+			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_nullUAV, nullptr);
 		}
 
 		if (m_useGauss)
@@ -337,18 +442,33 @@ void PostProcessing::Render(ID3D11DeviceContext* deviceContext, UINT winWidth, U
 			deviceContext->CSSetShader(m_gaussShader, nullptr, 0);
 			deviceContext->CSSetConstantBuffers(0, 1, &m_gaussSettingsBuf);
 			deviceContext->CSSetConstantBuffers(1, 1, &m_gaussWeightBuf);
+			
+			//1. Bind the backbuffers SRV and the middlegrounds UAV
+			deviceContext->CSSetShaderResources(0, 1, &m_backbuffSRV);
+			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_middlegroundUAV, nullptr);
 
 			//Blur in one direction
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::GAUSSIAN);
+
+			//Unbinding the current SRV and UAV
+			deviceContext->CSSetShaderResources(0, 1, &m_nullSRV);
+			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_nullUAV, nullptr);
+			
 			//Blur in the other direction
+			//SWAP TO middleSRV AND backBuffUAV HERE
+			deviceContext->CSSetShaderResources(0, 1, &m_middlegroundSRV);
+			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_backbuffUAV, nullptr);
+
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::GAUSSIAN);
+
+			//Unbinding SRV and UAV
+			deviceContext->CSSetShaderResources(0, 1, &m_nullSRV);
+			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_nullUAV, nullptr);
 		}
 
-		//Unbind the unordered access view
-		ID3D11UnorderedAccessView* nulluav = nullptr;
-		deviceContext->CSSetUnorderedAccessViews(0, 1, &nulluav, nullptr);
+	
 		//Unbinding the rest of the buffers
 		ID3D11Buffer* nullbuff = nullptr;
 		deviceContext->CSSetConstantBuffers(0, 1, &nullbuff);

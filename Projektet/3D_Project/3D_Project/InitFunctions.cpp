@@ -12,7 +12,9 @@ bool CreateDeviceAndSwapChain(HWND window, UINT winWidth, UINT winHeight, IDXGIS
 	desc.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	desc.SampleDesc.Count = 1;								//Nr of multisamples per pixel. 1 = does not use it
 	desc.SampleDesc.Quality = 0;							//Quality of anti-alising
-	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_UNORDERED_ACCESS;	//Unordered for reading the backbuffer to computeshader
+
+	//Possible to read and write from compute shader
+	desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_UNORDERED_ACCESS | DXGI_USAGE_SHADER_INPUT;
 	desc.BufferCount = 2;									//Need to have two buffers for ...flip_discard
 	desc.OutputWindow = window;
 	desc.Windowed = true;

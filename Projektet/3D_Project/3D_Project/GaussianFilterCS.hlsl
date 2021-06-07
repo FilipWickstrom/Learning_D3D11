@@ -1,9 +1,7 @@
 #define MAXWEIGHTS 32
 
-//Read and write texture to backbuffer
-RWTexture2D<unorm float4> backbuffer : register(u0);
-//FIX A READ TEXTURE
-//FIX A WRITE TEXTURE
+Texture2D input : register(t0);
+RWTexture2D<unorm float4> output : register(u0);
 
 cbuffer GaussSettings : register(b0)
 { 
@@ -40,9 +38,10 @@ void main( uint3 DTid : SV_DispatchThreadID)
         //Get the packed value on the right position
         float weight = (C_Weights[counter / 4])[counter % 4];
         
-        finalColour += backbuffer[DTid.xy + (dxy * i)] * weight;
+        finalColour += input[DTid.xy + (dxy * i)] * weight;
+            
         counter++;
     }
     
-    backbuffer[DTid.xy] = finalColour;
+    output[DTid.xy] = finalColour;
 }

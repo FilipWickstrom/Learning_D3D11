@@ -16,7 +16,13 @@ enum class Filter { GAUSSIAN, BILATERAL };
 class PostProcessing
 {
 private:
-	ID3D11UnorderedAccessView* m_unorderedAccessView;	//read from the backbuffer
+	ID3D11ShaderResourceView* m_backbuffSRV;
+	ID3D11UnorderedAccessView* m_middlegroundUAV;
+	ID3D11ShaderResourceView* m_middlegroundSRV;
+	ID3D11UnorderedAccessView* m_backbuffUAV;
+	ID3D11ShaderResourceView* m_nullSRV;
+	ID3D11UnorderedAccessView* m_nullUAV;
+
 	ID3D11ComputeShader* m_gaussShader;
 	ID3D11ComputeShader* m_bilateralShader;
 	ID3D11Buffer* m_gaussSettingsBuf;
@@ -55,7 +61,7 @@ private:
 
 private:
 	//Creating
-	bool CreateUAV(ID3D11Device* device, IDXGISwapChain* swapChain);
+	bool CreateViews(ID3D11Device* device, IDXGISwapChain* swapChain);
 	bool LoadShaders(ID3D11Device* device);
 	bool CreateConstantBuffers(ID3D11Device* device);
 
