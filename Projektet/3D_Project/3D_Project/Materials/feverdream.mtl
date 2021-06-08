@@ -3,3 +3,4 @@ Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000
 map_Kd Textures/Feverdream.png
+map_Bump Textures/brownBrickNormal.png

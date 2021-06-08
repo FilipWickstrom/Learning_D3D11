@@ -16,12 +16,12 @@ enum class Filter { GAUSSIAN, BILATERAL };
 class PostProcessing
 {
 private:
-	ID3D11ShaderResourceView* m_backbuffSRV;
-	ID3D11UnorderedAccessView* m_middlegroundUAV;
-	ID3D11ShaderResourceView* m_middlegroundSRV;
-	ID3D11UnorderedAccessView* m_backbuffUAV;
-	ID3D11ShaderResourceView* m_nullSRV;
-	ID3D11UnorderedAccessView* m_nullUAV;
+	ID3D11ShaderResourceView* m_backbuffSRV;		//First pass
+	ID3D11UnorderedAccessView* m_middlegroundUAV;	//First pass
+	ID3D11ShaderResourceView* m_middlegroundSRV;	//Second pass
+	ID3D11UnorderedAccessView* m_backbuffUAV;		//Second pass
+	ID3D11ShaderResourceView* m_nullSRV;			//Zeroing between passes
+	ID3D11UnorderedAccessView* m_nullUAV;			//Zeroing between passes
 
 	ID3D11ComputeShader* m_gaussShader;
 	ID3D11ComputeShader* m_bilateralShader;
@@ -56,6 +56,7 @@ private:
 		float weights[MAXWEIGHTSIZE];
 	} m_bilateralWeights;
 
+	//ON or OFF settings
 	bool m_useGauss;
 	bool m_useBilateral;
 

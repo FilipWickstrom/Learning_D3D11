@@ -10,8 +10,7 @@ bool PostProcessing::CreateViews(ID3D11Device* device, IDXGISwapChain* swapChain
 		return false;
 	}
 
-	HRESULT hr;
-	hr = device->CreateShaderResourceView(backBuffer, nullptr, &m_backbuffSRV);
+	HRESULT hr = device->CreateShaderResourceView(backBuffer, nullptr, &m_backbuffSRV);
 	if (FAILED(hr))
 	{
 		std::cerr << "Failed to create srv..." << std::endl;
@@ -31,7 +30,7 @@ bool PostProcessing::CreateViews(ID3D11Device* device, IDXGISwapChain* swapChain
 	backBuffer->GetDesc(&backbuffDesc);
 	backBuffer->Release();
 
-	//Create the middleground
+	//Create the middleground texture
 	D3D11_TEXTURE2D_DESC textDesc = {};
 	textDesc.Width = backbuffDesc.Width;
 	textDesc.Height = backbuffDesc.Height;
@@ -407,43 +406,51 @@ void PostProcessing::Render(ID3D11DeviceContext* deviceContext, UINT winWidth, U
 {
 	if (m_useGauss || m_useBilateral)
 	{
-		//We do not won't anything to change the rendertarget when are going to use it
+		//We do not won't anything to change the rendertarget when we are going to use it
 		ID3D11RenderTargetView* nullrtv = nullptr;
 		deviceContext->OMSetRenderTargets(1, &nullrtv, nullptr);
 
+		//Does the filters in two passes - like a plus-sign - really efficient 
 		if (m_useBilateral)
 		{
+			//Set shader and constantbuffers needed
 			deviceContext->CSSetShader(m_bilateralShader, nullptr, 0);
 			deviceContext->CSSetConstantBuffers(0, 1, &m_bilateralSettingsBuf);
 			deviceContext->CSSetConstantBuffers(1, 1, &m_bilateralWeightBuf);
 
-			//1. Bind the backbuffers SRV and the middlegrounds UAV
+			//Bind the backbuffers SRV (input) and the middlegrounds UAV (output)
 			deviceContext->CSSetShaderResources(0, 1, &m_backbuffSRV);
 			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_middlegroundUAV, nullptr);
-
-			//Cross/plus pattern - more efficient
+			
+			//Do the filter in one direction
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::BILATERAL);
 
+			//Unbind the used views
 			deviceContext->CSSetShaderResources(0, 1, &m_nullSRV);
 			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_nullUAV, nullptr);
+
+			//Bind the middleground SRV (input) and backbuffers UAV (output)
 			deviceContext->CSSetShaderResources(0, 1, &m_middlegroundSRV);
 			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_backbuffUAV, nullptr);
 
+			//Do the filter in other direction
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::BILATERAL);
 
+			//Unbind the used views
 			deviceContext->CSSetShaderResources(0, 1, &m_nullSRV);
 			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_nullUAV, nullptr);
 		}
 
 		if (m_useGauss)
 		{
+			//Set shader and constantbuffers needed
 			deviceContext->CSSetShader(m_gaussShader, nullptr, 0);
 			deviceContext->CSSetConstantBuffers(0, 1, &m_gaussSettingsBuf);
 			deviceContext->CSSetConstantBuffers(1, 1, &m_gaussWeightBuf);
 			
-			//1. Bind the backbuffers SRV and the middlegrounds UAV
+			//Bind the backbuffers SRV (input) and the middlegrounds UAV (output)
 			deviceContext->CSSetShaderResources(0, 1, &m_backbuffSRV);
 			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_middlegroundUAV, nullptr);
 
@@ -451,28 +458,27 @@ void PostProcessing::Render(ID3D11DeviceContext* deviceContext, UINT winWidth, U
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::GAUSSIAN);
 
-			//Unbinding the current SRV and UAV
+			//Unbind the used views
 			deviceContext->CSSetShaderResources(0, 1, &m_nullSRV);
 			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_nullUAV, nullptr);
 			
-			//Blur in the other direction
-			//SWAP TO middleSRV AND backBuffUAV HERE
+			//Bind the middleground SRV (input) and backbuffers UAV (output)
 			deviceContext->CSSetShaderResources(0, 1, &m_middlegroundSRV);
 			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_backbuffUAV, nullptr);
 
+			//Blur in the other direction
 			deviceContext->Dispatch(winWidth / 8, winHeight / 8, 1);
 			SwapDirection(deviceContext, Filter::GAUSSIAN);
 
-			//Unbinding SRV and UAV
+			//Unbind the used views
 			deviceContext->CSSetShaderResources(0, 1, &m_nullSRV);
 			deviceContext->CSSetUnorderedAccessViews(0, 1, &m_nullUAV, nullptr);
 		}
 
-	
-		//Unbinding the rest of the buffers
-		ID3D11Buffer* nullbuff = nullptr;
-		deviceContext->CSSetConstantBuffers(0, 1, &nullbuff);
-		deviceContext->CSSetConstantBuffers(1, 1, &nullbuff);
+		//Unbinding constant buffers
+		ID3D11Buffer* nullCBuff = nullptr;
+		deviceContext->CSSetConstantBuffers(0, 1, &nullCBuff);
+		deviceContext->CSSetConstantBuffers(1, 1, &nullCBuff);
 	}
 
 }
