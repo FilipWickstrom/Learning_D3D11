@@ -7,7 +7,7 @@
 
 Final image
 
-![lab1.png](https://github.com/FilipWickstrom/3D_programmering/blob/main/Lab1/Lab1_RayTracing/Lab1_RayTracing/lab1.png)
+![lab1.png](https://github.com/FilipWickstrom/Learning_D3D11/blob/main/Lab1/Lab1_RayTracing/Lab1_RayTracing/lab1.png)
 
 # Lab 2
 * Make a basic 3D-renderer that could render a moving quad
@@ -16,7 +16,7 @@ Final image
 
 Final 3D renderer
 
-![lab2.png](https://github.com/FilipWickstrom/3D_programmering/blob/main/Lab2/Lab2_HelloTriangle/TechFlipLogoRotation.gif)
+![lab2.png](https://github.com/FilipWickstrom/Learning_D3D11/blob/main/Lab2/Lab2_HelloTriangle/TechFlipLogoRotation.gif)
 
 # The final project
 * ERROR 404 - Text not found - coming soon
