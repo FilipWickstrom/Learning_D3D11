@@ -26,8 +26,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	HWND window = {};
 
-	//Size of renderwindow
-	Renderer renderer(1920, 1080);
+	//Set renderwindow to the size of the monitor
+	Renderer renderer(GetSystemMetrics(SM_CXSCREEN),
+					  GetSystemMetrics(SM_CYSCREEN));
 
 	//Setting up windowhandler, directx handler, pipeline, etc...
 	if (renderer.Setup(hInstance, nCmdShow, window))

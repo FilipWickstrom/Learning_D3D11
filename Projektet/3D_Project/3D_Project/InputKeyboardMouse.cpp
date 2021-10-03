@@ -122,33 +122,33 @@ void InputKeyboardMouse::KeyboardInput(float dt, Camera& camera, Rasterizer& ras
 		constBuffs.SetFollowCamera(false);
 
 	/* --- Render mode: texture, lights on or normal mode --- */
-	else if (kb.NumPad0)
+	else if (kb.T || kb.NumPad0)
 		constBuffs.SetRenderMode(0);
-	else if (kb.NumPad1)
+	else if (kb.Y || kb.NumPad1)
 		constBuffs.SetRenderMode(1);
-	else if (kb.NumPad2)
+	else if (kb.G || kb.NumPad2)
 		constBuffs.SetRenderMode(2);
-	else if (kb.NumPad3)
+	else if (kb.H || kb.NumPad3)
 		constBuffs.SetRenderMode(3);
 
 	/* ------- Back face culling ------*/
 	//With my manunal back face culling
-	else if (kb.NumPad7)
+	else if (kb.U || kb.NumPad7)
 		culling.SetCullingOn(true);
 	//Without any culling at all
-	else if (kb.NumPad4)
+	else if (kb.J || kb.NumPad4)
 		culling.SetCullingOn(false);
 
 	/* ------- Gauss Filter ------ */
-	else if (kb.NumPad8)
+	else if (kb.I || kb.NumPad8)
 		postProcess.TurnOnGauss();
-	else if (kb.NumPad5)
+	else if (kb.K || kb.NumPad5)
 		postProcess.TurnOnGauss(false);
 
 	/* ------- Bilateral Filter ------ */
-	else if (kb.NumPad9)
+	else if (kb.O || kb.NumPad9)
 		postProcess.TurnOnBilateral();
-	else if (kb.NumPad6)
+	else if (kb.L || kb.NumPad6)
 		postProcess.TurnOnBilateral(false);
 }
 
