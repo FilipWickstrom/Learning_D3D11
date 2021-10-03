@@ -1,21 +1,21 @@
 -----Techniques implemented-----
-2.1 Core Techniques (1p):
+2.1 Core Techniques:
  * 2.1.1 Deferred rendering
 
-2.2 Geometry (2p):
+2.2 Geometry:
  * 2.2.1 Model Format Parsing
  * 2.2.2 Displacement Mapping using Tessellation Hardware
 
-2.3 Texturing and Lighting (1p):
+2.3 Texturing and Lighting:
  * 2.3.1 Normal Mapping
 
-2.4 Projection Techniques (1p):
+2.4 Projection Techniques:
  * 2.4.1 Shadow Mapping
 
-2.5 Acceleration Techniques (1p):
+2.5 Acceleration Techniques:
  * 2.5.3 Back Face Culling using Geometry Shader 
 
-2.6 Other Techniques (3p):
+2.6 Other Techniques:
  * 2.6.2 Gaussian Filter in Compute Shader
  * 2.6.3 Bilateral Filter in Compute Shader
  * 2.6.6 Water-effect (CPU-based)
@@ -54,19 +54,19 @@ Main light follow camera:
  * ON/OFF: 		Q or E
 
 Rendermode with GBuffers:
- * Only textures: 	Numpad 0
- * With lights: 	Numpad 1
- * Normals:		Numpad 2
- * Positions:		Numpad 3
+ * Only textures: 	Numpad 0 or T 
+ * With lights: 	Numpad 1 or Y
+ * Normals:		Numpad 2 or G
+ * Positions:		Numpad 3 or H
 
 Back face culling:
- * ON/OFF:		Numpad 7 or Numpad 4
+ * ON/OFF:		(Numpad 7 or Numpad 4) || (U or J)
 
 Gauss Filter:
- * ON/OFF:		Numpad 8 or Numpad 5 
+ * ON/OFF:		(Numpad 8 or Numpad 5) || (I or K)
 
 Bilateral Filter: 	
- * ON/OFF:		Numpad 9 or Numpad 6
+ * ON/OFF:		(Numpad 9 or Numpad 6) || (O or L)
 
 Reset camera location
 to (0,0,0):		R
