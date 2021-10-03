@@ -1,0 +1,191 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Deferred Rendering">
+      <UniqueIdentifier>{c5ddf974-ce9c-4346-8416-4618db708a5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Handlers/Helpers">
+      <UniqueIdentifier>{9bbb9db4-dfe5-4fee-889c-6ad93975687b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Includes">
+      <UniqueIdentifier>{6da3122e-95ef-4b93-8c46-9aaf3fe7b3e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Camera &amp; input">
+      <UniqueIdentifier>{5c5940bd-de83-480c-8b2b-292645bd3313}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Main">
+      <UniqueIdentifier>{0a10edfd-ced8-4928-bb3c-9329c0988375}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Scene">
+      <UniqueIdentifier>{e659259c-3de6-491e-86d0-6edc7cd029d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tessellation">
+      <UniqueIdentifier>{e1211e7f-2c00-49fd-ae31-064bd8d80a13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shadow">
+      <UniqueIdentifier>{e7bf07d7-5e59-4c23-965f-001214950f8e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\BackFaceCulling">
+      <UniqueIdentifier>{5491e2ce-5a2a-4229-95e6-1eb23c76925b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\PostProcessing">
+      <UniqueIdentifier>{eccd714f-f4b5-43eb-b821-259b575e3681}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="WindowHandler.cpp">
+      <Filter>Source Files\Handlers/Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="FirstPass.cpp">
+      <Filter>Source Files\Deferred Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="SecondPass.cpp">
+      <Filter>Source Files\Deferred Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenQuad.cpp">
+      <Filter>Source Files\Deferred Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="InitFunctions.cpp">
+      <Filter>Source Files\Deferred Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="FPSCounter.cpp">
+      <Filter>Source Files\Handlers/Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="ConstantBuffers.cpp">
+      <Filter>Source Files\Handlers/Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files\Camera &amp; input</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Source Files\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Source Files\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshObject.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Source Files\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Tessellation.cpp">
+      <Filter>Source Files\Tessellation</Filter>
+    </ClCompile>
+    <ClCompile Include="InputKeyboardMouse.cpp">
+      <Filter>Source Files\Camera &amp; input</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadowMap.cpp">
+      <Filter>Source Files\Shadow</Filter>
+    </ClCompile>
+    <ClCompile Include="BackFaceCulling.cpp">
+      <Filter>Source Files\BackFaceCulling</Filter>
+    </ClCompile>
+    <ClCompile Include="Rasterizer.cpp">
+      <Filter>Source Files\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="PostProcessing.cpp">
+      <Filter>Source Files\PostProcessing</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="WindowHandler.h">
+      <Filter>Source Files\Handlers/Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="FirstPass.h">
+      <Filter>Source Files\Deferred Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="SecondPass.h">
+      <Filter>Source Files\Deferred Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenQuad.h">
+      <Filter>Source Files\Deferred Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="InitFunctions.h">
+      <Filter>Source Files\Deferred Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="FPSCounter.h">
+      <Filter>Source Files\Handlers/Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantBuffers.h">
+      <Filter>Source Files\Handlers/Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="Includes\stb\stb_image.h">
+      <Filter>Header Files\Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Source Files\Camera &amp; input</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Source Files\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshObject.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Source Files\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Tessellation.h">
+      <Filter>Source Files\Tessellation</Filter>
+    </ClInclude>
+    <ClInclude Include="InputKeyboardMouse.h">
+      <Filter>Source Files\Camera &amp; input</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowMap.h">
+      <Filter>Source Files\Shadow</Filter>
+    </ClInclude>
+    <ClInclude Include="BackFaceCulling.h">
+      <Filter>Source Files\BackFaceCulling</Filter>
+    </ClInclude>
+    <ClInclude Include="Rasterizer.h">
+      <Filter>Source Files\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="PostProcessing.h">
+      <Filter>Source Files\PostProcessing</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="FirstPassPS.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="FirstPassVS.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="SecondPassPS.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="SecondPassVS.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="HullShader.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="DomainShader.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="ShadowVS.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="GeometryShader.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="GaussianFilterCS.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="BilateralFilterCS.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+  </ItemGroup>
+</Project>
