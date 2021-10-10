@@ -32,12 +32,13 @@ This project was about making our own 3D-renderer from scratch where we picked d
 
 **ERROR 404 - Video not found... coming soon**
 
-3D-models and textures used in this project:
+Credits:
 * Cat: https://free3d.com/3d-model/low-poly-cat-46138.html
-* Most of the textures are from: https://3dtextures.me/
 * Fever Dream: https://steamcommunity.com/sharedfiles/filedetails/?id=605832569
 * Water: https://3dtextures.me/2017/12/28/water-001/
 * Floor: https://3dtextures.me/2021/01/12/stylized-stone-wall-001/
 * Wet rocks: https://3dtextures.me/2020/10/30/ground-wet-rocks-002/
 * Brick wall: https://3dtextures.me/2019/11/21/brick-wall-017/
 * Brown brick wall: https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+* Image loading with STB: https://github.com/nothings/stb
+* Keyboard and mouse: https://github.com/microsoft/DirectXTK
