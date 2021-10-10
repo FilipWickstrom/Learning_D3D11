@@ -1,0 +1,3 @@
+If you would like to try the project you have to go into 
+"3D_Project/Libs/x64/Debug" and "3D_Project/Libs/x64/Release" and unzip the lib-files. 
+Github have a limit on how large files can be...

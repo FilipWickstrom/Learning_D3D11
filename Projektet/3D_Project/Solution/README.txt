@@ -1,3 +1,5 @@
+Made by Filip Wickström/TechFlip
+
 -----Techniques implemented-----
 2.1 Core Techniques:
  * 2.1.1 Deferred rendering
