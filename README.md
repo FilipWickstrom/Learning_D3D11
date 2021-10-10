@@ -33,7 +33,6 @@ This project was about making our own 3D-renderer from scratch where we picked d
 **ERROR 404 - Video not found... coming soon**
 
 Credits:
-* Cat: https://free3d.com/3d-model/low-poly-cat-46138.html
 * Fever Dream: https://steamcommunity.com/sharedfiles/filedetails/?id=605832569
 * Water: https://3dtextures.me/2017/12/28/water-001/
 * Floor: https://3dtextures.me/2021/01/12/stylized-stone-wall-001/
