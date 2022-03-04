@@ -79,5 +79,7 @@ int main()
 		std::cout << "ERROR: could not create the picture... stbi_write_png failed" << std::endl;
 	}
 
+	std::cout << "Rendered lab1.png" << std::endl;
+
 	return 0;
 }
