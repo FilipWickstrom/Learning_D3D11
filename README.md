@@ -5,32 +5,30 @@
 * Sending rays from the "camera" to the objects (plane, sphere, triangle and oriented boundingbox)
 * stb_image_write.h was used as an extern library to write the final image
 
-**Final image**
-
-![lab1.png](https://github.com/FilipWickstrom/Learning_D3D11/blob/main/Lab1/Lab1_RayTracing/Lab1_RayTracing/lab1.png)
+![lab1.png](https://github.com/FilipWickstrom/Learning_D3D11/blob/main/Images/lab1.png)
 
 # Lab 2
 * Make a basic 3D-renderer that could render a moving quad
 * Learned the basic pipeline
 * stb_image.h was used as an extern library to read the textures
 
-**Final 3D renderer**
-
-![lab2.png](https://github.com/FilipWickstrom/Learning_D3D11/blob/main/Lab2/Lab2_HelloTriangle/TechFlipLogoRotation.gif)
+![lab2.gif](https://github.com/FilipWickstrom/Learning_D3D11/blob/main/Images/lab2.gif)
 
 # The final project
 This project was about making our own 3D-renderer from scratch where we picked different techniques to learn. I picked:
-  1. Deferred rendering
-  2. Model format parsing with .obj and .mtl
-  3. Displacement mapping with tessellation hardware
-  4. Normal mapping
-  5. Shadow mapping
-  6. Back face culling with geometry shader
-  7. Gaussian filter in compute shader
-  8. Bilateral filter in compute shader
-  9. Running water effect - CPU-based, which is probably not the best
+* Deferred rendering
+* Model format parsing with .obj and .mtl
+* Displacement mapping with tessellation hardware
+* Normal mapping
+* Shadow mapping
+* Back face culling with geometry shader
+* Gaussian filter in compute shader
+* Bilateral filter in compute shader
+* Running water effect - CPU-based, which is probably not the best
 
-**ERROR 404 - Video not found... coming soon**
+[![TheFinalProject.png](https://github.com/FilipWickstrom/Learning_D3D11/blob/main/Images/TheFinalProject.png)](https://www.youtube.com/watch?v=8EDrdRsyVGs)
+* Click the image to see a video of it. An update version is coming up later
+
 
 Credits:
 * Fever Dream: https://steamcommunity.com/sharedfiles/filedetails/?id=605832569
