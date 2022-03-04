@@ -37,6 +37,7 @@ newaction {
         os.remove("**.vcxproj")
         os.remove("**.vcxproj.filters")
         os.remove("**.vcxproj.user")
+		os.remove("**.cso")
         print("Done")
     end
 }
