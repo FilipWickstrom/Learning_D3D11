@@ -1,4 +1,4 @@
-## This was an introduction course to learning 3D-programming with DirectX 11 and C++
+## Introduction course to 3D-programming with DirectX11 and C++
 
 # Lab 1
 * Make a raytracer that could export an image of a scene of object
