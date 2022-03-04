@@ -1,4 +1,4 @@
-Made by Filip Wickström/TechFlip
+Made by Filip Wickström - https://github.com/FilipWickstrom
 
 -----Techniques implemented-----
 2.1 Core Techniques:
