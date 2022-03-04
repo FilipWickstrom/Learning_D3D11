@@ -21,9 +21,12 @@ void RedirectIOToConsole()
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
+#ifdef _DEBUG
 	RedirectIOToConsole();
-	const UINT WIDTH = 1280;
-	const UINT HEIGHT = 720;
+#endif // _DEBUG
+
+	const UINT WIDTH = 1920;
+	const UINT HEIGHT = 1080;
 	HWND window;
 
 	//Setup the window where everything can be drawn
@@ -95,7 +98,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 		//Update the window text
 		std::wstringstream windowtext;
-		windowtext << L"Hello Triangle Window | FPS: " << (int)(1.0f / deltatime.count()) << " | TimePerFrame : " << deltatime.count() << "s";
+		windowtext << L"Hello Triangle | FPS: " << (int)(1.0f / deltatime.count()) << " | TimePerFrame : " << deltatime.count() << "s";
 		SetWindowText(window, windowtext.str().c_str());
 	}
 

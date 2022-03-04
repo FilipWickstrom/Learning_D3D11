@@ -13,7 +13,7 @@ bool LoadShaders(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11Pixel
     std::ifstream reader;
     
     //Vertexshader
-    reader.open("VertexShader.cso", std::ios::binary | std::ios::ate);  //ate: Begins at the end
+    reader.open("Shaders/VertexShader.cso", std::ios::binary | std::ios::ate);  //ate: Begins at the end
     if (!reader.is_open())
     {
         std::cerr << "Could not open vertex shader..." << std::endl;
@@ -35,7 +35,7 @@ bool LoadShaders(ID3D11Device* device, ID3D11VertexShader*& vShader, ID3D11Pixel
     reader.close();
     
     //Pixelshader
-    reader.open("PixelShader.cso", std::ios::binary | std::ios::ate);
+    reader.open("Shaders/PixelShader.cso", std::ios::binary | std::ios::ate);
     if (!reader.is_open())
     {
         std::cerr << "Could not open pixel shader..." << std::endl;
@@ -108,7 +108,7 @@ bool CreateTexture(ID3D11Device* device, ID3D11Texture2D*& texture, ID3D11Shader
 {
     int textureWidth, textureHeight, channels;
     //Unsigned char because 1 byte (8 bits) which is good for format later on
-    unsigned char* image = stbi_load("../Textures/TechFlip.png", &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
+    unsigned char* image = stbi_load("../Assets/Textures/TechFlip.png", &textureWidth, &textureHeight, &channels, STBI_rgb_alpha);
 
     //Description
     D3D11_TEXTURE2D_DESC desc;

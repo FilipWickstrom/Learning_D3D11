@@ -25,8 +25,9 @@ bool CreateInterfaces(UINT width, UINT height, HWND window, ID3D11Device*& devic
 
     UINT flags = 0;
     //Shows debug messages in this mode in output
-    if (_DEBUG)
-        flags = D3D11_CREATE_DEVICE_DEBUG;
+#ifdef _DEBUG
+    flags = D3D11_CREATE_DEVICE_DEBUG;
+#endif // _DEBUG
 
     D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 }; //What versions for hardware to support
     HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags, featureLevels, 1, 
