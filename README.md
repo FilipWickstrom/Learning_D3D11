@@ -40,10 +40,11 @@ Credits:
 * Image loading with STB: https://github.com/nothings/stb
 * Keyboard and mouse: https://github.com/microsoft/DirectXTK
 
-# How to build and test?
-There is a solution for every project and they can all be built with premake. By default it uses Visual Studio 2019 but you can change it in the "build.bat" file if you need anything else. The projects was programmed on Visual Studio 2019 was made for Windows 10 64-bit.
+# How to build
+All of the projects can be built with premake. By default it uses Visual Studio 2019 but you can change it in the "build.bat" file if you need anything else. The projects was programmed on Visual Studio 2019 was made for Windows 10 64-bit.
 
-There is also some zipped files with the final results. They are named "EXE.zip" and can be runned by unzipping and clicking on the executable file :)
+# How to run
+There is zipped versions of the projects that can be tried. Check the right side on the github-page on releases.
 
 # Warning
 Most the code is a bit messy and not the best structured and optimized as it was my first time learning about using the D3D11 API and 3D-rendering in general.
